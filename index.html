@@ -4,13 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>وِرْدٌ</title>
-
-  <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
       background: #f0fdf4;
@@ -18,7 +14,6 @@
       justify-content: center;
       min-height: 100vh;
     }
-
     #app {
       width: 100%;
       max-width: 428px;
@@ -27,29 +22,15 @@
       position: relative;
     }
 
-    /* ── Config banner (shown when keys not set) ── */
-    #config-banner {
-      background: #fef3c7;
-      border-bottom: 2px solid #f59e0b;
-      padding: 12px 16px;
-      font-size: 13px;
-      color: #92400e;
-      display: none;
-    }
-    #config-banner a { color: #b45309; font-weight: 700; }
-
     /* ── Screens ── */
     .screen { display: none; flex-direction: column; min-height: 100vh; }
     .screen.active { display: flex; }
 
     /* ── Loading ── */
     #loading {
-      justify-content: center;
-      align-items: center;
+      justify-content: center; align-items: center;
       background: linear-gradient(160deg, #064e3b, #047857);
-      color: #fff;
-      font-size: 18px;
-      gap: 16px;
+      color: #fff; font-size: 18px; gap: 16px;
     }
     .spinner {
       width: 36px; height: 36px;
@@ -60,13 +41,11 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Welcome ── */
-    #welcome {
+    /* ── Auth (landing) ── */
+    #auth {
       background: linear-gradient(160deg, #064e3b 0%, #065f46 50%, #047857 100%);
-      justify-content: center;
-      align-items: center;
-      padding: 40px 24px;
-      gap: 32px;
+      justify-content: center; align-items: center;
+      padding: 40px 24px; gap: 32px;
     }
     .logo { text-align: center; }
     .logo-icon {
@@ -74,30 +53,61 @@
       background: rgba(255,255,255,.15);
       border-radius: 24px;
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 16px;
-      font-size: 40px;
+      margin: 0 auto 16px; font-size: 40px;
     }
     .logo h1 { color: #fff; font-size: 28px; font-weight: 700; }
     .logo p  { color: #a7f3d0; font-size: 14px; margin-top: 4px; }
 
-    .welcome-form {
+    .auth-card {
       background: #fff;
       border-radius: 20px;
       padding: 24px;
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 14px;
+    }
+    .auth-card h2 { font-size: 18px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
+
+    /* ── Signin / Signup screens ── */
+    #signin, #signup { background: #f9fafb; }
+    .screen-header {
+      background: linear-gradient(135deg, #064e3b, #047857);
+      padding: 56px 24px 24px;
+      color: #fff; position: relative;
+    }
+    .screen-header h2 { font-size: 22px; font-weight: 700; }
+    .screen-header p  { font-size: 13px; color: #a7f3d0; margin-top: 4px; }
+    .screen-body {
+      padding: 20px 16px;
+      display: flex; flex-direction: column;
+      gap: 16px; flex: 1;
     }
 
-    .form-group label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 8px;
+    /* ── Create / Join / Dashboard ── */
+    #create-group, #join-group { padding: 0; background: #f9fafb; }
+    #dashboard { background: #f0fdf4; overflow-y: auto; }
+
+    /* ── Back button ── */
+    .back-btn {
+      position: absolute; top: 16px; right: 16px;
+      background: rgba(255,255,255,.15);
+      border: none; color: #fff;
+      border-radius: 10px; padding: 8px 14px;
+      font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: background .2s;
     }
-    .form-group input[type="text"] {
+    .back-btn:hover { background: rgba(255,255,255,.25); }
+
+    /* ── Form elements ── */
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label {
+      font-size: 13px; font-weight: 600; color: #374151;
+    }
+    .form-input, .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group input[type="password"] {
       width: 100%;
       padding: 12px 16px;
       border: 2px solid #e5e7eb;
@@ -106,265 +116,209 @@
       outline: none;
       transition: border-color .2s;
       text-align: right;
+      font-family: inherit;
+      background: #fff;
     }
-    .form-group input[type="text"]:focus { border-color: #059669; }
+    .form-input:focus,
+    .form-group input:focus { border-color: #059669; }
 
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, #059669, #047857);
+      color: #fff; border: none;
+      border-radius: 14px; font-size: 16px;
+      font-weight: 700; cursor: pointer;
+      transition: opacity .2s; font-family: inherit;
+    }
+    .btn-primary:hover { opacity: .9; }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-secondary {
+      width: 100%; padding: 13px;
+      background: transparent; color: #059669;
+      border: 2px solid #059669;
+      border-radius: 14px; font-size: 15px;
+      font-weight: 700; cursor: pointer;
+      transition: all .2s; font-family: inherit;
+    }
+    .btn-secondary:hover { background: #ecfdf5; }
+
+    .btn-google {
+      width: 100%; padding: 13px;
+      background: #fff; color: #374151;
+      border: 2px solid #e5e7eb;
+      border-radius: 14px; font-size: 15px;
+      font-weight: 600; cursor: pointer;
+      display: flex; align-items: center;
+      justify-content: center; gap: 10px;
+      transition: all .2s; font-family: inherit;
+    }
+    .btn-google:hover { background: #f9fafb; border-color: #d1d5db; }
+    .btn-google svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+    .divider {
+      display: flex; align-items: center; gap: 10px;
+      color: #9ca3af; font-size: 13px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1;
+      height: 1px; background: #e5e7eb;
+    }
+
+    .auth-link {
+      text-align: center; font-size: 13px; color: #6b7280;
+    }
+    .auth-link a {
+      color: #059669; font-weight: 700; cursor: pointer; text-decoration: none;
+    }
+
+    /* ── Radio / gender cards ── */
     .radio-group { display: flex; gap: 10px; }
     .radio-card {
-      flex: 1;
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 12px;
-      text-align: center;
-      cursor: pointer;
-      transition: all .2s;
-      user-select: none;
+      flex: 1; border: 2px solid #e5e7eb;
+      border-radius: 12px; padding: 12px;
+      text-align: center; cursor: pointer;
+      transition: all .2s; user-select: none;
     }
     .radio-card input { display: none; }
     .radio-card.selected { border-color: #059669; background: #ecfdf5; }
     .radio-card .radio-icon { font-size: 22px; margin-bottom: 4px; }
     .radio-card .radio-label { font-size: 13px; font-weight: 600; color: #374151; }
 
-    .btn-primary {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #059669, #047857);
-      color: #fff;
-      border: none;
-      border-radius: 14px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity .2s;
-    }
-    .btn-primary:hover { opacity: .9; }
-    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-
-    .btn-secondary {
-      width: 100%;
-      padding: 13px;
-      background: transparent;
-      color: #059669;
-      border: 2px solid #059669;
-      border-radius: 14px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all .2s;
-    }
-    .btn-secondary:hover { background: #ecfdf5; }
-
-    /* ── Create group / Join group ── */
-    #create-group, #join-group { padding: 0; background: #f9fafb; }
-
-    .screen-header {
-      background: linear-gradient(135deg, #064e3b, #047857);
-      padding: 56px 24px 24px;
-      color: #fff;
-      position: relative;
-    }
-    .screen-header h2 { font-size: 22px; font-weight: 700; }
-    .screen-header p  { font-size: 13px; color: #a7f3d0; margin-top: 4px; }
-
-    .back-btn {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      background: rgba(255,255,255,.15);
-      border: none;
-      color: #fff;
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 14px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: background .2s;
-    }
-    .back-btn:hover { background: rgba(255,255,255,.25); }
-
-    .screen-body {
-      padding: 20px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      flex: 1;
-    }
-
+    /* ── Card ── */
     .card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 18px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      background: #fff; border-radius: 16px;
+      padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
     }
     .card h3 {
-      font-size: 13px;
-      font-weight: 700;
-      color: #6b7280;
-      letter-spacing: .05em;
-      margin-bottom: 14px;
+      font-size: 13px; font-weight: 700;
+      color: #6b7280; letter-spacing: .05em; margin-bottom: 14px;
     }
 
+    /* goal quick btns */
     .quick-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
     .quick-btn {
       padding: 6px 14px;
       border: 2px solid #d1fae5;
       border-radius: 20px;
-      background: #f0fdf4;
-      color: #059669;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all .15s;
+      background: #f0fdf4; color: #059669;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all .15s; font-family: inherit;
     }
     .quick-btn:hover, .quick-btn.selected { background: #059669; color: #fff; border-color: #059669; }
 
     .goal-input-row { display: flex; align-items: center; gap: 12px; }
     .goal-input-row input[type="number"] {
-      width: 80px;
-      padding: 10px 12px;
+      width: 80px; padding: 10px 12px;
       border: 2px solid #e5e7eb;
-      border-radius: 10px;
-      font-size: 18px;
-      font-weight: 700;
-      text-align: center;
-      outline: none;
-      color: #059669;
+      border-radius: 10px; font-size: 18px;
+      font-weight: 700; text-align: center;
+      outline: none; color: #059669;
     }
     .goal-input-row input:focus { border-color: #059669; }
     .goal-input-row span { font-size: 14px; color: #6b7280; }
 
     .option-cards { display: flex; flex-direction: column; gap: 8px; }
     .option-card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 12px 14px;
-      cursor: pointer;
-      transition: all .2s;
+      display: flex; align-items: center; gap: 12px;
+      border: 2px solid #e5e7eb; border-radius: 12px;
+      padding: 12px 14px; cursor: pointer; transition: all .2s;
     }
     .option-card.selected { border-color: #059669; background: #ecfdf5; }
+    .option-card.disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
     .option-card input { display: none; }
     .option-icon { font-size: 20px; }
     .option-text .option-title { font-size: 14px; font-weight: 600; color: #1f2937; }
     .option-text .option-desc  { font-size: 12px; color: #9ca3af; margin-top: 2px; }
 
-    /* join group info box */
+    /* join group info */
     .group-info-box {
       background: linear-gradient(135deg, #ecfdf5, #d1fae5);
       border: 2px solid #6ee7b7;
-      border-radius: 14px;
-      padding: 16px;
-      text-align: center;
+      border-radius: 14px; padding: 16px; text-align: center;
     }
     .group-info-box .gi-name { font-size: 18px; font-weight: 700; color: #065f46; }
     .group-info-box .gi-meta { font-size: 13px; color: #059669; margin-top: 4px; }
 
     /* ── Dashboard ── */
-    #dashboard { background: #f0fdf4; overflow-y: auto; }
-
     .dash-header {
       background: linear-gradient(135deg, #064e3b, #047857);
-      padding: 52px 20px 20px;
-      color: #fff;
+      padding: 52px 20px 20px; color: #fff; position: relative;
     }
     .dash-header h2 { font-size: 20px; font-weight: 700; }
     .dash-header .sub { font-size: 13px; color: #a7f3d0; margin-top: 2px; }
-
     .badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
     .badge {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 20px;
-      background: rgba(255,255,255,.15);
-      color: #d1fae5;
+      font-size: 11px; font-weight: 600;
+      padding: 3px 8px; border-radius: 20px;
+      background: rgba(255,255,255,.15); color: #d1fae5;
     }
 
     .dash-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-
     .progress-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 18px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      background: #fff; border-radius: 16px;
+      padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
     }
     .pc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .pc-label { font-size: 13px; font-weight: 700; color: #374151; }
     .pc-count { font-size: 22px; font-weight: 800; color: #059669; }
     .pc-goal  { font-size: 13px; color: #9ca3af; }
-
     .progress-bar-bg {
-      background: #e5e7eb;
-      border-radius: 99px;
-      height: 10px;
-      overflow: hidden;
-      margin-bottom: 14px;
+      background: #e5e7eb; border-radius: 99px;
+      height: 10px; overflow: hidden; margin-bottom: 14px;
     }
     .progress-bar-fill {
       background: linear-gradient(90deg, #34d399, #059669);
-      height: 100%;
-      border-radius: 99px;
-      transition: width .4s ease;
+      height: 100%; border-radius: 99px; transition: width .4s ease;
     }
-
     .inc-btns { display: flex; gap: 8px; flex-wrap: wrap; }
     .inc-btn {
-      padding: 8px 14px;
-      background: #ecfdf5;
-      border: 1px solid #d1fae5;
-      border-radius: 10px;
-      color: #059669;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all .15s;
+      padding: 8px 14px; background: #ecfdf5;
+      border: 1px solid #d1fae5; border-radius: 10px;
+      color: #059669; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: all .15s; font-family: inherit;
     }
     .inc-btn:hover { background: #059669; color: #fff; }
-
     .celebration {
       background: linear-gradient(135deg, #059669, #047857);
-      color: #fff;
-      border-radius: 12px;
-      padding: 12px 16px;
-      text-align: center;
-      font-size: 15px;
-      font-weight: 700;
-      display: none;
-      margin-top: 12px;
+      color: #fff; border-radius: 12px; padding: 12px 16px;
+      text-align: center; font-size: 15px; font-weight: 700;
+      display: none; margin-top: 12px;
     }
     .celebration.show { display: block; }
 
     /* members */
     .members-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 18px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      background: #fff; border-radius: 16px;
+      padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
     }
-    .mc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+    .mc-header {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 14px;
+      flex-wrap: wrap; gap: 8px;
+    }
     .mc-title { font-size: 13px; font-weight: 700; color: #374151; }
-
+    .add-member-btn {
+      background: none; border: 1px solid #34d399;
+      color: #059669; border-radius: 8px;
+      padding: 4px 10px; font-size: 12px;
+      font-family: inherit; cursor: pointer;
+    }
+    .add-member-btn:hover { background: #ecfdf5; }
     .member-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 0;
-      border-bottom: 1px solid #f3f4f6;
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid #f3f4f6;
     }
     .member-item:last-child { border-bottom: none; }
     .member-avatar {
-      width: 36px; height: 36px;
-      border-radius: 50%;
+      width: 36px; height: 36px; border-radius: 50%;
       background: linear-gradient(135deg, #34d399, #059669);
       display: flex; align-items: center; justify-content: center;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 700;
-      flex-shrink: 0;
+      color: #fff; font-size: 14px; font-weight: 700; flex-shrink: 0;
     }
     .member-avatar.me { background: linear-gradient(135deg, #f59e0b, #d97706); }
     .member-info { flex: 1; }
@@ -376,66 +330,48 @@
     .member-check { font-size: 18px; }
 
     /* invite */
-    .add-member-btn {
-      background: none;
-      border: 1px solid #34d399;
-      color: #059669;
-      border-radius: 8px;
-      padding: 4px 10px;
-      font-size: 12px;
-      font-family: inherit;
-      cursor: pointer;
-    }
-    .add-member-btn:hover { background: #ecfdf5; }
     .invite-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 18px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      background: #fff; border-radius: 16px;
+      padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
       margin-bottom: 30px;
     }
     .invite-card .ic-title { font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 12px; }
     .invite-link-row { display: flex; gap: 8px; }
     .invite-link-box {
-      flex: 1;
-      padding: 10px 12px;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      font-size: 12px;
-      color: #6b7280;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      direction: ltr;
+      flex: 1; padding: 10px 12px;
+      background: #f9fafb; border: 1px solid #e5e7eb;
+      border-radius: 10px; font-size: 12px; color: #6b7280;
+      overflow: hidden; white-space: nowrap;
+      text-overflow: ellipsis; direction: ltr;
     }
     .copy-btn {
-      padding: 10px 14px;
-      background: #059669;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
+      padding: 10px 14px; background: #059669;
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
     }
     .copy-btn:hover { background: #047857; }
 
+    /* gender btn */
+    .gender-btn {
+      flex: 1; padding: 10px;
+      border: 2px solid #e5e7eb; border-radius: 12px;
+      background: #fff; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all .2s; font-family: inherit;
+    }
+    .gender-btn.active { border-color: #059669; background: #ecfdf5; color: #059669; }
+
+    /* error text */
+    .err-text { font-size: 12px; color: #dc2626; margin-top: 2px; display: none; }
+    .err-text.show { display: block; }
+
     /* toast */
     #toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
+      position: fixed; bottom: 24px; left: 50%;
       transform: translateX(-50%) translateY(80px);
-      background: #1f2937;
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 99px;
-      font-size: 13px;
-      font-weight: 600;
-      transition: transform .3s;
-      z-index: 999;
-      white-space: nowrap;
+      background: #1f2937; color: #fff;
+      padding: 10px 20px; border-radius: 99px;
+      font-size: 13px; font-weight: 600;
+      transition: transform .3s; z-index: 999; white-space: nowrap;
     }
     #toast.show { transform: translateX(-50%) translateY(0); }
   </style>
@@ -443,52 +379,121 @@
 <body>
 <div id="app">
 
-  <!-- Config banner -->
-  <div id="config-banner">
-    ⚠️ لم يتم إعداد Supabase بعد. اتبع تعليمات الإعداد في الكود.
-  </div>
-
   <!-- ══════════ Loading ══════════ -->
   <div id="loading" class="screen active">
     <div class="spinner"></div>
     <span>جاري التحميل…</span>
   </div>
 
-  <!-- ══════════ Welcome ══════════ -->
-  <div id="welcome" class="screen">
+  <!-- ══════════ Auth Landing ══════════ -->
+  <div id="auth" class="screen">
     <div class="logo">
       <div class="logo-icon">📖</div>
       <h1>وِرْدٌ</h1>
       <p>اقرأ · تابع · وشجّع بعضكم</p>
     </div>
-    <div class="welcome-form">
-      <div class="form-group">
-        <label>اسمك</label>
-        <input type="text" id="user-name" placeholder="أدخل اسمك…" />
-      </div>
-      <div class="form-group">
-        <label>الجنس</label>
-        <div class="radio-group">
-          <label class="radio-card" id="card-male" onclick="selectGender('male')">
-            <input type="radio" name="gender" value="male" />
-            <div class="radio-icon">👨</div>
-            <div class="radio-label">ذكر</div>
-          </label>
-          <label class="radio-card" id="card-female" onclick="selectGender('female')">
-            <input type="radio" name="gender" value="female" />
-            <div class="radio-icon">👩</div>
-            <div class="radio-label">أنثى</div>
-          </label>
+    <div class="auth-card">
+      <h2>مرحباً بك</h2>
+      <button class="btn-google" onclick="signInWithGoogle()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        متابعة بحساب Google
+      </button>
+      <div class="divider">أو</div>
+      <button class="btn-primary" onclick="show('signup')">إنشاء حساب جديد</button>
+      <button class="btn-secondary" onclick="show('signin')">تسجيل الدخول</button>
+    </div>
+  </div>
+
+  <!-- ══════════ Sign Up ══════════ -->
+  <div id="signup" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="show('auth')">← رجوع</button>
+      <h2>إنشاء حساب</h2>
+      <p>أنشئ حسابك في وِرْدٌ</p>
+    </div>
+    <div class="screen-body">
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group">
+            <label>الاسم الأول</label>
+            <input type="text" id="signup-firstname" placeholder="محمد" />
+          </div>
+          <div class="form-group">
+            <label>اسم العائلة</label>
+            <input type="text" id="signup-lastname" placeholder="العمري" />
+          </div>
         </div>
+        <div class="form-group" style="margin-top:12px">
+          <label>البريد الإلكتروني</label>
+          <input type="email" id="signup-email" placeholder="example@email.com" style="direction:ltr;text-align:left" />
+        </div>
+        <div class="form-group" style="margin-top:12px">
+          <label>كلمة المرور</label>
+          <input type="password" id="signup-password" placeholder="٦ أحرف على الأقل" style="direction:ltr;text-align:left" />
+        </div>
+        <div class="form-group" style="margin-top:12px">
+          <label>الجنس</label>
+          <div class="radio-group">
+            <label class="radio-card" id="signup-card-male" onclick="selectSignupGender('male')">
+              <div class="radio-icon">👨</div>
+              <div class="radio-label">ذكر</div>
+            </label>
+            <label class="radio-card" id="signup-card-female" onclick="selectSignupGender('female')">
+              <div class="radio-icon">👩</div>
+              <div class="radio-label">أنثى</div>
+            </label>
+          </div>
+        </div>
+        <div id="signup-error" class="err-text"></div>
       </div>
-      <button class="btn-primary" onclick="proceedFromWelcome()">متابعة ←</button>
+      <button class="btn-primary" onclick="signUp()">إنشاء الحساب ←</button>
+      <p class="auth-link">لديك حساب؟ <a onclick="show('signin')">تسجيل الدخول</a></p>
+    </div>
+  </div>
+
+  <!-- ══════════ Sign In ══════════ -->
+  <div id="signin" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="show('auth')">← رجوع</button>
+      <h2>تسجيل الدخول</h2>
+      <p>أهلاً بعودتك</p>
+    </div>
+    <div class="screen-body">
+      <div class="card">
+        <button class="btn-google" onclick="signInWithGoogle()" style="margin-bottom:14px">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          متابعة بحساب Google
+        </button>
+        <div class="divider" style="margin-bottom:14px">أو</div>
+        <div class="form-group">
+          <label>البريد الإلكتروني</label>
+          <input type="email" id="signin-email" placeholder="example@email.com" style="direction:ltr;text-align:left" />
+        </div>
+        <div class="form-group" style="margin-top:12px">
+          <label>كلمة المرور</label>
+          <input type="password" id="signin-password" placeholder="كلمة المرور" style="direction:ltr;text-align:left" />
+        </div>
+        <div id="signin-error" class="err-text"></div>
+      </div>
+      <button class="btn-primary" onclick="signIn()">تسجيل الدخول ←</button>
+      <p class="auth-link">ليس لديك حساب؟ <a onclick="show('signup')">إنشاء حساب</a></p>
     </div>
   </div>
 
   <!-- ══════════ Choose action ══════════ -->
   <div id="choose-action" class="screen">
     <div class="screen-header">
-      <button class="back-btn" onclick="show('welcome')">← رجوع</button>
+      <button class="back-btn" onclick="signOut()">← خروج</button>
       <h2 id="choose-hi">أهلاً!</h2>
       <p>ماذا تريد أن تفعل؟</p>
     </div>
@@ -506,7 +511,6 @@
       <p>أنشئ حلقة القرآن الخاصة بك</p>
     </div>
     <div class="screen-body">
-      <!-- name -->
       <div class="card">
         <h3>اسم المجموعة</h3>
         <div class="form-group">
@@ -514,7 +518,6 @@
         </div>
       </div>
 
-      <!-- goal unit -->
       <div class="card">
         <h3>هدف القراءة اليومي</h3>
         <div class="radio-group" style="margin-bottom:14px">
@@ -547,7 +550,6 @@
         </div>
       </div>
 
-      <!-- privacy -->
       <div class="card">
         <h3>الخصوصية</h3>
         <div class="option-cards">
@@ -568,10 +570,9 @@
         </div>
       </div>
 
-      <!-- restriction -->
       <div class="card">
         <h3>قيود العضوية</h3>
-        <div class="option-cards">
+        <div class="option-cards" id="restriction-options">
           <label class="option-card selected" id="restr-all" onclick="selectRestriction('all')">
             <div class="option-icon">👥</div>
             <div class="option-text">
@@ -618,24 +619,7 @@
       <div id="join-group-info" style="display:none">
         <div class="group-info-box" id="join-info-box"></div>
         <div class="card" style="margin-top:0">
-          <h3>بياناتك</h3>
-          <div class="form-group">
-            <input type="text" id="join-name" placeholder="اسمك…" />
-          </div>
-          <div class="form-group" style="margin-top:12px">
-            <label>الجنس</label>
-            <div class="radio-group">
-              <label class="radio-card" id="join-card-male" onclick="selectJoinGender('male')">
-                <div class="radio-icon">👨</div>
-                <div class="radio-label">ذكر</div>
-              </label>
-              <label class="radio-card" id="join-card-female" onclick="selectJoinGender('female')">
-                <div class="radio-icon">👩</div>
-                <div class="radio-label">أنثى</div>
-              </label>
-            </div>
-          </div>
-          <button class="btn-primary" style="margin-top:16px" onclick="joinGroup()">انضم الآن ✓</button>
+          <button class="btn-primary" style="margin-top:4px" onclick="joinGroup()">انضم الآن ✓</button>
         </div>
       </div>
     </div>
@@ -644,13 +628,12 @@
   <!-- ══════════ Dashboard ══════════ -->
   <div id="dashboard" class="screen">
     <div class="dash-header">
-      <button class="back-btn" onclick="leaveDashboard()" style="position:absolute;top:16px;right:16px">← خروج</button>
+      <button class="back-btn" onclick="leaveDashboard()">← خروج</button>
       <h2 id="dash-group-name">مجموعتي</h2>
       <div class="sub" id="dash-sub"></div>
       <div class="badges" id="dash-badges"></div>
     </div>
     <div class="dash-body">
-      <!-- my progress -->
       <div class="progress-card">
         <div class="pc-top">
           <span class="pc-label">تقدّمك اليوم</span>
@@ -669,7 +652,6 @@
         <div class="celebration" id="celebration">🎉 ما شاء الله! أتممت الهدف اليوم!</div>
       </div>
 
-      <!-- members -->
       <div class="members-card">
         <div class="mc-header">
           <div style="display:flex;align-items:center;gap:8px">
@@ -679,13 +661,12 @@
           <button class="add-member-btn" onclick="toggleAddMember()">+ إضافة عضو</button>
         </div>
         <div id="add-member-form" style="display:none;padding:12px 0 4px;border-top:1px solid #f3f4f6;margin-top:8px">
-          <input id="new-member-name" type="text" placeholder="الاسم" class="form-input" style="margin-bottom:8px" />
+          <input id="new-member-name" type="text" placeholder="الاسم" class="form-input" style="margin-bottom:8px;width:100%" />
           <button class="btn-primary" style="padding:10px" onclick="addMember()">إضافة ✓</button>
         </div>
         <div id="member-list"></div>
       </div>
 
-      <!-- invite -->
       <div class="invite-card">
         <div class="ic-title">دعوة الأصدقاء</div>
         <div class="invite-link-row">
@@ -702,85 +683,114 @@
 
 <script>
 // ══════════════════════════════════════════
-//  ⚙️  CONFIGURATION — Fill these in!
-//  1. Go to supabase.com → your project → Settings → API
-//  2. Copy "Project URL" and "anon public" key below
+//  ⚙️  CONFIGURATION
 // ══════════════════════════════════════════
 const SUPABASE_URL  = 'https://hiatftvcsheggxbrfbek.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpYXRmdHZjc2hlZ2d4YnJmYmVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODk2NDIsImV4cCI6MjA4NjY2NTY0Mn0.Xa627AYcsSX37vHGCgx-AR62Fc1-O4jIUr_-o4b1oeg';
-// ══════════════════════════════════════════
 
 const { createClient } = supabase;
-let db = null;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 const unitLabels = { page: 'صفحة', hizb: 'حزب', juz: 'جزء' };
 
 const state = {
-  userName: '', userGender: '',
+  user: null, profile: null,
   goalUnit: 'page', goalPages: 2,
   privacy: 'public', restriction: 'all',
   groupId: null, groupData: null,
   memberId: null, myPages: 0,
-  joinGender: '', joinGroupData: null,
+  joinGroupData: null,
 };
 
-// ── Init ──────────────────────────────────
+let signupGender = '';
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', async () => {
-  if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
-    document.getElementById('config-banner').style.display = 'block';
-    show('welcome');
+  // Check for invite link in URL
+  const params = new URLSearchParams(window.location.search);
+  const joinCode = params.get('join');
+  if (joinCode) localStorage.setItem('werd_pending_join', joinCode);
+
+  // Listen to auth state
+  db.auth.onAuthStateChange(async (event, session) => {
+    if (session?.user) {
+      state.user = session.user;
+      await loadProfile(session.user);
+    } else {
+      state.user = null;
+      state.profile = null;
+    }
+  });
+
+  const { data: { session } } = await db.auth.getSession();
+
+  if (session?.user) {
+    state.user = session.user;
+    await loadProfile(session.user);
+    await afterLogin();
+  } else {
+    show('auth');
+  }
+});
+
+async function loadProfile(user) {
+  const { data } = await db.from('profiles').select('*').eq('id', user.id).single();
+  if (data) {
+    state.profile = data;
+  } else if (user.user_metadata?.full_name) {
+    // Google user — create profile if missing
+    const nameParts = (user.user_metadata.full_name || '').split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName  = nameParts.slice(1).join(' ') || '';
+    const { data: newProfile } = await db.from('profiles').upsert({
+      id: user.id,
+      first_name: firstName,
+      last_name: lastName,
+      email: user.email,
+      gender: '',
+    }).select().single();
+    state.profile = newProfile;
+    // If Google user has no gender, ask them
+    if (!state.profile?.gender) {
+      show('complete-profile');
+      return;
+    }
+  }
+}
+
+async function afterLogin() {
+  if (!state.profile || !state.profile.gender) {
+    show('complete-profile');
     return;
   }
 
-  db = createClient(SUPABASE_URL, SUPABASE_ANON);
+  const displayName = state.profile.first_name || state.user.email;
+  document.getElementById('choose-hi').textContent = 'أهلاً ' + displayName + '!';
 
-  // Check if returning user
+  // Apply gender restrictions on create-group screen
+  applyGenderRestrictions();
+
+  // Check saved group session
   const savedMemberId = localStorage.getItem('werd_member_id');
   const savedGroupId  = localStorage.getItem('werd_group_id');
-
   if (savedMemberId && savedGroupId) {
     try {
       const { data: member } = await db.from('members').select('*').eq('id', savedMemberId).single();
       const { data: group }  = await db.from('groups').select('*').eq('id', savedGroupId).single();
       if (member && group) {
-        state.memberId   = member.id;
-        state.groupId    = group.id;
-        state.groupData  = group;
-        state.userName   = member.name;
-        state.userGender = member.gender;
-        state.myPages    = member.pages_today;
+        state.memberId  = member.id;
+        state.groupId   = group.id;
+        state.groupData = group;
+        state.myPages   = member.pages_today;
         await openDashboard();
         return;
       }
     } catch(e) {}
   }
 
-  // Check for invite link ?join=CODE
-  const params = new URLSearchParams(window.location.search);
-  const joinCode = params.get('join');
-  if (joinCode) {
-    localStorage.setItem('werd_pending_join', joinCode);
-  }
-
-  show('welcome');
-});
-
-// ── Welcome ───────────────────────────────
-function selectGender(g) {
-  state.userGender = g;
-  document.getElementById('card-male').classList.toggle('selected', g === 'male');
-  document.getElementById('card-female').classList.toggle('selected', g === 'female');
-}
-
-async function proceedFromWelcome() {
-  const name = document.getElementById('user-name').value.trim();
-  if (!name)             { toast('الرجاء إدخال اسمك'); return; }
-  if (!state.userGender) { toast('الرجاء اختيار الجنس'); return; }
-  state.userName = name;
-
-  document.getElementById('choose-hi').textContent = 'أهلاً ' + name + '!';
-
-  // If there's a pending join code, go directly to join screen
+  // Pending join code?
   const pendingJoin = localStorage.getItem('werd_pending_join');
   if (pendingJoin) {
     localStorage.removeItem('werd_pending_join');
@@ -793,7 +803,108 @@ async function proceedFromWelcome() {
   show('choose-action');
 }
 
-// ── Create Group ──────────────────────────
+function applyGenderRestrictions() {
+  const gender = state.profile?.gender;
+  if (!gender) return;
+  // If user is male, disable "women only" option
+  // If user is female, disable "men only" option
+  const menCard   = document.getElementById('restr-men');
+  const womenCard = document.getElementById('restr-women');
+  if (gender === 'male') {
+    womenCard.classList.add('disabled');
+    womenCard.title = 'لا يمكنك إنشاء مجموعة للنساء فقط';
+  } else if (gender === 'female') {
+    menCard.classList.add('disabled');
+    menCard.title = 'لا يمكنك إنشاء مجموعة للرجال فقط';
+  }
+}
+
+// ══════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════
+function selectSignupGender(g) {
+  signupGender = g;
+  document.getElementById('signup-card-male').classList.toggle('selected', g === 'male');
+  document.getElementById('signup-card-female').classList.toggle('selected', g === 'female');
+}
+
+async function signUp() {
+  const firstName = document.getElementById('signup-firstname').value.trim();
+  const lastName  = document.getElementById('signup-lastname').value.trim();
+  const email     = document.getElementById('signup-email').value.trim();
+  const password  = document.getElementById('signup-password').value;
+  const errEl     = document.getElementById('signup-error');
+
+  errEl.classList.remove('show');
+  if (!firstName)    return showErr(errEl, 'أدخل الاسم الأول');
+  if (!email)        return showErr(errEl, 'أدخل البريد الإلكتروني');
+  if (password.length < 6) return showErr(errEl, 'كلمة المرور يجب أن تكون ٦ أحرف على الأقل');
+  if (!signupGender) return showErr(errEl, 'اختر الجنس');
+
+  const { data, error } = await db.auth.signUp({
+    email, password,
+    options: { data: { first_name: firstName, last_name: lastName } }
+  });
+
+  if (error) return showErr(errEl, error.message);
+
+  // Create profile
+  await db.from('profiles').upsert({
+    id: data.user.id,
+    first_name: firstName,
+    last_name: lastName,
+    email,
+    gender: signupGender,
+  });
+
+  state.user = data.user;
+  state.profile = { first_name: firstName, last_name: lastName, email, gender: signupGender };
+
+  toast('تم إنشاء الحساب ✓');
+  await afterLogin();
+}
+
+async function signIn() {
+  const email    = document.getElementById('signin-email').value.trim();
+  const password = document.getElementById('signin-password').value;
+  const errEl    = document.getElementById('signin-error');
+
+  errEl.classList.remove('show');
+  if (!email || !password) return showErr(errEl, 'أدخل البريد وكلمة المرور');
+
+  const { data, error } = await db.auth.signInWithPassword({ email, password });
+  if (error) return showErr(errEl, 'بريد إلكتروني أو كلمة مرور غير صحيحة');
+
+  state.user = data.user;
+  await loadProfile(data.user);
+  await afterLogin();
+}
+
+async function signInWithGoogle() {
+  const { error } = await db.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + window.location.pathname }
+  });
+  if (error) toast('حدث خطأ في تسجيل الدخول');
+}
+
+async function signOut() {
+  if (realtimeSub) { realtimeSub.unsubscribe(); realtimeSub = null; }
+  localStorage.removeItem('werd_member_id');
+  localStorage.removeItem('werd_group_id');
+  await db.auth.signOut();
+  Object.assign(state, { user: null, profile: null, groupId: null, groupData: null, memberId: null, myPages: 0 });
+  show('auth');
+}
+
+function showErr(el, msg) {
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+// ══════════════════════════════════════════
+//  CREATE GROUP
+// ══════════════════════════════════════════
 function selectUnit(u) {
   state.goalUnit = u;
   ['page','hizb','juz'].forEach(x =>
@@ -825,6 +936,10 @@ function selectPrivacy(p) {
 }
 
 function selectRestriction(r) {
+  // Block invalid combos
+  const gender = state.profile?.gender;
+  if (r === 'women' && gender === 'male') { toast('لا يمكنك إنشاء مجموعة للنساء فقط'); return; }
+  if (r === 'men'   && gender === 'female') { toast('لا يمكنك إنشاء مجموعة للرجال فقط'); return; }
   state.restriction = r;
   ['all','men','women'].forEach(x =>
     document.getElementById('restr-' + x).classList.toggle('selected', x === r)
@@ -832,15 +947,17 @@ function selectRestriction(r) {
 }
 
 async function createGroup() {
-  const name = document.getElementById('group-name').value.trim();
+  const name   = document.getElementById('group-name').value.trim();
   if (!name) { toast('الرجاء إدخال اسم المجموعة'); return; }
 
+  const gender = state.profile?.gender;
+  if (state.restriction === 'women' && gender === 'male')   { toast('لا يمكنك إنشاء مجموعة للنساء فقط'); return; }
+  if (state.restriction === 'men'   && gender === 'female') { toast('لا يمكنك إنشاء مجموعة للرجال فقط'); return; }
+
   const btn = document.querySelector('#create-group .btn-primary:last-child');
-  btn.disabled = true;
-  btn.textContent = 'جاري الإنشاء…';
+  btn.disabled = true; btn.textContent = 'جاري الإنشاء…';
 
   try {
-    // Insert group
     const { data: group, error: ge } = await db.from('groups').insert({
       name,
       goal_amount: state.goalPages,
@@ -850,38 +967,29 @@ async function createGroup() {
     }).select().single();
     if (ge) throw ge;
 
-    // Insert self as member
+    const displayName = (state.profile.first_name + ' ' + state.profile.last_name).trim();
     const { data: member, error: me } = await db.from('members').insert({
       group_id: group.id,
-      name: state.userName,
-      gender: state.userGender,
+      name: displayName,
+      gender: state.profile.gender,
       pages_today: 0,
     }).select().single();
     if (me) throw me;
 
-    state.groupId   = group.id;
-    state.groupData = group;
-    state.memberId  = member.id;
-    state.myPages   = 0;
-
+    state.groupId = group.id; state.groupData = group;
+    state.memberId = member.id; state.myPages = 0;
     localStorage.setItem('werd_member_id', member.id);
     localStorage.setItem('werd_group_id', group.id);
-
     await openDashboard();
   } catch(e) {
     toast('حدث خطأ: ' + e.message);
-    btn.disabled = false;
-    btn.textContent = 'إنشاء المجموعة 🕌';
+    btn.disabled = false; btn.textContent = 'إنشاء المجموعة 🕌';
   }
 }
 
-// ── Join Group ────────────────────────────
-function selectJoinGender(g) {
-  state.joinGender = g;
-  document.getElementById('join-card-male').classList.toggle('selected', g === 'male');
-  document.getElementById('join-card-female').classList.toggle('selected', g === 'female');
-}
-
+// ══════════════════════════════════════════
+//  JOIN GROUP
+// ══════════════════════════════════════════
 async function lookupGroup() {
   const code = document.getElementById('invite-input').value.trim();
   if (!code) { toast('أدخل رمز الدعوة'); return; }
@@ -896,55 +1004,37 @@ async function lookupGroup() {
     <div class="gi-meta">الهدف: ${group.goal_amount} ${unitLabel} يومياً</div>
   `;
   document.getElementById('join-group-info').style.display = 'block';
-
-  // Pre-fill name/gender from welcome if set
-  if (state.userName) document.getElementById('join-name').value = state.userName;
-  if (state.userGender) selectJoinGender(state.userGender);
 }
 
 async function joinGroup() {
-  const name = document.getElementById('join-name').value.trim() || state.userName;
-  const gender = state.joinGender || state.userGender;
-  const group = state.joinGroupData;
+  const group  = state.joinGroupData;
+  const gender = state.profile?.gender;
+  const name   = (state.profile.first_name + ' ' + state.profile.last_name).trim();
 
-  if (!name)   { toast('أدخل اسمك'); return; }
-  if (!gender) { toast('اختر جنسك'); return; }
   if (!group)  { toast('ابحث عن المجموعة أولاً'); return; }
 
-  // Check gender restriction
-  if (group.restriction === 'men' && gender === 'female') {
-    toast('هذه المجموعة للرجال فقط'); return;
-  }
-  if (group.restriction === 'women' && gender === 'male') {
-    toast('هذه المجموعة للنساء فقط'); return;
-  }
+  if (group.restriction === 'men'   && gender === 'female') { toast('هذه المجموعة للرجال فقط'); return; }
+  if (group.restriction === 'women' && gender === 'male')   { toast('هذه المجموعة للنساء فقط'); return; }
 
   try {
     const { data: member, error } = await db.from('members').insert({
-      group_id: group.id,
-      name,
-      gender,
-      pages_today: 0,
+      group_id: group.id, name, gender, pages_today: 0,
     }).select().single();
     if (error) throw error;
 
-    state.groupId    = group.id;
-    state.groupData  = group;
-    state.memberId   = member.id;
-    state.userName   = name;
-    state.userGender = gender;
-    state.myPages    = 0;
-
+    state.groupId = group.id; state.groupData = group;
+    state.memberId = member.id; state.myPages = 0;
     localStorage.setItem('werd_member_id', member.id);
     localStorage.setItem('werd_group_id', group.id);
-
     await openDashboard();
   } catch(e) {
     toast('حدث خطأ: ' + e.message);
   }
 }
 
-// ── Dashboard ─────────────────────────────
+// ══════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════
 let realtimeSub = null;
 
 async function openDashboard() {
@@ -952,14 +1042,12 @@ async function openDashboard() {
   document.getElementById('dash-group-name').textContent = group.name;
   document.getElementById('pages-goal-label').textContent = '/ ' + group.goal_amount + ' ' + (unitLabels[group.goal_unit] || 'صفحة');
 
-  // badges
   const badgeEl = document.getElementById('dash-badges');
   badgeEl.innerHTML = '';
-  if (group.privacy === 'private')      badgeEl.innerHTML += '<span class="badge">🔒 خاصة</span>';
-  if (group.restriction === 'men')      badgeEl.innerHTML += '<span class="badge">👨 للرجال فقط</span>';
-  if (group.restriction === 'women')    badgeEl.innerHTML += '<span class="badge">👩 للنساء فقط</span>';
+  if (group.privacy === 'private')   badgeEl.innerHTML += '<span class="badge">🔒 خاصة</span>';
+  if (group.restriction === 'men')   badgeEl.innerHTML += '<span class="badge">👨 للرجال فقط</span>';
+  if (group.restriction === 'women') badgeEl.innerHTML += '<span class="badge">👩 للنساء فقط</span>';
 
-  // invite link
   const baseUrl = window.location.origin + window.location.pathname;
   document.getElementById('invite-link-display').textContent = baseUrl + '?join=' + group.invite_code;
 
@@ -971,11 +1059,8 @@ async function openDashboard() {
 async function loadMembers() {
   const { data: members } = await db.from('members').select('*').eq('group_id', state.groupId);
   if (!members) return;
-
-  // Update my pages from DB
   const me = members.find(m => m.id === state.memberId);
   if (me) state.myPages = me.pages_today;
-
   renderMembers(members);
   updateMyProgress();
 }
@@ -984,31 +1069,28 @@ function renderMembers(members) {
   const group = state.groupData;
   const goal  = group.goal_amount;
   const unit  = unitLabels[group.goal_unit] || 'صفحة';
-
   document.getElementById('members-count').textContent = members.length + ' عضو';
   document.getElementById('dash-sub').textContent = members.length + ' أعضاء · هدف ' + goal + ' ' + unit;
 
   const list = document.getElementById('member-list');
   list.innerHTML = '';
-  members
-    .sort((a, b) => b.pages_today - a.pages_today)
-    .forEach(m => {
-      const pct  = Math.min(100, (m.pages_today / goal) * 100);
-      const done = m.pages_today >= goal;
-      const isMe = m.id === state.memberId;
-      list.innerHTML += `
-        <div class="member-item">
-          <div class="member-avatar ${isMe ? 'me' : ''}">${m.name[0]}</div>
-          <div class="member-info">
-            <div class="member-name-row">
-              <span class="member-name">${m.name}${isMe ? ' (أنت)' : ''}</span>
-              <span class="member-count">${m.pages_today} ${unit}</span>
-            </div>
-            <div class="member-bar-bg"><div class="member-bar-fill" style="width:${pct}%"></div></div>
+  members.sort((a, b) => b.pages_today - a.pages_today).forEach(m => {
+    const pct  = Math.min(100, (m.pages_today / goal) * 100);
+    const done = m.pages_today >= goal;
+    const isMe = m.id === state.memberId;
+    list.innerHTML += `
+      <div class="member-item">
+        <div class="member-avatar ${isMe ? 'me' : ''}">${m.name[0]}</div>
+        <div class="member-info">
+          <div class="member-name-row">
+            <span class="member-name">${m.name}${isMe ? ' (أنت)' : ''}</span>
+            <span class="member-count">${m.pages_today} ${unit}</span>
           </div>
-          <div class="member-check">${done ? '✅' : ''}</div>
-        </div>`;
-    });
+          <div class="member-bar-bg"><div class="member-bar-fill" style="width:${pct}%"></div></div>
+        </div>
+        <div class="member-check">${done ? '✅' : ''}</div>
+      </div>`;
+  });
 }
 
 function updateMyProgress() {
@@ -1022,64 +1104,43 @@ function updateMyProgress() {
 async function addPages(n) {
   state.myPages += n;
   updateMyProgress();
-
-  await db.from('members')
-    .update({ pages_today: state.myPages })
-    .eq('id', state.memberId);
+  await db.from('members').update({ pages_today: state.myPages }).eq('id', state.memberId);
 }
 
 function subscribeToMembers() {
   if (realtimeSub) realtimeSub.unsubscribe();
-
   realtimeSub = db
     .channel('members-' + state.groupId)
     .on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'members',
+      event: '*', schema: 'public', table: 'members',
       filter: 'group_id=eq.' + state.groupId,
-    }, async () => {
-      await loadMembers();
-    })
+    }, async () => { await loadMembers(); })
     .subscribe();
 }
 
-// ── Invite ────────────────────────────────
-// ── Leave Dashboard ───────────────────────
 function leaveDashboard() {
   if (realtimeSub) { realtimeSub.unsubscribe(); realtimeSub = null; }
   localStorage.removeItem('werd_member_id');
   localStorage.removeItem('werd_group_id');
-  Object.assign(state, { groupId: null, groupData: null, memberId: null, myPages: 0 });
-  show('welcome');
+  Object.assign(state, { groupId: null, groupData: null, memberId: null, myPages: 0, joinGroupData: null });
+  show('choose-action');
 }
 
-// ── Add Member from Dashboard ──────────────
-let newMemberGender = '';
-
+// ══════════════════════════════════════════
+//  ADD MEMBER FROM DASHBOARD
+// ══════════════════════════════════════════
 function toggleAddMember() {
   const form = document.getElementById('add-member-form');
-  form.style.display = form.style.display === 'none' ? 'block' : 'none';
-  newMemberGender = '';
-  document.getElementById('new-member-name').value = '';
-  document.getElementById('new-gender-male').classList.remove('active');
-  document.getElementById('new-gender-female').classList.remove('active');
-}
-
-function setNewGender(g) {
-  newMemberGender = g;
-  document.getElementById('new-gender-male').classList.toggle('active', g === 'male');
-  document.getElementById('new-gender-female').classList.toggle('active', g === 'female');
+  const isHidden = form.style.display === 'none';
+  form.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) document.getElementById('new-member-name').value = '';
 }
 
 async function addMember() {
   const name = document.getElementById('new-member-name').value.trim();
   if (!name) return toast('أدخل الاسم');
   const { error } = await db.from('members').insert({
-    group_id: state.groupId,
-    name,
-    gender: 'male',
-    pages_today: 0
+    group_id: state.groupId, name, gender: 'male', pages_today: 0
   });
   if (error) return toast('حدث خطأ، حاول مجدداً');
   toast('تمت إضافة العضو ✓');
@@ -1092,7 +1153,9 @@ function copyLink() {
   toast('تم نسخ الرابط!');
 }
 
-// ── Helpers ───────────────────────────────
+// ══════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');

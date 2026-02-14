@@ -3,6 +3,21 @@
 -- Run this once in your Supabase SQL Editor
 -- ================================================
 
+-- Profiles table (linked to Supabase Auth users)
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  first_name text not null default '',
+  last_name  text not null default '',
+  email      text not null default '',
+  gender     text not null default '',  -- 'male' | 'female'
+  created_at timestamptz default now()
+);
+
+alter table profiles enable row level security;
+create policy "users read own profile"   on profiles for select using (auth.uid() = id);
+create policy "users insert own profile" on profiles for insert with check (auth.uid() = id);
+create policy "users update own profile" on profiles for update using (auth.uid() = id);
+
 -- Groups table
 create table if not exists groups (
   id uuid primary key default gen_random_uuid(),
