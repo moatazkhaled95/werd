@@ -402,6 +402,29 @@
     </div>
   </div>
 
+  <!-- ══════════ Complete Profile ══════════ -->
+  <div id="complete-profile" class="screen">
+    <div class="screen-header">
+      <h2>أكمل ملفك الشخصي</h2>
+    </div>
+    <div class="auth-card" style="margin-top:16px">
+      <p style="font-size:13px;color:#6b7280;margin-bottom:16px;text-align:center">نحتاج بعض المعلومات لإكمال حسابك</p>
+      <input id="cp-first" type="text" placeholder="الاسم الأول *" class="form-input" style="margin-bottom:10px;width:100%" />
+      <input id="cp-last" type="text" placeholder="اسم العائلة" class="form-input" style="margin-bottom:16px;width:100%" />
+      <p style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px">الجنس *</p>
+      <div style="display:flex;gap:10px;margin-bottom:16px">
+        <div id="cp-card-male" class="gender-card" onclick="selectCpGender('male')">
+          <span style="font-size:24px">👨</span><span>ذكر</span>
+        </div>
+        <div id="cp-card-female" class="gender-card" onclick="selectCpGender('female')">
+          <span style="font-size:24px">👩</span><span>أنثى</span>
+        </div>
+      </div>
+      <div id="cp-error" class="error-msg"></div>
+      <button class="btn-primary" onclick="saveCompleteProfile()">حفظ والمتابعة</button>
+    </div>
+  </div>
+
   <!-- ══════════ Auth Landing ══════════ -->
   <div id="auth" class="screen">
     <div class="logo">
@@ -815,6 +838,31 @@ async function afterLogin() {
 // ══════════════════════════════════════════
 //  AUTH
 // ══════════════════════════════════════════
+let cpGender = '';
+function selectCpGender(g) {
+  cpGender = g;
+  document.getElementById('cp-card-male').classList.toggle('selected', g === 'male');
+  document.getElementById('cp-card-female').classList.toggle('selected', g === 'female');
+}
+async function saveCompleteProfile() {
+  const firstName = document.getElementById('cp-first').value.trim();
+  const errEl = document.getElementById('cp-error');
+  errEl.classList.remove('show');
+  if (!firstName) return showErr(errEl, 'أدخل اسمك الأول');
+  if (!cpGender) return showErr(errEl, 'اختر الجنس');
+  const lastName = document.getElementById('cp-last').value.trim();
+  const { error } = await db.from('profiles').upsert({
+    id: state.user.id,
+    first_name: firstName,
+    last_name: lastName,
+    email: state.user.email || '',
+    gender: cpGender,
+  });
+  if (error) return showErr(errEl, 'حدث خطأ، حاول مجدداً');
+  state.profile = { first_name: firstName, last_name: lastName, email: state.user.email, gender: cpGender };
+  await afterLogin();
+}
+
 function selectSignupGender(g) {
   signupGender = g;
   document.getElementById('signup-card-male').classList.toggle('selected', g === 'male');
