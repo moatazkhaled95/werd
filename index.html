@@ -759,17 +759,17 @@ window.addEventListener('DOMContentLoaded', () => {
   const joinCode = params.get('join');
   if (joinCode) localStorage.setItem('werd_pending_join', joinCode);
 
-  // Single auth handler — covers normal load, email verification redirect, and Google OAuth redirect
-  let authHandled = false;
   db.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_OUT') { authHandled = false; show('auth'); return; }
-    if (authHandled && event === 'INITIAL_SESSION') return;
-    if (session?.user) {
-      authHandled = true;
-      state.user = session.user;
-      await loadProfile(session.user);
-      await afterLogin();
-    } else if (event === 'INITIAL_SESSION') {
+    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+      if (session?.user) {
+        state.user = session.user;
+        await loadProfile(session.user);
+        await afterLogin();
+      } else {
+        show('auth');
+      }
+    } else if (event === 'SIGNED_OUT') {
+      state.user = null; state.profile = null;
       show('auth');
     }
   });
@@ -914,16 +914,8 @@ async function signUp() {
 
   state.user = data.user;
   state.profile = { first_name: firstName, last_name: lastName, email, gender: signupGender };
-
-  // If email confirmation required, show verify screen
-  if (!data.session) {
-    document.getElementById('verify-email-addr').textContent = email;
-    show('verify-email');
-    return;
-  }
-
   toast('تم إنشاء الحساب ✓');
-  // onAuthStateChange will fire and handle navigation
+  // onAuthStateChange SIGNED_IN will fire and handle navigation
 }
 
 async function checkVerification() {
