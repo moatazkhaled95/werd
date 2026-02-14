@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>وِرْدٌ</title>
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      background: #f0fdf4;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 428px;
+      min-height: 100vh;
+      background: #fff;
+      position: relative;
+    }
+
+    /* ── Config banner (shown when keys not set) ── */
+    #config-banner {
+      background: #fef3c7;
+      border-bottom: 2px solid #f59e0b;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #92400e;
+      display: none;
+    }
+    #config-banner a { color: #b45309; font-weight: 700; }
+
+    /* ── Screens ── */
+    .screen { display: none; flex-direction: column; min-height: 100vh; }
+    .screen.active { display: flex; }
+
+    /* ── Loading ── */
+    #loading {
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(160deg, #064e3b, #047857);
+      color: #fff;
+      font-size: 18px;
+      gap: 16px;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Welcome ── */
+    #welcome {
+      background: linear-gradient(160deg, #064e3b 0%, #065f46 50%, #047857 100%);
+      justify-content: center;
+      align-items: center;
+      padding: 40px 24px;
+      gap: 32px;
+    }
+    .logo { text-align: center; }
+    .logo-icon {
+      width: 80px; height: 80px;
+      background: rgba(255,255,255,.15);
+      border-radius: 24px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 40px;
+    }
+    .logo h1 { color: #fff; font-size: 28px; font-weight: 700; }
+    .logo p  { color: #a7f3d0; font-size: 14px; margin-top: 4px; }
+
+    .welcome-form {
+      background: #fff;
+      border-radius: 20px;
+      padding: 24px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    .form-group input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color .2s;
+      text-align: right;
+    }
+    .form-group input[type="text"]:focus { border-color: #059669; }
+
+    .radio-group { display: flex; gap: 10px; }
+    .radio-card {
+      flex: 1;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      user-select: none;
+    }
+    .radio-card input { display: none; }
+    .radio-card.selected { border-color: #059669; background: #ecfdf5; }
+    .radio-card .radio-icon { font-size: 22px; margin-bottom: 4px; }
+    .radio-card .radio-label { font-size: 13px; font-weight: 600; color: #374151; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #059669, #047857);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .btn-primary:hover { opacity: .9; }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 13px;
+      background: transparent;
+      color: #059669;
+      border: 2px solid #059669;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-secondary:hover { background: #ecfdf5; }
+
+    /* ── Create group / Join group ── */
+    #create-group, #join-group { padding: 0; background: #f9fafb; }
+
+    .screen-header {
+      background: linear-gradient(135deg, #064e3b, #047857);
+      padding: 56px 24px 24px;
+      color: #fff;
+      position: relative;
+    }
+    .screen-header h2 { font-size: 22px; font-weight: 700; }
+    .screen-header p  { font-size: 13px; color: #a7f3d0; margin-top: 4px; }
+
+    .back-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(255,255,255,.15);
+      border: none;
+      color: #fff;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background .2s;
+    }
+    .back-btn:hover { background: rgba(255,255,255,.25); }
+
+    .screen-body {
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .card h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #6b7280;
+      letter-spacing: .05em;
+      margin-bottom: 14px;
+    }
+
+    .quick-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .quick-btn {
+      padding: 6px 14px;
+      border: 2px solid #d1fae5;
+      border-radius: 20px;
+      background: #f0fdf4;
+      color: #059669;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .quick-btn:hover, .quick-btn.selected { background: #059669; color: #fff; border-color: #059669; }
+
+    .goal-input-row { display: flex; align-items: center; gap: 12px; }
+    .goal-input-row input[type="number"] {
+      width: 80px;
+      padding: 10px 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      outline: none;
+      color: #059669;
+    }
+    .goal-input-row input:focus { border-color: #059669; }
+    .goal-input-row span { font-size: 14px; color: #6b7280; }
+
+    .option-cards { display: flex; flex-direction: column; gap: 8px; }
+    .option-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .option-card.selected { border-color: #059669; background: #ecfdf5; }
+    .option-card input { display: none; }
+    .option-icon { font-size: 20px; }
+    .option-text .option-title { font-size: 14px; font-weight: 600; color: #1f2937; }
+    .option-text .option-desc  { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+
+    /* join group info box */
+    .group-info-box {
+      background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+      border: 2px solid #6ee7b7;
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+    .group-info-box .gi-name { font-size: 18px; font-weight: 700; color: #065f46; }
+    .group-info-box .gi-meta { font-size: 13px; color: #059669; margin-top: 4px; }
+
+    /* ── Dashboard ── */
+    #dashboard { background: #f0fdf4; overflow-y: auto; }
+
+    .dash-header {
+      background: linear-gradient(135deg, #064e3b, #047857);
+      padding: 52px 20px 20px;
+      color: #fff;
+    }
+    .dash-header h2 { font-size: 20px; font-weight: 700; }
+    .dash-header .sub { font-size: 13px; color: #a7f3d0; margin-top: 2px; }
+
+    .badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: rgba(255,255,255,.15);
+      color: #d1fae5;
+    }
+
+    .dash-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+    .progress-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .pc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .pc-label { font-size: 13px; font-weight: 700; color: #374151; }
+    .pc-count { font-size: 22px; font-weight: 800; color: #059669; }
+    .pc-goal  { font-size: 13px; color: #9ca3af; }
+
+    .progress-bar-bg {
+      background: #e5e7eb;
+      border-radius: 99px;
+      height: 10px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+    .progress-bar-fill {
+      background: linear-gradient(90deg, #34d399, #059669);
+      height: 100%;
+      border-radius: 99px;
+      transition: width .4s ease;
+    }
+
+    .inc-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .inc-btn {
+      padding: 8px 14px;
+      background: #ecfdf5;
+      border: 1px solid #d1fae5;
+      border-radius: 10px;
+      color: #059669;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .inc-btn:hover { background: #059669; color: #fff; }
+
+    .celebration {
+      background: linear-gradient(135deg, #059669, #047857);
+      color: #fff;
+      border-radius: 12px;
+      padding: 12px 16px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      display: none;
+      margin-top: 12px;
+    }
+    .celebration.show { display: block; }
+
+    /* members */
+    .members-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .mc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .mc-title { font-size: 13px; font-weight: 700; color: #374151; }
+
+    .member-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .member-item:last-child { border-bottom: none; }
+    .member-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #34d399, #059669);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .member-avatar.me { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .member-info { flex: 1; }
+    .member-name-row { display: flex; justify-content: space-between; align-items: center; }
+    .member-name { font-size: 14px; font-weight: 600; color: #1f2937; }
+    .member-count { font-size: 12px; color: #059669; font-weight: 700; }
+    .member-bar-bg { background: #e5e7eb; border-radius: 99px; height: 5px; margin-top: 4px; overflow: hidden; }
+    .member-bar-fill { background: #34d399; height: 100%; border-radius: 99px; transition: width .4s; }
+    .member-check { font-size: 18px; }
+
+    /* invite */
+    .invite-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      margin-bottom: 30px;
+    }
+    .invite-card .ic-title { font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 12px; }
+    .invite-link-row { display: flex; gap: 8px; }
+    .invite-link-box {
+      flex: 1;
+      padding: 10px 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 12px;
+      color: #6b7280;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      direction: ltr;
+    }
+    .copy-btn {
+      padding: 10px 14px;
+      background: #059669;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .copy-btn:hover { background: #047857; }
+
+    /* toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1f2937;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: transform .3s;
+      z-index: 999;
+      white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Config banner -->
+  <div id="config-banner">
+    ⚠️ لم يتم إعداد Supabase بعد. اتبع تعليمات الإعداد في الكود.
+  </div>
+
+  <!-- ══════════ Loading ══════════ -->
+  <div id="loading" class="screen active">
+    <div class="spinner"></div>
+    <span>جاري التحميل…</span>
+  </div>
+
+  <!-- ══════════ Welcome ══════════ -->
+  <div id="welcome" class="screen">
+    <div class="logo">
+      <div class="logo-icon">📖</div>
+      <h1>وِرْدٌ</h1>
+      <p>اقرأ · تابع · وشجّع بعضكم</p>
+    </div>
+    <div class="welcome-form">
+      <div class="form-group">
+        <label>اسمك</label>
+        <input type="text" id="user-name" placeholder="أدخل اسمك…" />
+      </div>
+      <div class="form-group">
+        <label>الجنس</label>
+        <div class="radio-group">
+          <label class="radio-card" id="card-male" onclick="selectGender('male')">
+            <input type="radio" name="gender" value="male" />
+            <div class="radio-icon">👨</div>
+            <div class="radio-label">ذكر</div>
+          </label>
+          <label class="radio-card" id="card-female" onclick="selectGender('female')">
+            <input type="radio" name="gender" value="female" />
+            <div class="radio-icon">👩</div>
+            <div class="radio-label">أنثى</div>
+          </label>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="proceedFromWelcome()">متابعة ←</button>
+    </div>
+  </div>
+
+  <!-- ══════════ Choose action ══════════ -->
+  <div id="choose-action" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="show('welcome')">← رجوع</button>
+      <h2 id="choose-hi">أهلاً!</h2>
+      <p>ماذا تريد أن تفعل؟</p>
+    </div>
+    <div class="screen-body">
+      <button class="btn-primary" style="margin-top:8px" onclick="show('create-group')">إنشاء مجموعة جديدة 🕌</button>
+      <button class="btn-secondary" onclick="show('join-group')">الانضمام لمجموعة موجودة 🔗</button>
+    </div>
+  </div>
+
+  <!-- ══════════ Create Group ══════════ -->
+  <div id="create-group" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="show('choose-action')">← رجوع</button>
+      <h2>إنشاء مجموعة</h2>
+      <p>أنشئ حلقة القرآن الخاصة بك</p>
+    </div>
+    <div class="screen-body">
+      <!-- name -->
+      <div class="card">
+        <h3>اسم المجموعة</h3>
+        <div class="form-group">
+          <input type="text" id="group-name" placeholder="مثال: حلقة العائلة، مجموعة رمضان…" />
+        </div>
+      </div>
+
+      <!-- goal unit -->
+      <div class="card">
+        <h3>هدف القراءة اليومي</h3>
+        <div class="radio-group" style="margin-bottom:14px">
+          <label class="radio-card selected" id="unit-page" onclick="selectUnit('page')">
+            <input type="radio" name="unit" value="page" />
+            <div class="radio-icon">📄</div>
+            <div class="radio-label">صفحة</div>
+          </label>
+          <label class="radio-card" id="unit-hizb" onclick="selectUnit('hizb')">
+            <input type="radio" name="unit" value="hizb" />
+            <div class="radio-icon">📖</div>
+            <div class="radio-label">حزب</div>
+          </label>
+          <label class="radio-card" id="unit-juz" onclick="selectUnit('juz')">
+            <input type="radio" name="unit" value="juz" />
+            <div class="radio-icon">📗</div>
+            <div class="radio-label">جزء</div>
+          </label>
+        </div>
+        <div class="goal-input-row" style="margin-bottom:10px">
+          <input type="number" id="goal-pages" value="2" min="1" max="100" oninput="syncGoalInput()" />
+          <span id="goal-unit-label">صفحة في اليوم</span>
+        </div>
+        <div class="quick-btns" id="goal-quick">
+          <button class="quick-btn" onclick="setGoal(1)">١</button>
+          <button class="quick-btn selected" onclick="setGoal(2)">٢</button>
+          <button class="quick-btn" onclick="setGoal(3)">٣</button>
+          <button class="quick-btn" onclick="setGoal(4)">٤</button>
+          <button class="quick-btn" onclick="setGoal(5)">٥</button>
+        </div>
+      </div>
+
+      <!-- privacy -->
+      <div class="card">
+        <h3>الخصوصية</h3>
+        <div class="option-cards">
+          <label class="option-card selected" id="priv-public" onclick="selectPrivacy('public')">
+            <div class="option-icon">🌐</div>
+            <div class="option-text">
+              <div class="option-title">عامة</div>
+              <div class="option-desc">يمكن للجميع الانضمام عبر الرابط</div>
+            </div>
+          </label>
+          <label class="option-card" id="priv-private" onclick="selectPrivacy('private')">
+            <div class="option-icon">🔒</div>
+            <div class="option-text">
+              <div class="option-title">خاصة</div>
+              <div class="option-desc">بالدعوة فقط</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- restriction -->
+      <div class="card">
+        <h3>قيود العضوية</h3>
+        <div class="option-cards">
+          <label class="option-card selected" id="restr-all" onclick="selectRestriction('all')">
+            <div class="option-icon">👥</div>
+            <div class="option-text">
+              <div class="option-title">الجميع</div>
+              <div class="option-desc">مفتوح لكل الأعضاء</div>
+            </div>
+          </label>
+          <label class="option-card" id="restr-men" onclick="selectRestriction('men')">
+            <div class="option-icon">👨</div>
+            <div class="option-text">
+              <div class="option-title">للرجال فقط</div>
+              <div class="option-desc">يُقبل الأعضاء الذكور فقط</div>
+            </div>
+          </label>
+          <label class="option-card" id="restr-women" onclick="selectRestriction('women')">
+            <div class="option-icon">👩</div>
+            <div class="option-text">
+              <div class="option-title">للنساء فقط</div>
+              <div class="option-desc">يُقبل الأعضاء الإناث فقط</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="createGroup()">إنشاء المجموعة 🕌</button>
+    </div>
+  </div>
+
+  <!-- ══════════ Join Group ══════════ -->
+  <div id="join-group" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="show('choose-action')">← رجوع</button>
+      <h2>الانضمام لمجموعة</h2>
+      <p>أدخل رمز الدعوة أو افتح الرابط المشارك</p>
+    </div>
+    <div class="screen-body">
+      <div class="card" id="join-lookup-card">
+        <h3>رمز الدعوة</h3>
+        <div class="form-group" style="display:flex;gap:8px">
+          <input type="text" id="invite-input" placeholder="أدخل الرمز…" style="direction:ltr;text-align:left" />
+          <button class="btn-primary" style="width:auto;padding:12px 18px;white-space:nowrap" onclick="lookupGroup()">بحث</button>
+        </div>
+      </div>
+      <div id="join-group-info" style="display:none">
+        <div class="group-info-box" id="join-info-box"></div>
+        <div class="card" style="margin-top:0">
+          <h3>بياناتك</h3>
+          <div class="form-group">
+            <input type="text" id="join-name" placeholder="اسمك…" />
+          </div>
+          <div class="form-group" style="margin-top:12px">
+            <label>الجنس</label>
+            <div class="radio-group">
+              <label class="radio-card" id="join-card-male" onclick="selectJoinGender('male')">
+                <div class="radio-icon">👨</div>
+                <div class="radio-label">ذكر</div>
+              </label>
+              <label class="radio-card" id="join-card-female" onclick="selectJoinGender('female')">
+                <div class="radio-icon">👩</div>
+                <div class="radio-label">أنثى</div>
+              </label>
+            </div>
+          </div>
+          <button class="btn-primary" style="margin-top:16px" onclick="joinGroup()">انضم الآن ✓</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Dashboard ══════════ -->
+  <div id="dashboard" class="screen">
+    <div class="dash-header">
+      <h2 id="dash-group-name">مجموعتي</h2>
+      <div class="sub" id="dash-sub"></div>
+      <div class="badges" id="dash-badges"></div>
+    </div>
+    <div class="dash-body">
+      <!-- my progress -->
+      <div class="progress-card">
+        <div class="pc-top">
+          <span class="pc-label">تقدّمك اليوم</span>
+          <span><span class="pc-count" id="pages-read">0</span> <span class="pc-goal" id="pages-goal-label"></span></span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="my-bar" style="width:0%"></div>
+        </div>
+        <div class="inc-btns">
+          <button class="inc-btn" onclick="addPages(1)">+١</button>
+          <button class="inc-btn" onclick="addPages(2)">+٢</button>
+          <button class="inc-btn" onclick="addPages(3)">+٣</button>
+          <button class="inc-btn" onclick="addPages(5)">+٥</button>
+          <button class="inc-btn" onclick="addPages(10)">+١٠</button>
+        </div>
+        <div class="celebration" id="celebration">🎉 ما شاء الله! أتممت الهدف اليوم!</div>
+      </div>
+
+      <!-- members -->
+      <div class="members-card">
+        <div class="mc-header">
+          <span class="mc-title">الأعضاء</span>
+          <span id="members-count" style="font-size:12px;color:#9ca3af"></span>
+        </div>
+        <div id="member-list"></div>
+      </div>
+
+      <!-- invite -->
+      <div class="invite-card">
+        <div class="ic-title">دعوة الأصدقاء</div>
+        <div class="invite-link-row">
+          <div class="invite-link-box" id="invite-link-display"></div>
+          <button class="copy-btn" onclick="copyLink()">نسخ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  ⚙️  CONFIGURATION — Fill these in!
+//  1. Go to supabase.com → your project → Settings → API
+//  2. Copy "Project URL" and "anon public" key below
+// ══════════════════════════════════════════
+const SUPABASE_URL  = 'https://hiatftvcsheggxbrfbek.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpYXRmdHZjc2hlZ2d4YnJmYmVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODk2NDIsImV4cCI6MjA4NjY2NTY0Mn0.Xa627AYcsSX37vHGCgx-AR62Fc1-O4jIUr_-o4b1oeg';
+// ══════════════════════════════════════════
+
+const { createClient } = supabase;
+let db = null;
+
+const unitLabels = { page: 'صفحة', hizb: 'حزب', juz: 'جزء' };
+
+const state = {
+  userName: '', userGender: '',
+  goalUnit: 'page', goalPages: 2,
+  privacy: 'public', restriction: 'all',
+  groupId: null, groupData: null,
+  memberId: null, myPages: 0,
+  joinGender: '', joinGroupData: null,
+};
+
+// ── Init ──────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+    document.getElementById('config-banner').style.display = 'block';
+    show('welcome');
+    return;
+  }
+
+  db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  // Check if returning user
+  const savedMemberId = localStorage.getItem('werd_member_id');
+  const savedGroupId  = localStorage.getItem('werd_group_id');
+
+  if (savedMemberId && savedGroupId) {
+    try {
+      const { data: member } = await db.from('members').select('*').eq('id', savedMemberId).single();
+      const { data: group }  = await db.from('groups').select('*').eq('id', savedGroupId).single();
+      if (member && group) {
+        state.memberId   = member.id;
+        state.groupId    = group.id;
+        state.groupData  = group;
+        state.userName   = member.name;
+        state.userGender = member.gender;
+        state.myPages    = member.pages_today;
+        await openDashboard();
+        return;
+      }
+    } catch(e) {}
+  }
+
+  // Check for invite link ?join=CODE
+  const params = new URLSearchParams(window.location.search);
+  const joinCode = params.get('join');
+  if (joinCode) {
+    localStorage.setItem('werd_pending_join', joinCode);
+  }
+
+  show('welcome');
+});
+
+// ── Welcome ───────────────────────────────
+function selectGender(g) {
+  state.userGender = g;
+  document.getElementById('card-male').classList.toggle('selected', g === 'male');
+  document.getElementById('card-female').classList.toggle('selected', g === 'female');
+}
+
+async function proceedFromWelcome() {
+  const name = document.getElementById('user-name').value.trim();
+  if (!name)             { toast('الرجاء إدخال اسمك'); return; }
+  if (!state.userGender) { toast('الرجاء اختيار الجنس'); return; }
+  state.userName = name;
+
+  document.getElementById('choose-hi').textContent = 'أهلاً ' + name + '!';
+
+  // If there's a pending join code, go directly to join screen
+  const pendingJoin = localStorage.getItem('werd_pending_join');
+  if (pendingJoin) {
+    localStorage.removeItem('werd_pending_join');
+    show('join-group');
+    document.getElementById('invite-input').value = pendingJoin;
+    await lookupGroup();
+    return;
+  }
+
+  show('choose-action');
+}
+
+// ── Create Group ──────────────────────────
+function selectUnit(u) {
+  state.goalUnit = u;
+  ['page','hizb','juz'].forEach(x =>
+    document.getElementById('unit-' + x).classList.toggle('selected', x === u)
+  );
+  document.getElementById('goal-unit-label').textContent = unitLabels[u] + ' في اليوم';
+}
+
+function setGoal(n) {
+  state.goalPages = n;
+  document.getElementById('goal-pages').value = n;
+  document.querySelectorAll('#goal-quick .quick-btn').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.textContent) === n);
+  });
+}
+
+function syncGoalInput() {
+  const v = parseInt(document.getElementById('goal-pages').value) || 1;
+  state.goalPages = v;
+  document.querySelectorAll('#goal-quick .quick-btn').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.textContent) === v);
+  });
+}
+
+function selectPrivacy(p) {
+  state.privacy = p;
+  document.getElementById('priv-public').classList.toggle('selected', p === 'public');
+  document.getElementById('priv-private').classList.toggle('selected', p === 'private');
+}
+
+function selectRestriction(r) {
+  state.restriction = r;
+  ['all','men','women'].forEach(x =>
+    document.getElementById('restr-' + x).classList.toggle('selected', x === r)
+  );
+}
+
+async function createGroup() {
+  const name = document.getElementById('group-name').value.trim();
+  if (!name) { toast('الرجاء إدخال اسم المجموعة'); return; }
+
+  const btn = document.querySelector('#create-group .btn-primary:last-child');
+  btn.disabled = true;
+  btn.textContent = 'جاري الإنشاء…';
+
+  try {
+    // Insert group
+    const { data: group, error: ge } = await db.from('groups').insert({
+      name,
+      goal_amount: state.goalPages,
+      goal_unit: state.goalUnit,
+      privacy: state.privacy,
+      restriction: state.restriction,
+    }).select().single();
+    if (ge) throw ge;
+
+    // Insert self as member
+    const { data: member, error: me } = await db.from('members').insert({
+      group_id: group.id,
+      name: state.userName,
+      gender: state.userGender,
+      pages_today: 0,
+    }).select().single();
+    if (me) throw me;
+
+    state.groupId   = group.id;
+    state.groupData = group;
+    state.memberId  = member.id;
+    state.myPages   = 0;
+
+    localStorage.setItem('werd_member_id', member.id);
+    localStorage.setItem('werd_group_id', group.id);
+
+    await openDashboard();
+  } catch(e) {
+    toast('حدث خطأ: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = 'إنشاء المجموعة 🕌';
+  }
+}
+
+// ── Join Group ────────────────────────────
+function selectJoinGender(g) {
+  state.joinGender = g;
+  document.getElementById('join-card-male').classList.toggle('selected', g === 'male');
+  document.getElementById('join-card-female').classList.toggle('selected', g === 'female');
+}
+
+async function lookupGroup() {
+  const code = document.getElementById('invite-input').value.trim();
+  if (!code) { toast('أدخل رمز الدعوة'); return; }
+
+  const { data: group } = await db.from('groups').select('*').eq('invite_code', code).single();
+  if (!group) { toast('لم يتم العثور على المجموعة'); return; }
+
+  state.joinGroupData = group;
+  const unitLabel = unitLabels[group.goal_unit] || 'صفحة';
+  document.getElementById('join-info-box').innerHTML = `
+    <div class="gi-name">${group.name}</div>
+    <div class="gi-meta">الهدف: ${group.goal_amount} ${unitLabel} يومياً</div>
+  `;
+  document.getElementById('join-group-info').style.display = 'block';
+
+  // Pre-fill name/gender from welcome if set
+  if (state.userName) document.getElementById('join-name').value = state.userName;
+  if (state.userGender) selectJoinGender(state.userGender);
+}
+
+async function joinGroup() {
+  const name = document.getElementById('join-name').value.trim() || state.userName;
+  const gender = state.joinGender || state.userGender;
+  const group = state.joinGroupData;
+
+  if (!name)   { toast('أدخل اسمك'); return; }
+  if (!gender) { toast('اختر جنسك'); return; }
+  if (!group)  { toast('ابحث عن المجموعة أولاً'); return; }
+
+  // Check gender restriction
+  if (group.restriction === 'men' && gender === 'female') {
+    toast('هذه المجموعة للرجال فقط'); return;
+  }
+  if (group.restriction === 'women' && gender === 'male') {
+    toast('هذه المجموعة للنساء فقط'); return;
+  }
+
+  try {
+    const { data: member, error } = await db.from('members').insert({
+      group_id: group.id,
+      name,
+      gender,
+      pages_today: 0,
+    }).select().single();
+    if (error) throw error;
+
+    state.groupId    = group.id;
+    state.groupData  = group;
+    state.memberId   = member.id;
+    state.userName   = name;
+    state.userGender = gender;
+    state.myPages    = 0;
+
+    localStorage.setItem('werd_member_id', member.id);
+    localStorage.setItem('werd_group_id', group.id);
+
+    await openDashboard();
+  } catch(e) {
+    toast('حدث خطأ: ' + e.message);
+  }
+}
+
+// ── Dashboard ─────────────────────────────
+let realtimeSub = null;
+
+async function openDashboard() {
+  const group = state.groupData;
+  document.getElementById('dash-group-name').textContent = group.name;
+  document.getElementById('pages-goal-label').textContent = '/ ' + group.goal_amount + ' ' + (unitLabels[group.goal_unit] || 'صفحة');
+
+  // badges
+  const badgeEl = document.getElementById('dash-badges');
+  badgeEl.innerHTML = '';
+  if (group.privacy === 'private')      badgeEl.innerHTML += '<span class="badge">🔒 خاصة</span>';
+  if (group.restriction === 'men')      badgeEl.innerHTML += '<span class="badge">👨 للرجال فقط</span>';
+  if (group.restriction === 'women')    badgeEl.innerHTML += '<span class="badge">👩 للنساء فقط</span>';
+
+  // invite link
+  const baseUrl = window.location.origin + window.location.pathname;
+  document.getElementById('invite-link-display').textContent = baseUrl + '?join=' + group.invite_code;
+
+  await loadMembers();
+  subscribeToMembers();
+  show('dashboard');
+}
+
+async function loadMembers() {
+  const { data: members } = await db.from('members').select('*').eq('group_id', state.groupId);
+  if (!members) return;
+
+  // Update my pages from DB
+  const me = members.find(m => m.id === state.memberId);
+  if (me) state.myPages = me.pages_today;
+
+  renderMembers(members);
+  updateMyProgress();
+}
+
+function renderMembers(members) {
+  const group = state.groupData;
+  const goal  = group.goal_amount;
+  const unit  = unitLabels[group.goal_unit] || 'صفحة';
+
+  document.getElementById('members-count').textContent = members.length + ' عضو';
+  document.getElementById('dash-sub').textContent = members.length + ' أعضاء · هدف ' + goal + ' ' + unit;
+
+  const list = document.getElementById('member-list');
+  list.innerHTML = '';
+  members
+    .sort((a, b) => b.pages_today - a.pages_today)
+    .forEach(m => {
+      const pct  = Math.min(100, (m.pages_today / goal) * 100);
+      const done = m.pages_today >= goal;
+      const isMe = m.id === state.memberId;
+      list.innerHTML += `
+        <div class="member-item">
+          <div class="member-avatar ${isMe ? 'me' : ''}">${m.name[0]}</div>
+          <div class="member-info">
+            <div class="member-name-row">
+              <span class="member-name">${m.name}${isMe ? ' (أنت)' : ''}</span>
+              <span class="member-count">${m.pages_today} ${unit}</span>
+            </div>
+            <div class="member-bar-bg"><div class="member-bar-fill" style="width:${pct}%"></div></div>
+          </div>
+          <div class="member-check">${done ? '✅' : ''}</div>
+        </div>`;
+    });
+}
+
+function updateMyProgress() {
+  const group = state.groupData;
+  const pct = Math.min(100, (state.myPages / group.goal_amount) * 100);
+  document.getElementById('pages-read').textContent = state.myPages;
+  document.getElementById('my-bar').style.width = pct + '%';
+  document.getElementById('celebration').classList.toggle('show', state.myPages >= group.goal_amount);
+}
+
+async function addPages(n) {
+  state.myPages += n;
+  updateMyProgress();
+
+  await db.from('members')
+    .update({ pages_today: state.myPages })
+    .eq('id', state.memberId);
+}
+
+function subscribeToMembers() {
+  if (realtimeSub) realtimeSub.unsubscribe();
+
+  realtimeSub = db
+    .channel('members-' + state.groupId)
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'members',
+      filter: 'group_id=eq.' + state.groupId,
+    }, async () => {
+      await loadMembers();
+    })
+    .subscribe();
+}
+
+// ── Invite ────────────────────────────────
+function copyLink() {
+  const link = document.getElementById('invite-link-display').textContent;
+  navigator.clipboard.writeText(link).catch(() => {});
+  toast('تم نسخ الرابط!');
+}
+
+// ── Helpers ───────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
