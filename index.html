@@ -680,10 +680,6 @@
         </div>
         <div id="add-member-form" style="display:none;padding:12px 0 4px;border-top:1px solid #f3f4f6;margin-top:8px">
           <input id="new-member-name" type="text" placeholder="الاسم" class="form-input" style="margin-bottom:8px" />
-          <div class="gender-row" style="margin-bottom:10px">
-            <button id="new-gender-male" class="gender-btn" onclick="setNewGender('male')">ذكر</button>
-            <button id="new-gender-female" class="gender-btn" onclick="setNewGender('female')">أنثى</button>
-          </div>
           <button class="btn-primary" style="padding:10px" onclick="addMember()">إضافة ✓</button>
         </div>
         <div id="member-list"></div>
@@ -1079,11 +1075,10 @@ function setNewGender(g) {
 async function addMember() {
   const name = document.getElementById('new-member-name').value.trim();
   if (!name) return toast('أدخل الاسم');
-  if (!newMemberGender) return toast('اختر الجنس');
   const { error } = await db.from('members').insert({
     group_id: state.groupId,
     name,
-    gender: newMemberGender,
+    gender: 'male',
     pages_today: 0
   });
   if (error) return toast('حدث خطأ، حاول مجدداً');
