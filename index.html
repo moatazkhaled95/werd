@@ -760,12 +760,16 @@ window.addEventListener('DOMContentLoaded', () => {
   if (joinCode) localStorage.setItem('werd_pending_join', joinCode);
 
   // Single auth handler — covers normal load, email verification redirect, and Google OAuth redirect
+  let authHandled = false;
   db.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_OUT') { authHandled = false; show('auth'); return; }
+    if (authHandled && event === 'INITIAL_SESSION') return;
     if (session?.user) {
+      authHandled = true;
       state.user = session.user;
       await loadProfile(session.user);
       await afterLogin();
-    } else {
+    } else if (event === 'INITIAL_SESSION') {
       show('auth');
     }
   });
@@ -919,7 +923,7 @@ async function signUp() {
   }
 
   toast('تم إنشاء الحساب ✓');
-  await afterLogin();
+  // onAuthStateChange will fire and handle navigation
 }
 
 async function checkVerification() {
@@ -959,9 +963,7 @@ async function signIn() {
     return showErr(errEl, 'بريد إلكتروني أو كلمة مرور غير صحيحة');
   }
 
-  state.user = data.user;
-  await loadProfile(data.user);
-  await afterLogin();
+  // onAuthStateChange will fire and handle the rest
 }
 
 async function signInWithGoogle() {
