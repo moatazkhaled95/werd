@@ -345,7 +345,7 @@
       padding: 18px;
       box-shadow: 0 1px 4px rgba(0,0,0,.06);
     }
-    .mc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .mc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
     .mc-title { font-size: 13px; font-weight: 700; color: #374151; }
 
     .member-item {
@@ -644,6 +644,7 @@
   <!-- ══════════ Dashboard ══════════ -->
   <div id="dashboard" class="screen">
     <div class="dash-header">
+      <button class="back-btn" onclick="leaveDashboard()" style="position:absolute;top:16px;right:16px">← خروج</button>
       <h2 id="dash-group-name">مجموعتي</h2>
       <div class="sub" id="dash-sub"></div>
       <div class="badges" id="dash-badges"></div>
@@ -1046,6 +1047,15 @@ function subscribeToMembers() {
 }
 
 // ── Invite ────────────────────────────────
+// ── Leave Dashboard ───────────────────────
+function leaveDashboard() {
+  if (realtimeSub) { realtimeSub.unsubscribe(); realtimeSub = null; }
+  localStorage.removeItem('werd_member_id');
+  localStorage.removeItem('werd_group_id');
+  Object.assign(state, { groupId: null, groupData: null, memberId: null, myPages: 0 });
+  show('welcome');
+}
+
 // ── Add Member from Dashboard ──────────────
 let newMemberGender = '';
 
