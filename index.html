@@ -385,6 +385,23 @@
     <span>جاري التحميل…</span>
   </div>
 
+  <!-- ══════════ Verify Email ══════════ -->
+  <div id="verify-email" class="screen">
+    <div style="background:linear-gradient(160deg,#064e3b,#047857);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;gap:24px">
+      <div style="font-size:60px">📧</div>
+      <div style="text-align:center;color:#fff">
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:8px">تحقق من بريدك الإلكتروني</h2>
+        <p style="color:#a7f3d0;font-size:14px;line-height:1.6">أرسلنا رابط التحقق إلى<br><strong id="verify-email-addr" style="color:#fff"></strong></p>
+      </div>
+      <div style="background:#fff;border-radius:20px;padding:24px;width:100%;display:flex;flex-direction:column;gap:12px">
+        <p style="font-size:13px;color:#6b7280;text-align:center">افتح بريدك وانقر على رابط التحقق، ثم عد هنا</p>
+        <button class="btn-primary" onclick="checkVerification()">لقد تحققت ✓</button>
+        <button class="btn-secondary" onclick="resendVerification()">إعادة إرسال البريد</button>
+        <p class="auth-link"><a onclick="show('auth')">← رجوع لتسجيل الدخول</a></p>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════════ Auth Landing ══════════ -->
   <div id="auth" class="screen">
     <div class="logo">
@@ -661,8 +678,12 @@
           <button class="add-member-btn" onclick="toggleAddMember()">+ إضافة عضو</button>
         </div>
         <div id="add-member-form" style="display:none;padding:12px 0 4px;border-top:1px solid #f3f4f6;margin-top:8px">
-          <input id="new-member-name" type="text" placeholder="الاسم" class="form-input" style="margin-bottom:8px;width:100%" />
-          <button class="btn-primary" style="padding:10px" onclick="addMember()">إضافة ✓</button>
+          <input id="new-member-name" type="text" placeholder="الاسم (اختياري)" class="form-input" style="margin-bottom:8px;width:100%" />
+          <input id="new-member-email" type="email" placeholder="البريد الإلكتروني (للدعوة)" class="form-input" style="margin-bottom:8px;width:100%;direction:ltr;text-align:left" />
+          <div style="display:flex;gap:8px">
+            <button class="btn-primary" style="padding:10px" onclick="addMember()">إضافة ✓</button>
+            <button class="btn-secondary" style="padding:10px;white-space:nowrap" onclick="inviteByEmail()">دعوة بالبريد 📧</button>
+          </div>
         </div>
         <div id="member-list"></div>
       </div>
@@ -842,8 +863,33 @@ async function signUp() {
   state.user = data.user;
   state.profile = { first_name: firstName, last_name: lastName, email, gender: signupGender };
 
+  // If email confirmation required, show verify screen
+  if (!data.session) {
+    document.getElementById('verify-email-addr').textContent = email;
+    show('verify-email');
+    return;
+  }
+
   toast('تم إنشاء الحساب ✓');
   await afterLogin();
+}
+
+async function checkVerification() {
+  const { data: { session } } = await db.auth.getSession();
+  if (session?.user?.email_confirmed_at) {
+    state.user = session.user;
+    await loadProfile(session.user);
+    await afterLogin();
+  } else {
+    toast('لم يتم التحقق بعد، تحقق من بريدك');
+  }
+}
+
+async function resendVerification() {
+  const email = state.user?.email;
+  if (!email) return;
+  await db.auth.resend({ type: 'signup', email });
+  toast('تم إعادة إرسال البريد ✓');
 }
 
 async function signIn() {
@@ -855,7 +901,15 @@ async function signIn() {
   if (!email || !password) return showErr(errEl, 'أدخل البريد وكلمة المرور');
 
   const { data, error } = await db.auth.signInWithPassword({ email, password });
-  if (error) return showErr(errEl, 'بريد إلكتروني أو كلمة مرور غير صحيحة');
+  if (error) {
+    if (error.message.toLowerCase().includes('email not confirmed')) {
+      state.user = { email };
+      document.getElementById('verify-email-addr').textContent = email;
+      show('verify-email');
+      return;
+    }
+    return showErr(errEl, 'بريد إلكتروني أو كلمة مرور غير صحيحة');
+  }
 
   state.user = data.user;
   await loadProfile(data.user);
@@ -1119,6 +1173,18 @@ async function addMember() {
   if (error) return toast('حدث خطأ، حاول مجدداً');
   toast('تمت إضافة العضو ✓');
   toggleAddMember();
+}
+
+function inviteByEmail() {
+  const email = document.getElementById('new-member-email').value.trim();
+  if (!email) return toast('أدخل البريد الإلكتروني للدعوة');
+  const link = document.getElementById('invite-link-display').textContent;
+  const name  = state.groupData?.name || 'وِرْدٌ';
+  const subject = encodeURIComponent('دعوة للانضمام إلى مجموعة ' + name);
+  const body = encodeURIComponent(
+    'السلام عليكم،\n\nأنت مدعو للانضمام إلى مجموعة "' + name + '" على تطبيق وِرْدٌ لمتابعة قراءة القرآن الكريم.\n\nانقر على الرابط للانضمام:\n' + link + '\n\nبارك الله فيك.'
+  );
+  window.location.href = 'mailto:' + email + '?subject=' + subject + '&body=' + body;
 }
 
 function copyLink() {
