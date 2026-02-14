@@ -728,32 +728,22 @@ let signupGender = '';
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
-window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener('DOMContentLoaded', () => {
   // Check for invite link in URL
   const params = new URLSearchParams(window.location.search);
   const joinCode = params.get('join');
   if (joinCode) localStorage.setItem('werd_pending_join', joinCode);
 
-  // Listen to auth state
+  // Single auth handler — covers normal load, email verification redirect, and Google OAuth redirect
   db.auth.onAuthStateChange(async (event, session) => {
     if (session?.user) {
       state.user = session.user;
       await loadProfile(session.user);
+      await afterLogin();
     } else {
-      state.user = null;
-      state.profile = null;
+      show('auth');
     }
   });
-
-  const { data: { session } } = await db.auth.getSession();
-
-  if (session?.user) {
-    state.user = session.user;
-    await loadProfile(session.user);
-    await afterLogin();
-  } else {
-    show('auth');
-  }
 });
 
 async function loadProfile(user) {
