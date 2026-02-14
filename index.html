@@ -769,9 +769,6 @@ async function afterLogin() {
   const displayName = state.profile.first_name || state.user.email;
   document.getElementById('choose-hi').textContent = 'أهلاً ' + displayName + '!';
 
-  // Apply gender restrictions on create-group screen
-  applyGenderRestrictions();
-
   // Check saved group session
   const savedMemberId = localStorage.getItem('werd_member_id');
   const savedGroupId  = localStorage.getItem('werd_group_id');
@@ -803,21 +800,6 @@ async function afterLogin() {
   show('choose-action');
 }
 
-function applyGenderRestrictions() {
-  const gender = state.profile?.gender;
-  if (!gender) return;
-  // If user is male, disable "women only" option
-  // If user is female, disable "men only" option
-  const menCard   = document.getElementById('restr-men');
-  const womenCard = document.getElementById('restr-women');
-  if (gender === 'male') {
-    womenCard.classList.add('disabled');
-    womenCard.title = 'لا يمكنك إنشاء مجموعة للنساء فقط';
-  } else if (gender === 'female') {
-    menCard.classList.add('disabled');
-    menCard.title = 'لا يمكنك إنشاء مجموعة للرجال فقط';
-  }
-}
 
 // ══════════════════════════════════════════
 //  AUTH
@@ -936,10 +918,6 @@ function selectPrivacy(p) {
 }
 
 function selectRestriction(r) {
-  // Block invalid combos
-  const gender = state.profile?.gender;
-  if (r === 'women' && gender === 'male') { toast('لا يمكنك إنشاء مجموعة للنساء فقط'); return; }
-  if (r === 'men'   && gender === 'female') { toast('لا يمكنك إنشاء مجموعة للرجال فقط'); return; }
   state.restriction = r;
   ['all','men','women'].forEach(x =>
     document.getElementById('restr-' + x).classList.toggle('selected', x === r)
@@ -949,10 +927,6 @@ function selectRestriction(r) {
 async function createGroup() {
   const name   = document.getElementById('group-name').value.trim();
   if (!name) { toast('الرجاء إدخال اسم المجموعة'); return; }
-
-  const gender = state.profile?.gender;
-  if (state.restriction === 'women' && gender === 'male')   { toast('لا يمكنك إنشاء مجموعة للنساء فقط'); return; }
-  if (state.restriction === 'men'   && gender === 'female') { toast('لا يمكنك إنشاء مجموعة للرجال فقط'); return; }
 
   const btn = document.querySelector('#create-group .btn-primary:last-child');
   btn.disabled = true; btn.textContent = 'جاري الإنشاء…';
