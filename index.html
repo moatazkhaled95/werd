@@ -376,6 +376,17 @@
     .member-check { font-size: 18px; }
 
     /* invite */
+    .add-member-btn {
+      background: none;
+      border: 1px solid #34d399;
+      color: #059669;
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .add-member-btn:hover { background: #ecfdf5; }
     .invite-card {
       background: #fff;
       border-radius: 16px;
@@ -662,6 +673,15 @@
         <div class="mc-header">
           <span class="mc-title">الأعضاء</span>
           <span id="members-count" style="font-size:12px;color:#9ca3af"></span>
+          <button class="add-member-btn" onclick="toggleAddMember()">+ إضافة عضو</button>
+        </div>
+        <div id="add-member-form" style="display:none;padding:12px 0 4px;border-top:1px solid #f3f4f6;margin-top:8px">
+          <input id="new-member-name" type="text" placeholder="الاسم" class="form-input" style="margin-bottom:8px" />
+          <div class="gender-row" style="margin-bottom:10px">
+            <button id="new-gender-male" class="gender-btn" onclick="setNewGender('male')">ذكر</button>
+            <button id="new-gender-female" class="gender-btn" onclick="setNewGender('female')">أنثى</button>
+          </div>
+          <button class="btn-primary" style="padding:10px" onclick="addMember()">إضافة ✓</button>
         </div>
         <div id="member-list"></div>
       </div>
@@ -1026,6 +1046,39 @@ function subscribeToMembers() {
 }
 
 // ── Invite ────────────────────────────────
+// ── Add Member from Dashboard ──────────────
+let newMemberGender = '';
+
+function toggleAddMember() {
+  const form = document.getElementById('add-member-form');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  newMemberGender = '';
+  document.getElementById('new-member-name').value = '';
+  document.getElementById('new-gender-male').classList.remove('active');
+  document.getElementById('new-gender-female').classList.remove('active');
+}
+
+function setNewGender(g) {
+  newMemberGender = g;
+  document.getElementById('new-gender-male').classList.toggle('active', g === 'male');
+  document.getElementById('new-gender-female').classList.toggle('active', g === 'female');
+}
+
+async function addMember() {
+  const name = document.getElementById('new-member-name').value.trim();
+  if (!name) return toast('أدخل الاسم');
+  if (!newMemberGender) return toast('اختر الجنس');
+  const { error } = await db.from('members').insert({
+    group_id: state.groupId,
+    name,
+    gender: newMemberGender,
+    pages_today: 0
+  });
+  if (error) return toast('حدث خطأ، حاول مجدداً');
+  toast('تمت إضافة العضو ✓');
+  toggleAddMember();
+}
+
 function copyLink() {
   const link = document.getElementById('invite-link-display').textContent;
   navigator.clipboard.writeText(link).catch(() => {});
