@@ -411,14 +411,16 @@
       <p style="font-size:13px;color:#6b7280;margin-bottom:16px;text-align:center">نحتاج بعض المعلومات لإكمال حسابك</p>
       <input id="cp-first" type="text" placeholder="الاسم الأول *" class="form-input" style="margin-bottom:10px;width:100%" />
       <input id="cp-last" type="text" placeholder="اسم العائلة" class="form-input" style="margin-bottom:16px;width:100%" />
-      <p style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px">الجنس *</p>
-      <div style="display:flex;gap:10px;margin-bottom:16px">
-        <div id="cp-card-male" class="gender-card" onclick="selectCpGender('male')">
-          <span style="font-size:24px">👨</span><span>ذكر</span>
-        </div>
-        <div id="cp-card-female" class="gender-card" onclick="selectCpGender('female')">
-          <span style="font-size:24px">👩</span><span>أنثى</span>
-        </div>
+      <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:8px">الجنس *</label>
+      <div class="radio-group" style="margin-bottom:16px">
+        <label class="radio-card" id="cp-card-male" onclick="selectCpGender('male')">
+          <div class="radio-icon">👨</div>
+          <div class="radio-label">ذكر</div>
+        </label>
+        <label class="radio-card" id="cp-card-female" onclick="selectCpGender('female')">
+          <div class="radio-icon">👩</div>
+          <div class="radio-label">أنثى</div>
+        </label>
       </div>
       <div id="cp-error" class="error-msg"></div>
       <button class="btn-primary" onclick="saveCompleteProfile()">حفظ والمتابعة</button>
