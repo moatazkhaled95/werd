@@ -753,21 +753,30 @@ let signupGender = '';
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   // Check for invite link in URL
   const params = new URLSearchParams(window.location.search);
   const joinCode = params.get('join');
   if (joinCode) localStorage.setItem('werd_pending_join', joinCode);
 
+  // Handle initial page load using getSession (fires once, no event conflicts)
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    if (session?.user) {
+      state.user = session.user;
+      await loadProfile(session.user);
+      await afterLogin();
+    } else {
+      show('auth');
+    }
+  } catch(e) { show('auth'); }
+
+  // Handle future auth events only (not initial load)
   db.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-      if (session?.user) {
-        state.user = session.user;
-        await loadProfile(session.user);
-        await afterLogin();
-      } else {
-        show('auth');
-      }
+    if (event === 'SIGNED_IN') {
+      state.user = session.user;
+      await loadProfile(session.user);
+      await afterLogin();
     } else if (event === 'SIGNED_OUT') {
       state.user = null; state.profile = null;
       show('auth');
@@ -1239,8 +1248,10 @@ function copyLink() {
 //  HELPERS
 // ══════════════════════════════════════════
 function show(id) {
+  const el = document.getElementById(id);
+  if (!el) { console.error('show(): screen not found:', id); return; }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
 }
 
 let toastTimer;
