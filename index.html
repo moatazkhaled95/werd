@@ -853,14 +853,22 @@ async function saveCompleteProfile() {
   if (!firstName) return showErr(errEl, 'أدخل اسمك الأول');
   if (!cpGender) return showErr(errEl, 'اختر الجنس');
   const lastName = document.getElementById('cp-last').value.trim();
-  const { error } = await db.from('profiles').upsert({
-    id: state.user.id,
-    first_name: firstName,
-    last_name: lastName,
-    email: state.user.email || '',
-    gender: cpGender,
-  });
-  if (error) return showErr(errEl, 'حدث خطأ، حاول مجدداً');
+  // Try update first, then insert if no row exists
+  const { error: upErr } = await db.from('profiles').update({
+    first_name: firstName, last_name: lastName, gender: cpGender,
+  }).eq('id', state.user.id);
+
+  if (upErr) {
+    // Row might not exist yet — try insert
+    const { error: insErr } = await db.from('profiles').insert({
+      id: state.user.id,
+      first_name: firstName,
+      last_name: lastName,
+      email: state.user.email || '',
+      gender: cpGender,
+    });
+    if (insErr) return showErr(errEl, insErr.message || 'حدث خطأ، حاول مجدداً');
+  }
   state.profile = { first_name: firstName, last_name: lastName, email: state.user.email, gender: cpGender };
   await afterLogin();
 }
