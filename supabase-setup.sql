@@ -53,6 +53,7 @@ alter table members enable row level security;
 drop policy if exists "public read groups"    on groups;
 drop policy if exists "public insert groups"  on groups;
 drop policy if exists "public update groups"  on groups;
+drop policy if exists "public delete groups"  on groups;
 drop policy if exists "public read members"   on members;
 drop policy if exists "public insert members" on members;
 drop policy if exists "public update members" on members;
@@ -64,6 +65,7 @@ create policy "public read members"   on members for select using (true);
 create policy "public insert members" on members for insert with check (true);
 create policy "public update members" on members for update using (true);
 create policy "public delete members" on members for delete using (true);
+create policy "public delete groups"  on groups  for delete using (true);
 
 -- ── Migrations (safe to run on existing DB) ──
 alter table groups  add column if not exists created_by       uuid references auth.users(id);
