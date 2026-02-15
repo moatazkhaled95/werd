@@ -1401,13 +1401,35 @@ function toggleEditGoal() {
   }
 }
 
+function editSelectUnit(u) {
+  state.goalBaseUnit = u;
+  state.goalSubUnit = u === 'page' ? 'none' : null;
+  state.goalUnit = u === 'page' ? 'page' : null;
+  state.goalPages = u === 'page' ? 1 : 1;
+  renderEditGoalOptions();
+}
+
 function renderEditGoalOptions() {
-  // Temporarily redirect renderGoalOptions output to edit-goal-options
   const sec = document.getElementById('edit-goal-options');
   if (!sec) return;
   const base = state.goalBaseUnit;
+
+  const unitCards = `
+    <div class="radio-group" style="margin-bottom:14px">
+      <label class="radio-card${base==='page'?' selected':''}" onclick="editSelectUnit('page')">
+        <div class="radio-icon">📄</div><div class="radio-label">صفحة</div>
+      </label>
+      <label class="radio-card${base==='hizb'?' selected':''}" onclick="editSelectUnit('hizb')">
+        <div class="radio-icon">📖</div><div class="radio-label">حزب</div>
+      </label>
+      <label class="radio-card${base==='juz'?' selected':''}" onclick="editSelectUnit('juz')">
+        <div class="radio-icon">📗</div><div class="radio-label">جزء</div>
+      </label>
+    </div>`;
+
+  let amountHtml = '';
   if (base === 'page') {
-    sec.innerHTML = `
+    amountHtml = `
       <div class="goal-input-row" style="margin-bottom:10px">
         <input type="number" id="edit-goal-pages" value="${state.goalPages}" min="1" max="100" oninput="state.goalPages=parseInt(this.value)||1" />
         <span>صفحة في اليوم</span>
@@ -1415,26 +1437,28 @@ function renderEditGoalOptions() {
       <div class="quick-btns">
         ${[1,2,3,5,10].map(n=>`<button class="quick-btn${state.goalPages===n?' selected':''}" onclick="state.goalPages=${n};renderEditGoalOptions()">${n}</button>`).join('')}
       </div>`;
-    return;
+  } else if (base) {
+    const baseLabel = base === 'hizb' ? 'حزب' : 'جزء';
+    const fracs = [
+      { key:'quarter', label:`ربع ${baseLabel}` },
+      { key:'half',    label:`نصف ${baseLabel}` },
+      { key:'third',   label:`ثلاثة أرباع ${baseLabel}` },
+      { key:'full',    label:baseLabel },
+    ];
+    const fracBtns = fracs.map(f =>
+      `<button class="quick-btn${state.goalSubUnit===f.key?' selected':''}" onclick="state.goalSubUnit='${f.key}';state.goalUnit='${f.key==='full'?base:base+'-'+f.key}';state.goalPages=1;renderEditGoalOptions()" style="min-width:72px">${f.label}</button>`
+    ).join('');
+    const qtySection = state.goalSubUnit === 'full' ? `
+      <div style="margin-top:10px">
+        <div class="goal-input-row">
+          <input type="number" id="edit-goal-pages" value="${state.goalPages}" min="1" max="30" oninput="state.goalPages=parseInt(this.value)||1" style="width:70px"/>
+          <span>${baseLabel} في اليوم</span>
+        </div>
+      </div>` : '';
+    amountHtml = `<div class="quick-btns" style="flex-wrap:wrap;margin-bottom:4px">${fracBtns}</div>${qtySection}`;
   }
-  const baseLabel = base === 'hizb' ? 'حزب' : 'جزء';
-  const fracs = [
-    { key:'quarter', label:`ربع ${baseLabel}` },
-    { key:'half',    label:`نصف ${baseLabel}` },
-    { key:'third',   label:`ثلاثة أرباع ${baseLabel}` },
-    { key:'full',    label:baseLabel },
-  ];
-  const fracBtns = fracs.map(f =>
-    `<button class="quick-btn${state.goalSubUnit===f.key?' selected':''}" onclick="state.goalSubUnit='${f.key}';state.goalUnit='${f.key==='full'?base:base+'-'+f.key}';state.goalPages=1;renderEditGoalOptions()" style="min-width:72px">${f.label}</button>`
-  ).join('');
-  const qtySection = state.goalSubUnit === 'full' ? `
-    <div style="margin-top:10px">
-      <div class="goal-input-row">
-        <input type="number" id="edit-goal-pages" value="${state.goalPages}" min="1" max="30" oninput="state.goalPages=parseInt(this.value)||1" style="width:70px"/>
-        <span>${baseLabel} في اليوم</span>
-      </div>
-    </div>` : '';
-  sec.innerHTML = `<div class="quick-btns" style="flex-wrap:wrap;margin-bottom:4px">${fracBtns}</div>${qtySection}`;
+
+  sec.innerHTML = unitCards + amountHtml;
 }
 
 async function saveGoal() {
