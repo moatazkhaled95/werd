@@ -696,12 +696,8 @@
           <button class="add-member-btn" onclick="toggleAddMember()">+ إضافة عضو</button>
         </div>
         <div id="add-member-form" style="display:none;padding:12px 0 4px;border-top:1px solid #f3f4f6;margin-top:8px">
-          <input id="new-member-name" type="text" placeholder="الاسم (اختياري)" class="form-input" style="margin-bottom:8px;width:100%" />
-          <input id="new-member-email" type="email" placeholder="البريد الإلكتروني (للدعوة)" class="form-input" style="margin-bottom:8px;width:100%;direction:ltr;text-align:left" />
-          <div style="display:flex;gap:8px">
-            <button class="btn-primary" style="padding:10px" onclick="addMember()">إضافة ✓</button>
-            <button class="btn-secondary" style="padding:10px;white-space:nowrap" onclick="inviteByEmail()">دعوة بالبريد 📧</button>
-          </div>
+          <input id="new-member-email" type="email" placeholder="البريد الإلكتروني" class="form-input" style="margin-bottom:8px;width:100%;direction:ltr;text-align:left" />
+          <button class="btn-primary" style="width:100%;padding:10px" onclick="sendInvite()">إرسال دعوة 📧</button>
         </div>
         <div id="member-list"></div>
       </div>
@@ -1042,7 +1038,7 @@ async function lookupGroup() {
 async function joinGroup() {
   const group  = state.joinGroupData;
   const gender = state.profile?.gender;
-  const name   = (state.profile.first_name + ' ' + state.profile.last_name).trim();
+  const name   = state.profile.first_name || state.user.email;
 
   if (!group)  { toast('ابحث عن المجموعة أولاً'); return; }
 
@@ -1166,30 +1162,21 @@ function toggleAddMember() {
   const form = document.getElementById('add-member-form');
   const isHidden = form.style.display === 'none';
   form.style.display = isHidden ? 'block' : 'none';
-  if (isHidden) document.getElementById('new-member-name').value = '';
+  if (isHidden) document.getElementById('new-member-email').value = '';
 }
 
-async function addMember() {
-  const name = document.getElementById('new-member-name').value.trim();
-  if (!name) return toast('أدخل الاسم');
-  const { error } = await db.from('members').insert({
-    group_id: state.groupId, name, gender: 'male', pages_today: 0
-  });
-  if (error) return toast('حدث خطأ، حاول مجدداً');
-  toast('تمت إضافة العضو ✓');
-  toggleAddMember();
-}
-
-function inviteByEmail() {
+async function sendInvite() {
   const email = document.getElementById('new-member-email').value.trim();
-  if (!email) return toast('أدخل البريد الإلكتروني للدعوة');
-  const link = document.getElementById('invite-link-display').textContent;
-  const name  = state.groupData?.name || 'وِرْدٌ';
-  const subject = encodeURIComponent('دعوة للانضمام إلى مجموعة ' + name);
-  const body = encodeURIComponent(
-    'السلام عليكم،\n\nأنت مدعو للانضمام إلى مجموعة "' + name + '" على تطبيق وِرْدٌ لمتابعة قراءة القرآن الكريم.\n\nانقر على الرابط للانضمام:\n' + link + '\n\nبارك الله فيك.'
-  );
-  window.location.href = 'mailto:' + email + '?subject=' + subject + '&body=' + body;
+  if (!email) return toast('أدخل البريد الإلكتروني');
+  const joinLink = window.location.origin + window.location.pathname + '?join=' + state.groupData.invite_code;
+  const { error } = await db.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: joinLink }
+  });
+  if (error) return toast('حدث خطأ: ' + error.message);
+  toast('تم إرسال الدعوة ✓');
+  document.getElementById('new-member-email').value = '';
+  toggleAddMember();
 }
 
 function copyLink() {
