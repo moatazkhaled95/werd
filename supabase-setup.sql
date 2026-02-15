@@ -98,3 +98,6 @@ begin
     alter publication supabase_realtime add table members;
   end if;
 end $$;
+
+-- ── Points system ──────────────────────────────────
+alter table members add column if not exists total_points int not null default 0;

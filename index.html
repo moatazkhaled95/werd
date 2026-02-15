@@ -383,6 +383,78 @@
       box-shadow: 0 4px 20px rgba(5,150,105,.4);
     }
     #goal-banner.show { top: 0; }
+
+    /* ── Islamic geometric pattern on headers ── */
+    .screen-header::after, .dash-header::after {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.08)' stroke-width='1'%3E%3Cpolygon points='40,4 49,26 72,26 54,41 61,63 40,50 19,63 26,41 8,26 31,26'/%3E%3Ccircle cx='40' cy='40' r='14'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: 80px 80px;
+    }
+    #auth::after {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.07)' stroke-width='1'%3E%3Cpolygon points='40,4 49,26 72,26 54,41 61,63 40,50 19,63 26,41 8,26 31,26'/%3E%3Ccircle cx='40' cy='40' r='14'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: 80px 80px;
+    }
+    #auth { position: relative; overflow: hidden; }
+    .screen-header, .dash-header { overflow: hidden; }
+    .logo-icon { box-shadow: 0 0 0 8px rgba(255,255,255,.07), 0 0 0 16px rgba(255,255,255,.04); }
+
+    /* ── Night mode ── */
+    html[data-theme="dark"] body { background: #0a1628; }
+    html[data-theme="dark"] #app { background: #0f1f2e; }
+    html[data-theme="dark"] #auth { background: linear-gradient(160deg, #021a12 0%, #032a1a 50%, #043d25 100%); }
+    html[data-theme="dark"] #signin, html[data-theme="dark"] #signup,
+    html[data-theme="dark"] #create-group, html[data-theme="dark"] #join-group,
+    html[data-theme="dark"] #choose-action, html[data-theme="dark"] #complete-profile { background: #0f1f2e !important; }
+    html[data-theme="dark"] #dashboard { background: #0a1628 !important; }
+    html[data-theme="dark"] .screen-body { background: transparent; }
+    html[data-theme="dark"] .card,
+    html[data-theme="dark"] .progress-card,
+    html[data-theme="dark"] .members-card,
+    html[data-theme="dark"] .invite-card,
+    html[data-theme="dark"] .auth-card { background: #162032; box-shadow: 0 1px 6px rgba(0,0,0,.4); }
+    html[data-theme="dark"] .card h3, html[data-theme="dark"] .mc-title,
+    html[data-theme="dark"] .pc-label, html[data-theme="dark"] .form-group label { color: #7ab8a0; }
+    html[data-theme="dark"] .member-name, html[data-theme="dark"] .auth-card h2,
+    html[data-theme="dark"] .option-text .option-title { color: #e2f0eb; }
+    html[data-theme="dark"] .member-item { border-color: #1e3347; }
+    html[data-theme="dark"] .member-bar-bg, html[data-theme="dark"] .progress-bar-bg { background: #1e3347; }
+    html[data-theme="dark"] .form-input, html[data-theme="dark"] .form-group input[type="text"],
+    html[data-theme="dark"] .form-group input[type="email"], html[data-theme="dark"] .form-group input[type="password"],
+    html[data-theme="dark"] .form-group input[type="number"] { background: #1e3347; border-color: #2a4a63; color: #e2f0eb; }
+    html[data-theme="dark"] .radio-card { border-color: #2a4a63; background: #1e3347; }
+    html[data-theme="dark"] .radio-card.selected { border-color: #059669; background: #0a2e1e; }
+    html[data-theme="dark"] .radio-card .radio-label { color: #b8d4ca; }
+    html[data-theme="dark"] .option-card { border-color: #2a4a63; background: #1e3347; }
+    html[data-theme="dark"] .option-card.selected { border-color: #059669; background: #0a2e1e; }
+    html[data-theme="dark"] .option-text .option-desc { color: #6b9e8a; }
+    html[data-theme="dark"] .quick-btn { background: #1e3347; border-color: #2a4a63; color: #34d399; }
+    html[data-theme="dark"] .inc-btn { background: #1e3347; border-color: #2a4a63; color: #34d399; }
+    html[data-theme="dark"] .goal-input-row input { background: #1e3347; border-color: #2a4a63; }
+    html[data-theme="dark"] .btn-google { background: #1e3347; border-color: #2a4a63; color: #e2f0eb; }
+    html[data-theme="dark"] .btn-secondary { border-color: #059669; color: #34d399; }
+    html[data-theme="dark"] .btn-secondary:hover { background: #0a2e1e; }
+    html[data-theme="dark"] .auth-link { color: #7ab8a0; }
+    html[data-theme="dark"] .pc-goal, html[data-theme="dark"] .member-count { color: #34d399; }
+    html[data-theme="dark"] .divider { color: #2a4a63; }
+    html[data-theme="dark"] .divider::before, html[data-theme="dark"] .divider::after { background: #2a4a63; }
+    html[data-theme="dark"] #toast { background: #162032; border: 1px solid #2a4a63; }
+    html[data-theme="dark"] .group-info-box { background: linear-gradient(135deg, #0a2e1e, #0d3d28); border-color: #059669; }
+    html[data-theme="dark"] .group-info-box .gi-name { color: #a7f3d0; }
+    html[data-theme="dark"] .invite-link-box { background: #1e3347; border-color: #2a4a63; color: #7ab8a0; }
+
+    /* ── Leaderboard ── */
+    .view-tabs { display: flex; gap: 0; margin-bottom: 14px; border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; }
+    .view-tab { flex: 1; padding: 8px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; background: #f9fafb; color: #6b7280; font-family: inherit; transition: all .2s; }
+    .view-tab.active { background: #059669; color: #fff; }
+    html[data-theme="dark"] .view-tabs { border-color: #2a4a63; }
+    html[data-theme="dark"] .view-tab { background: #1e3347; color: #7ab8a0; }
+    html[data-theme="dark"] .view-tab.active { background: #059669; color: #fff; }
+    .rank-medal { font-size: 18px; width: 28px; text-align: center; flex-shrink: 0; }
+    .points-badge { font-size: 12px; font-weight: 800; color: #d97706; background: #fef3c7; padding: 2px 8px; border-radius: 20px; }
+    html[data-theme="dark"] .points-badge { background: #3d2a00; color: #fbbf24; }
   </style>
 </head>
 <body>
@@ -554,6 +626,7 @@
           <span style="font-size:11px;color:#a7f3d0">حجم الخط</span>
           <button onclick="changeFontSize(-1)" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:14px;font-weight:700;width:26px;height:26px;border-radius:6px;cursor:pointer;line-height:1">−</button>
           <button onclick="changeFontSize(1)"  style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:14px;font-weight:700;width:26px;height:26px;border-radius:6px;cursor:pointer;line-height:1">+</button>
+          <button onclick="toggleNightMode()" id="night-btn" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:15px;width:26px;height:26px;border-radius:6px;cursor:pointer;line-height:1" title="الوضع الليلي">🌙</button>
         </div>
       </div>
     </div>
@@ -726,6 +799,10 @@
           <input id="new-member-email" type="email" placeholder="البريد الإلكتروني" class="form-input" style="margin-bottom:8px;width:100%;direction:ltr;text-align:left" />
           <button class="btn-primary" style="width:100%;padding:10px" onclick="sendInvite()">إرسال دعوة 📧</button>
         </div>
+        <div class="view-tabs">
+          <button class="view-tab active" id="tab-today" onclick="setMemberView('today')">اليوم</button>
+          <button class="view-tab" id="tab-points" onclick="setMemberView('points')">🏆 النقاط</button>
+        </div>
         <div id="member-list"></div>
       </div>
 
@@ -785,9 +862,22 @@ function changeFontSize(delta) {
   localStorage.setItem('werd_font_size', next);
 }
 
+function toggleNightMode() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
+  localStorage.setItem('werd_night_mode', isDark ? '' : 'dark');
+  document.getElementById('night-btn').textContent = isDark ? '🌙' : '☀️';
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
   const savedSize = localStorage.getItem('werd_font_size');
   if (savedSize) document.documentElement.style.fontSize = savedSize + 'px';
+  const savedTheme = localStorage.getItem('werd_night_mode');
+  if (savedTheme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    const btn = document.getElementById('night-btn');
+    if (btn) btn.textContent = '☀️';
+  }
   renderGoalOptions();
 
   // Check for invite link in URL
@@ -1389,7 +1479,17 @@ async function loadMembers() {
   updateMyProgress();
 }
 
+let memberView = 'today';
+
+function setMemberView(view) {
+  memberView = view;
+  document.getElementById('tab-today').classList.toggle('active', view === 'today');
+  document.getElementById('tab-points').classList.toggle('active', view === 'points');
+  if (state.lastMembers) renderMembers(state.lastMembers);
+}
+
 function renderMembers(members) {
+  state.lastMembers = members;
   const group = state.groupData;
   const goal  = group.goal_amount;
   const unit  = unitLabels[group.goal_unit] || 'صفحة';
@@ -1399,24 +1499,60 @@ function renderMembers(members) {
   const list = document.getElementById('member-list');
   list.innerHTML = '';
   const isCreator = state.groupData.created_by === state.user?.id;
-  members.sort((a, b) => b.pages_today - a.pages_today).forEach(m => {
-    const pct  = Math.min(100, (m.pages_today / goal) * 100);
-    const done = m.pages_today >= goal;
-    const isMe = m.id === state.memberId;
-    const canRemove = isCreator && !isMe;
-    list.innerHTML += `
-      <div class="member-item">
-        <div class="member-avatar ${isMe ? 'me' : ''}">${m.name[0]}</div>
-        <div class="member-info">
-          <div class="member-name-row">
-            <span class="member-name">${m.name}${isMe ? ' (أنت)' : ''}</span>
-            <span class="member-count">${m.pages_today} ${unit}</span>
+
+  if (memberView === 'points') {
+    const sorted = [...members].sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
+    const medals = ['🥇', '🥈', '🥉'];
+    sorted.forEach((m, i) => {
+      const isMe = m.id === state.memberId;
+      list.innerHTML += `
+        <div class="member-item">
+          <div class="rank-medal">${medals[i] || (i + 1)}</div>
+          <div class="member-info">
+            <div class="member-name-row">
+              <span class="member-name">${m.name}${isMe ? ' (أنت)' : ''}</span>
+              <span class="points-badge">${m.total_points || 0} نقطة</span>
+            </div>
           </div>
-          <div class="member-bar-bg"><div class="member-bar-fill" style="width:${pct}%"></div></div>
-        </div>
-        ${canRemove ? `<button onclick="removeMember('${m.id}')" style="background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;padding:4px 8px;line-height:1">×</button>` : `<div class="member-check">${done ? '✅' : ''}</div>`}
-      </div>`;
-  });
+        </div>`;
+    });
+  } else {
+    members.sort((a, b) => b.pages_today - a.pages_today).forEach(m => {
+      const pct  = Math.min(100, (m.pages_today / goal) * 100);
+      const done = m.pages_today >= goal;
+      const isMe = m.id === state.memberId;
+      const canRemove = isCreator && !isMe;
+      list.innerHTML += `
+        <div class="member-item">
+          <div class="member-avatar ${isMe ? 'me' : ''}">${m.name[0]}</div>
+          <div class="member-info">
+            <div class="member-name-row">
+              <span class="member-name">${m.name}${isMe ? ' (أنت)' : ''}</span>
+              <span class="member-count">${m.pages_today} ${unit}</span>
+            </div>
+            <div class="member-bar-bg"><div class="member-bar-fill" style="width:${pct}%"></div></div>
+          </div>
+          ${canRemove ? `<button onclick="removeMember('${m.id}')" style="background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;padding:4px 8px;line-height:1">×</button>` : `<div class="member-check">${done ? '✅' : ''}</div>`}
+        </div>`;
+    });
+  }
+}
+
+async function awardPoints() {
+  // Count how many members have already reached the goal (before me)
+  const { data: alreadyDone } = await db.from('members')
+    .select('id')
+    .eq('group_id', state.groupId)
+    .gte('pages_today', state.groupData.goal_amount)
+    .neq('id', state.memberId);
+
+  const rank = (alreadyDone?.length || 0); // 0 = first, 1 = second, 2 = third
+  const pts = rank === 0 ? 3 : rank === 1 ? 2 : rank === 2 ? 1 : 0;
+  if (pts > 0) {
+    const { data: me } = await db.from('members').select('total_points').eq('id', state.memberId).single();
+    await db.from('members').update({ total_points: (me?.total_points || 0) + pts }).eq('id', state.memberId);
+    toast(rank === 0 ? '🥇 أول من أتمّ الهدف! +3 نقاط' : rank === 1 ? '🥈 ثاني من أتمّ الهدف! +2 نقاط' : '🥉 ثالث من أتمّ الهدف! +1 نقطة');
+  }
 }
 
 async function removeMember(memberId) {
@@ -1441,6 +1577,7 @@ async function addPages(n) {
   if (prevPages < goal && state.myPages >= goal) {
     goalNotify('🎉 ما شاء الله! أتممت الهدف اليوم!');
     sendGoalNotification();
+    awardPoints();
   }
   updateMyProgress();
   await db.from('members').update({ pages_today: state.myPages }).eq('id', state.memberId);
