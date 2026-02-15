@@ -560,7 +560,11 @@
     <div class="screen-body">
       <div id="my-groups-list" style="margin-bottom:16px"></div>
       <button class="btn-primary" style="margin-top:4px" onclick="show('create-group')">+ إنشاء مجموعة جديدة</button>
-      <button class="btn-secondary" style="margin-top:8px" onclick="show('join-group')">الانضمام لمجموعة موجودة 🔗</button>
+      <button class="btn-secondary" style="margin-top:8px" onclick="show('join-group')">انضم بالرمز السري 🔒</button>
+      <div style="margin-top:20px">
+        <div style="font-weight:700;font-size:14px;color:#374151;margin-bottom:8px">🌐 المجموعات العامة</div>
+        <div id="public-groups-list"></div>
+      </div>
     </div>
   </div>
 
@@ -608,14 +612,14 @@
             <div class="option-icon">🌐</div>
             <div class="option-text">
               <div class="option-title">عامة</div>
-              <div class="option-desc">يمكن للجميع الانضمام عبر الرابط</div>
+              <div class="option-desc">تظهر للجميع ويمكن الانضمام مباشرة</div>
             </div>
           </label>
           <label class="option-card" id="priv-private" onclick="selectPrivacy('private')">
             <div class="option-icon">🔒</div>
             <div class="option-text">
               <div class="option-title">خاصة</div>
-              <div class="option-desc">بالدعوة فقط</div>
+              <div class="option-desc">بالرمز السري فقط</div>
             </div>
           </label>
         </div>
@@ -725,10 +729,10 @@
         <div id="member-list"></div>
       </div>
 
-      <div class="invite-card">
+      <div class="invite-card" id="invite-card-section">
         <div class="ic-title">دعوة الأصدقاء</div>
         <div style="text-align:center;margin-bottom:10px">
-          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">رقم المجموعة</div>
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">رقم المجموعة السري</div>
           <div style="display:flex;align-items:center;justify-content:center;gap:10px">
             <div id="group-code-display" style="font-size:32px;font-weight:800;letter-spacing:6px;color:#059669;direction:ltr"></div>
             <button onclick="copyCode()" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#059669;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap">نسخ الرقم</button>
@@ -843,10 +847,11 @@ async function showMyGroups() {
   const displayName = state.profile.first_name || state.user.email;
   document.getElementById('choose-hi').textContent = 'أهلاً ' + displayName + '!';
 
-  // Fetch groups I created + groups I joined
-  const [{ data: created }, { data: memberships }] = await Promise.all([
+  // Fetch groups I created + groups I joined + all public groups
+  const [{ data: created }, { data: memberships }, { data: publicGroups }] = await Promise.all([
     db.from('groups').select('*').eq('created_by', state.user.id),
     db.from('members').select('id, pages_today, group_id, groups(*)').eq('user_id', state.user.id),
+    db.from('groups').select('*, members(count)').eq('privacy', 'public').order('created_at', { ascending: false }),
   ]);
 
   const groups = [];
@@ -879,6 +884,31 @@ async function showMyGroups() {
         </div>
       </div>`).join('');
   }
+  // Public groups discovery — exclude ones user already belongs to
+  const myGroupIds = new Set(groups.map(g => g.group.id));
+  const discover = (publicGroups || []).filter(g => !myGroupIds.has(g.id));
+
+  const discoverEl = document.getElementById('public-groups-list');
+  if (discoverEl) {
+    if (discover.length === 0) {
+      discoverEl.innerHTML = '<p style="text-align:center;color:#9ca3af;font-size:13px;padding:8px 0">لا توجد مجموعات عامة حالياً</p>';
+    } else {
+      discoverEl.innerHTML = discover.map(g => {
+        const count = g.members?.[0]?.count ?? 0;
+        const unit  = unitLabels[g.goal_unit] || 'صفحة';
+        const restr = g.restriction === 'men' ? ' · 👨 رجال' : g.restriction === 'women' ? ' · 👩 نساء' : '';
+        return `
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+            <div style="min-width:0">
+              <div style="font-weight:600;font-size:15px;color:#111827">${g.name}</div>
+              <div style="font-size:12px;color:#9ca3af;margin-top:3px">🌐 عامة · ${count} عضو · هدف ${g.goal_amount} ${unit}${restr}</div>
+            </div>
+            <button onclick="quickJoinPublic('${g.id}')" style="background:#059669;border:none;color:#fff;font-weight:700;font-size:13px;padding:7px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;margin-right:8px">انضم</button>
+          </div>`;
+      }).join('');
+    }
+  }
+
   show('choose-action');
 }
 
@@ -1158,6 +1188,29 @@ async function createGroup() {
 // ══════════════════════════════════════════
 //  JOIN GROUP
 // ══════════════════════════════════════════
+async function quickJoinPublic(groupId) {
+  const { data: group } = await db.from('groups').select('*').eq('id', groupId).single();
+  if (!group) { toast('لم يتم العثور على المجموعة'); return; }
+  const gender = state.profile?.gender;
+  if (group.restriction === 'men'   && gender === 'female') { toast('هذه المجموعة للرجال فقط'); return; }
+  if (group.restriction === 'women' && gender === 'male')   { toast('هذه المجموعة للنساء فقط'); return; }
+  const { data: existing } = await db.from('members').select('*').eq('group_id', group.id).eq('user_id', state.user.id).single();
+  if (existing) {
+    state.groupId = group.id; state.groupData = group;
+    state.memberId = existing.id; state.myPages = existing.pages_today;
+    await openDashboard(); return;
+  }
+  const name = state.profile.first_name || state.user.email;
+  const { data: member, error } = await db.from('members').insert({
+    group_id: group.id, name, gender, pages_today: 0, user_id: state.user.id, email: state.user.email || '',
+  }).select().single();
+  if (error) { toast('حدث خطأ: ' + error.message); return; }
+  state.groupId = group.id; state.groupData = group;
+  state.memberId = member.id; state.myPages = 0;
+  toast('تم الانضمام للمجموعة ✓');
+  await openDashboard();
+}
+
 async function autoJoinGroup(code) {
   const { data: group } = await db.from('groups').select('*').eq('invite_code', code).single();
   if (!group) { toast('رابط الدعوة غير صالح أو منتهي الصلاحية'); await showMyGroups(); return; }
@@ -1298,7 +1351,10 @@ async function openDashboard() {
   if (group.restriction === 'men')   badgeEl.innerHTML += '<span class="badge">👨 للرجال فقط</span>';
   if (group.restriction === 'women') badgeEl.innerHTML += '<span class="badge">👩 للنساء فقط</span>';
 
-  document.getElementById('group-code-display').textContent = group.invite_code;
+  // Only show invite code card for private groups
+  const isPrivate = group.privacy === 'private';
+  document.getElementById('invite-card-section').style.display = isPrivate ? '' : 'none';
+  if (isPrivate) document.getElementById('group-code-display').textContent = group.invite_code;
   const isCreator = group.created_by === state.user?.id;
   document.getElementById('add-member-btn').style.display = isCreator ? '' : 'none';
   document.getElementById('leave-group-btn').style.display = isCreator ? 'none' : '';
