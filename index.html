@@ -773,16 +773,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION') return;
     if (authBusy) return;
     authBusy = true;
-    try {
-      if (session?.user) {
-        state.user = session.user;
-        loadProfile(session.user);
-        await afterLogin();
-      } else {
-        show('auth');
-      }
-    } finally {
-      authBusy = false;
+    if (session?.user) {
+      state.user = session.user;
+      loadProfile(session.user);
+      await afterLogin();
+    } else {
+      show('auth');
+      authBusy = false; // allow sign-in after showing auth
     }
   });
 });
