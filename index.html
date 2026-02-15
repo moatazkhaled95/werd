@@ -799,13 +799,11 @@ async function afterLogin() {
     show('complete-profile');
     return;
   }
-  // Pending join code from invite link?
+  // Pending join code from invite link — auto-join
   const pendingJoin = localStorage.getItem('werd_pending_join');
   if (pendingJoin) {
     localStorage.removeItem('werd_pending_join');
-    show('join-group');
-    document.getElementById('invite-input').value = pendingJoin;
-    await lookupGroup();
+    await autoJoinGroup(pendingJoin);
     return;
   }
   await showMyGroups();
@@ -1056,6 +1054,35 @@ async function createGroup() {
 // ══════════════════════════════════════════
 //  JOIN GROUP
 // ══════════════════════════════════════════
+async function autoJoinGroup(code) {
+  const { data: group } = await db.from('groups').select('*').eq('invite_code', code).single();
+  if (!group) { toast('رابط الدعوة غير صالح أو منتهي الصلاحية'); await showMyGroups(); return; }
+
+  const gender = state.profile?.gender;
+  if (group.restriction === 'men'   && gender === 'female') { toast('هذه المجموعة للرجال فقط'); await showMyGroups(); return; }
+  if (group.restriction === 'women' && gender === 'male')   { toast('هذه المجموعة للنساء فقط'); await showMyGroups(); return; }
+
+  // Check if already a member
+  const { data: existing } = await db.from('members').select('*').eq('group_id', group.id).eq('user_id', state.user.id).single();
+  if (existing) {
+    state.groupId = group.id; state.groupData = group;
+    state.memberId = existing.id; state.myPages = existing.pages_today;
+    await openDashboard(); return;
+  }
+
+  // Join the group
+  const name = state.profile.first_name || state.user.email;
+  const { data: member, error } = await db.from('members').insert({
+    group_id: group.id, name, gender, pages_today: 0, user_id: state.user.id,
+  }).select().single();
+  if (error) { toast('حدث خطأ: ' + error.message); await showMyGroups(); return; }
+
+  state.groupId = group.id; state.groupData = group;
+  state.memberId = member.id; state.myPages = 0;
+  toast('تم الانضمام للمجموعة ✓');
+  await openDashboard();
+}
+
 async function lookupGroup() {
   const code = document.getElementById('invite-input').value.trim();
   if (!code) { toast('أدخل رمز الدعوة'); return; }
