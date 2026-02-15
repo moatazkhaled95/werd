@@ -1192,6 +1192,7 @@ async function removeMember(memberId) {
   const { error } = await db.from('members').delete().eq('id', memberId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
   toast('تم إزالة العضو ✓');
+  await loadMembers();
 }
 
 function updateMyProgress() {
