@@ -687,7 +687,14 @@
       <div class="progress-card">
         <div class="pc-top">
           <span class="pc-label">تقدّمك اليوم</span>
-          <span><span class="pc-count" id="pages-read">0</span> <span class="pc-goal" id="pages-goal-label"></span></span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span><span class="pc-count" id="pages-read">0</span> <span class="pc-goal" id="pages-goal-label"></span></span>
+            <button id="edit-goal-btn" onclick="toggleEditGoal()" style="display:none;background:none;border:none;cursor:pointer;font-size:14px;padding:0;line-height:1;color:#9ca3af">✏️</button>
+          </div>
+        </div>
+        <div id="edit-goal-form" style="display:none;padding:10px 0 4px">
+          <div id="edit-goal-options"></div>
+          <button onclick="saveGoal()" class="btn-primary" style="margin-top:8px;padding:8px">حفظ الهدف</button>
         </div>
         <div class="progress-bar-bg">
           <div class="progress-bar-fill" id="my-bar" style="width:0%"></div>
@@ -1278,6 +1285,7 @@ async function openDashboard() {
   const isCreator = group.created_by === state.user?.id;
   document.getElementById('add-member-btn').style.display = isCreator ? '' : 'none';
   document.getElementById('leave-group-btn').style.display = isCreator ? 'none' : '';
+  document.getElementById('edit-goal-btn').style.display = isCreator ? '' : 'none';
 
   await checkAndResetDaily(group);
   await loadMembers();
@@ -1373,6 +1381,77 @@ function subscribeToMembers() {
       filter: 'group_id=eq.' + state.groupId,
     }, async () => { await loadMembers(); })
     .subscribe();
+}
+
+function toggleEditGoal() {
+  const form = document.getElementById('edit-goal-form');
+  const open = form.style.display === 'none';
+  form.style.display = open ? '' : 'none';
+  if (open) {
+    // Seed state from current group
+    const g = state.groupData;
+    const unit = g.goal_unit || 'page';
+    const base = unit.includes('-') ? unit.split('-')[0] : unit;
+    state.goalBaseUnit = base;
+    state.goalPages = g.goal_amount;
+    if (unit === 'page') { state.goalSubUnit = 'none'; state.goalUnit = 'page'; }
+    else if (unit === base) { state.goalSubUnit = 'full'; state.goalUnit = base; }
+    else { state.goalSubUnit = unit.replace(base + '-', ''); state.goalUnit = unit; }
+    renderEditGoalOptions();
+  }
+}
+
+function renderEditGoalOptions() {
+  // Temporarily redirect renderGoalOptions output to edit-goal-options
+  const sec = document.getElementById('edit-goal-options');
+  if (!sec) return;
+  const base = state.goalBaseUnit;
+  if (base === 'page') {
+    sec.innerHTML = `
+      <div class="goal-input-row" style="margin-bottom:10px">
+        <input type="number" id="edit-goal-pages" value="${state.goalPages}" min="1" max="100" oninput="state.goalPages=parseInt(this.value)||1" />
+        <span>صفحة في اليوم</span>
+      </div>
+      <div class="quick-btns">
+        ${[1,2,3,5,10].map(n=>`<button class="quick-btn${state.goalPages===n?' selected':''}" onclick="state.goalPages=${n};renderEditGoalOptions()">${n}</button>`).join('')}
+      </div>`;
+    return;
+  }
+  const baseLabel = base === 'hizb' ? 'حزب' : 'جزء';
+  const fracs = [
+    { key:'quarter', label:`ربع ${baseLabel}` },
+    { key:'half',    label:`نصف ${baseLabel}` },
+    { key:'third',   label:`ثلاثة أرباع ${baseLabel}` },
+    { key:'full',    label:baseLabel },
+  ];
+  const fracBtns = fracs.map(f =>
+    `<button class="quick-btn${state.goalSubUnit===f.key?' selected':''}" onclick="state.goalSubUnit='${f.key}';state.goalUnit='${f.key==='full'?base:base+'-'+f.key}';state.goalPages=1;renderEditGoalOptions()" style="min-width:72px">${f.label}</button>`
+  ).join('');
+  const qtySection = state.goalSubUnit === 'full' ? `
+    <div style="margin-top:10px">
+      <div class="goal-input-row">
+        <input type="number" id="edit-goal-pages" value="${state.goalPages}" min="1" max="30" oninput="state.goalPages=parseInt(this.value)||1" style="width:70px"/>
+        <span>${baseLabel} في اليوم</span>
+      </div>
+    </div>` : '';
+  sec.innerHTML = `<div class="quick-btns" style="flex-wrap:wrap;margin-bottom:4px">${fracBtns}</div>${qtySection}`;
+}
+
+async function saveGoal() {
+  if (!state.goalUnit) { toast('اختر نوع الهدف'); return; }
+  const { error } = await db.from('groups').update({
+    goal_amount: state.goalPages,
+    goal_unit: state.goalUnit,
+  }).eq('id', state.groupId);
+  if (error) { toast('حدث خطأ: ' + error.message); return; }
+  state.groupData.goal_amount = state.goalPages;
+  state.groupData.goal_unit   = state.goalUnit;
+  document.getElementById('pages-goal-label').textContent = '/ ' + state.goalPages + ' ' + (unitLabels[state.goalUnit] || 'صفحة');
+  document.getElementById('dash-sub').textContent = document.getElementById('members-count').textContent + ' · هدف ' + state.goalPages + ' ' + (unitLabels[state.goalUnit] || 'صفحة');
+  renderAddButtons(state.goalUnit);
+  document.getElementById('edit-goal-form').style.display = 'none';
+  toast('تم تحديث الهدف ✓');
+  await loadMembers();
 }
 
 async function leaveGroup() {
