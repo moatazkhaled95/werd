@@ -1178,6 +1178,7 @@ async function createGroup() {
     state.memberId = member.id; state.myPages = 0;
     localStorage.setItem('werd_member_id', member.id);
     localStorage.setItem('werd_group_id', group.id);
+    btn.disabled = false; btn.textContent = 'إنشاء المجموعة 🕌';
     await openDashboard();
   } catch(e) {
     toast('حدث خطأ: ' + e.message);
