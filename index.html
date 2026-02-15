@@ -690,6 +690,13 @@
           <button class="inc-btn" onclick="addPages(5)">+٥</button>
           <button class="inc-btn" onclick="addPages(10)">+١٠</button>
         </div>
+        <div class="inc-btns" style="margin-top:6px">
+          <button class="inc-btn" style="background:#fee2e2;color:#ef4444" onclick="addPages(-1)">-١</button>
+          <button class="inc-btn" style="background:#fee2e2;color:#ef4444" onclick="addPages(-2)">-٢</button>
+          <button class="inc-btn" style="background:#fee2e2;color:#ef4444" onclick="addPages(-3)">-٣</button>
+          <button class="inc-btn" style="background:#fee2e2;color:#ef4444" onclick="addPages(-5)">-٥</button>
+          <button class="inc-btn" style="background:#fee2e2;color:#ef4444" onclick="addPages(-10)">-١٠</button>
+        </div>
         <div class="celebration" id="celebration">🎉 ما شاء الله! أتممت الهدف اليوم!</div>
       </div>
 
@@ -1172,7 +1179,7 @@ function updateMyProgress() {
 }
 
 async function addPages(n) {
-  state.myPages += n;
+  state.myPages = Math.max(0, state.myPages + n);
   updateMyProgress();
   await db.from('members').update({ pages_today: state.myPages }).eq('id', state.memberId);
 }
