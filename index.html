@@ -1237,17 +1237,16 @@ function toggleAddMember() {
   if (isHidden) document.getElementById('new-member-email').value = '';
 }
 
-function sendInvite() {
+async function sendInvite() {
   const email = document.getElementById('new-member-email').value.trim();
   if (!email) return toast('أدخل البريد الإلكتروني');
   const joinLink = window.location.origin + window.location.pathname + '?join=' + state.groupData.invite_code;
-  const groupName = state.groupData?.name || 'وِرْدٌ';
-  const subject = encodeURIComponent('دعوة للانضمام إلى مجموعة ' + groupName + ' 📖');
-  const body = encodeURIComponent(
-    'السلام عليكم،\n\nأنت مدعو للانضمام إلى مجموعة "' + groupName + '" على تطبيق وِرْدٌ لمتابعة قراءة القرآن الكريم.\n\nانقر على الرابط للانضمام:\n' + joinLink + '\n\nبارك الله فيك.'
-  );
-  window.open('mailto:' + email + '?subject=' + subject + '&body=' + body);
-  toast('تم فتح تطبيق البريد ✓');
+  const { error } = await db.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: joinLink }
+  });
+  if (error) return toast('حدث خطأ: ' + error.message);
+  toast('تم إرسال الدعوة ✓');
   document.getElementById('new-member-email').value = '';
   toggleAddMember();
 }
