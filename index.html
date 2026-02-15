@@ -640,13 +640,13 @@
     <div class="screen-header">
       <button class="back-btn" onclick="showMyGroups()">← رجوع</button>
       <h2>الانضمام لمجموعة</h2>
-      <p>أدخل رمز الدعوة أو افتح الرابط المشارك</p>
+      <p>أدخل رقم المجموعة المكون من ٦ أرقام</p>
     </div>
     <div class="screen-body">
       <div class="card" id="join-lookup-card">
-        <h3>رمز الدعوة</h3>
+        <h3>رقم المجموعة</h3>
         <div class="form-group" style="display:flex;gap:8px">
-          <input type="text" id="invite-input" placeholder="أدخل الرمز…" style="direction:ltr;text-align:left" />
+          <input type="number" id="invite-input" placeholder="أدخل الرقم المكون من ٦ أرقام" style="direction:ltr;text-align:left" />
           <button class="btn-primary" style="width:auto;padding:12px 18px;white-space:nowrap" onclick="lookupGroup()">بحث</button>
         </div>
       </div>
@@ -700,6 +700,10 @@
 
       <div class="invite-card">
         <div class="ic-title">دعوة الأصدقاء</div>
+        <div style="text-align:center;margin-bottom:10px">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">رقم المجموعة</div>
+          <div id="group-code-display" style="font-size:32px;font-weight:800;letter-spacing:6px;color:#059669;direction:ltr"></div>
+        </div>
         <div class="invite-link-row">
           <div class="invite-link-box" id="invite-link-display"></div>
           <button class="copy-btn" onclick="copyLink()">نسخ</button>
@@ -1072,6 +1076,7 @@ async function createGroup() {
   btn.disabled = true; btn.textContent = 'جاري الإنشاء…';
 
   try {
+    const invite_code = String(Math.floor(100000 + Math.random() * 900000));
     const { data: group, error: ge } = await db.from('groups').insert({
       name,
       goal_amount: state.goalPages,
@@ -1079,6 +1084,7 @@ async function createGroup() {
       privacy: state.privacy,
       restriction: state.restriction,
       created_by: state.user.id,
+      invite_code,
     }).select().single();
     if (ge) throw ge;
 
@@ -1228,6 +1234,7 @@ async function openDashboard() {
   if (group.restriction === 'men')   badgeEl.innerHTML += '<span class="badge">👨 للرجال فقط</span>';
   if (group.restriction === 'women') badgeEl.innerHTML += '<span class="badge">👩 للنساء فقط</span>';
 
+  document.getElementById('group-code-display').textContent = group.invite_code;
   const baseUrl = window.location.origin + window.location.pathname;
   document.getElementById('invite-link-display').textContent = baseUrl + '?join=' + group.invite_code;
 
