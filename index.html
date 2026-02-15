@@ -724,8 +724,8 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 const unitLabels = {
   page: 'صفحة',
-  hizb: 'حزب', 'hizb-quarter': 'ربع حزب', 'hizb-half': 'نصف حزب', 'hizb-third': 'ثلث حزب',
-  juz:  'جزء',  'juz-quarter':  'ربع جزء',  'juz-half':  'نصف جزء',  'juz-third':  'ثلث جزء',
+  hizb: 'حزب', 'hizb-quarter': 'ربع حزب', 'hizb-half': 'نصف حزب', 'hizb-third': 'ثلاثة أرباع حزب',
+  juz:  'جزء',  'juz-quarter':  'ربع جزء',  'juz-half':  'نصف جزء',  'juz-third':  'ثلاثة أرباع جزء',
 };
 
 const state = {
@@ -1027,7 +1027,7 @@ function renderGoalOptions() {
   const fracs = [
     { key: 'quarter', label: `ربع ${baseLabel}` },
     { key: 'half',    label: `نصف ${baseLabel}` },
-    { key: 'third',   label: `ثلث ${baseLabel}` },
+    { key: 'third',   label: `ثلاثة أرباع ${baseLabel}` },
     { key: 'full',    label: baseLabel },
   ];
 
