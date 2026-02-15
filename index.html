@@ -754,27 +754,28 @@ window.addEventListener('DOMContentLoaded', async () => {
   const joinCode = params.get('join');
   if (joinCode) localStorage.setItem('werd_pending_join', joinCode);
 
-  // Handle initial page load using getSession (fires once, no event conflicts)
-  try {
-    const { data: { session } } = await db.auth.getSession();
-    if (session?.user) {
-      state.user = session.user;
-      await loadProfile(session.user);
-      await afterLogin();
-    } else {
-      show('auth');
-    }
-  } catch(e) { show('auth'); }
+  let authBusy = false;
 
-  // Handle future auth events only (not initial load)
   db.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN') {
-      state.user = session.user;
-      await loadProfile(session.user);
-      await afterLogin();
-    } else if (event === 'SIGNED_OUT') {
+    if (event === 'SIGNED_OUT') {
+      authBusy = false;
       state.user = null; state.profile = null;
       show('auth');
+      return;
+    }
+    if (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION') return;
+    if (authBusy) return;
+    authBusy = true;
+    try {
+      if (session?.user) {
+        state.user = session.user;
+        loadProfile(session.user);
+        await afterLogin();
+      } else {
+        show('auth');
+      }
+    } finally {
+      authBusy = false;
     }
   });
 });
@@ -869,8 +870,9 @@ async function saveCompleteProfile() {
   if (!firstName) return showErr(errEl, 'أدخل اسمك');
   if (!cpGender) return showErr(errEl, 'اختر الجنس');
   // Save to user metadata (no DB table needed)
-  const { error } = await db.auth.updateUser({ data: { name: firstName, gender: cpGender } });
+  const { data: updated, error } = await db.auth.updateUser({ data: { name: firstName, gender: cpGender } });
   if (error) return showErr(errEl, error.message || 'حدث خطأ، حاول مجدداً');
+  if (updated?.user) state.user = updated.user;
   state.profile = { first_name: firstName, gender: cpGender, email: state.user.email };
   await afterLogin();
 }
