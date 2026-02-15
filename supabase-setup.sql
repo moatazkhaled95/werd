@@ -70,6 +70,7 @@ alter table groups  add column if not exists created_by       uuid references au
 alter table members add column if not exists user_id          uuid references auth.users(id);
 alter table groups  add column if not exists timezone         text default 'Asia/Riyadh';
 alter table groups  add column if not exists last_reset_date  text default '';
+alter table members add column if not exists email            text default '';
 
 -- ── Realtime ──────────────────────────────────
 do $$
