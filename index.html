@@ -646,7 +646,7 @@
       <div class="card" id="join-lookup-card">
         <h3>رقم المجموعة</h3>
         <div class="form-group" style="display:flex;gap:8px">
-          <input type="number" id="invite-input" placeholder="أدخل الرقم المكون من ٦ أرقام" style="direction:ltr;text-align:left" />
+          <input type="text" inputmode="numeric" id="invite-input" placeholder="أدخل رقم المجموعة" style="direction:ltr;text-align:left" onkeydown="if(event.key==='Enter')lookupGroup()" />
           <button class="btn-primary" style="width:auto;padding:12px 18px;white-space:nowrap" onclick="lookupGroup()">بحث</button>
         </div>
       </div>
@@ -702,7 +702,10 @@
         <div class="ic-title">دعوة الأصدقاء</div>
         <div style="text-align:center;margin-bottom:10px">
           <div style="font-size:12px;color:#6b7280;margin-bottom:4px">رقم المجموعة</div>
-          <div id="group-code-display" style="font-size:32px;font-weight:800;letter-spacing:6px;color:#059669;direction:ltr"></div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+            <div id="group-code-display" style="font-size:32px;font-weight:800;letter-spacing:6px;color:#059669;direction:ltr"></div>
+            <button onclick="copyCode()" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#059669;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap">نسخ الرقم</button>
+          </div>
         </div>
         <div class="invite-link-row">
           <div class="invite-link-box" id="invite-link-display"></div>
@@ -1142,8 +1145,8 @@ async function autoJoinGroup(code) {
 }
 
 async function lookupGroup() {
-  const code = document.getElementById('invite-input').value.trim();
-  if (!code) { toast('أدخل رمز الدعوة'); return; }
+  const code = document.getElementById('invite-input').value.replace(/\s+/g, '').trim();
+  if (!code) { toast('أدخل رقم المجموعة'); return; }
 
   const { data: group } = await db.from('groups').select('*').eq('invite_code', code).single();
   if (!group) { toast('لم يتم العثور على المجموعة'); return; }
@@ -1351,6 +1354,13 @@ function copyLink() {
   const link = document.getElementById('invite-link-display').textContent;
   navigator.clipboard.writeText(link).catch(() => {});
   toast('تم نسخ الرابط!');
+}
+
+function copyCode() {
+  const code = state.groupData?.invite_code;
+  if (!code) return;
+  navigator.clipboard.writeText(code).catch(() => {});
+  toast('تم نسخ رقم المجموعة ✓');
 }
 
 // ══════════════════════════════════════════
