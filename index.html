@@ -674,7 +674,10 @@
     <div class="dash-header">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <button class="back-btn" onclick="leaveDashboard()">← مجموعاتي</button>
-        <button onclick="signOut()" style="background:none;border:none;color:#6b7280;font-size:13px;cursor:pointer;padding:4px 8px">خروج ↩</button>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button id="leave-group-btn" onclick="leaveGroup()" style="display:none;background:none;border:1px solid #fee2e2;color:#ef4444;font-size:12px;cursor:pointer;padding:4px 10px;border-radius:8px">مغادرة</button>
+          <button onclick="signOut()" style="background:none;border:none;color:#6b7280;font-size:13px;cursor:pointer;padding:4px 8px">خروج ↩</button>
+        </div>
       </div>
       <h2 id="dash-group-name">مجموعتي</h2>
       <div class="sub" id="dash-sub"></div>
@@ -1240,6 +1243,12 @@ async function checkAndResetDaily(group) {
   const tz = group.timezone || 'Asia/Riyadh';
   const todayInTz = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date());
   if (todayInTz === group.last_reset_date) return; // already reset today
+  if (!group.last_reset_date) {
+    // First time — just record today, don't wipe existing progress
+    await db.from('groups').update({ last_reset_date: todayInTz }).eq('id', group.id);
+    state.groupData.last_reset_date = todayInTz;
+    return;
+  }
   // New day — reset all members' pages to 0
   await db.from('members').update({ pages_today: 0 }).eq('group_id', group.id);
   await db.from('groups').update({ last_reset_date: todayInTz }).eq('id', group.id);
@@ -1262,6 +1271,7 @@ async function openDashboard() {
   document.getElementById('group-code-display').textContent = group.invite_code;
   const isCreator = group.created_by === state.user?.id;
   document.getElementById('add-member-btn').style.display = isCreator ? '' : 'none';
+  document.getElementById('leave-group-btn').style.display = isCreator ? 'none' : '';
 
   await checkAndResetDaily(group);
   await loadMembers();
@@ -1357,6 +1367,14 @@ function subscribeToMembers() {
       filter: 'group_id=eq.' + state.groupId,
     }, async () => { await loadMembers(); })
     .subscribe();
+}
+
+async function leaveGroup() {
+  if (!confirm('هل أنت متأكد أنك تريد مغادرة المجموعة؟')) return;
+  const { error } = await db.from('members').delete().eq('id', state.memberId);
+  if (error) { toast('حدث خطأ: ' + error.message); return; }
+  toast('تم مغادرة المجموعة');
+  await leaveDashboard();
 }
 
 async function leaveDashboard() {
