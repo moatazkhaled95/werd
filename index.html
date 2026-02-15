@@ -546,9 +546,16 @@
     <div class="screen-header">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <h2 id="choose-hi">أهلاً!</h2>
-        <button onclick="signOut()" style="background:none;border:none;color:#6b7280;font-size:13px;cursor:pointer;padding:4px 8px">خروج ↩</button>
+        <button onclick="signOut()" style="background:#ef4444;border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;padding:6px 14px;border-radius:8px;font-family:inherit">تسجيل الخروج</button>
       </div>
-      <p>مجموعاتي</p>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+        <p style="margin:0">مجموعاتي</p>
+        <div style="display:flex;align-items:center;gap:4px;margin-right:auto">
+          <span style="font-size:11px;color:#a7f3d0">حجم الخط</span>
+          <button onclick="changeFontSize(-1)" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:14px;font-weight:700;width:26px;height:26px;border-radius:6px;cursor:pointer;line-height:1">−</button>
+          <button onclick="changeFontSize(1)"  style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:14px;font-weight:700;width:26px;height:26px;border-radius:6px;cursor:pointer;line-height:1">+</button>
+        </div>
+      </div>
     </div>
     <div class="screen-body">
       <div id="my-groups-list" style="margin-bottom:16px"></div>
@@ -675,8 +682,8 @@
       <div style="display:flex;justify-content:space-between;align-items:center">
         <button class="back-btn" onclick="leaveDashboard()">← مجموعاتي</button>
         <div style="display:flex;gap:6px;align-items:center">
-          <button id="leave-group-btn" onclick="leaveGroup()" style="display:none;background:none;border:1px solid #fee2e2;color:#ef4444;font-size:12px;cursor:pointer;padding:4px 10px;border-radius:8px">مغادرة</button>
-          <button onclick="signOut()" style="background:none;border:none;color:#6b7280;font-size:13px;cursor:pointer;padding:4px 8px">خروج ↩</button>
+          <button id="leave-group-btn" onclick="leaveGroup()" style="display:none;background:#ef4444;border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;padding:6px 14px;border-radius:8px;font-family:inherit">مغادرة المجموعة</button>
+          <button onclick="signOut()" style="background:#ef4444;border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;padding:6px 14px;border-radius:8px;font-family:inherit">تسجيل الخروج</button>
         </div>
       </div>
       <h2 id="dash-group-name">مجموعتي</h2>
@@ -766,7 +773,17 @@ let signupGender = '';
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
+function changeFontSize(delta) {
+  const root = document.documentElement;
+  const current = parseFloat(getComputedStyle(root).fontSize) || 16;
+  const next = Math.min(22, Math.max(12, current + delta));
+  root.style.fontSize = next + 'px';
+  localStorage.setItem('werd_font_size', next);
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
+  const savedSize = localStorage.getItem('werd_font_size');
+  if (savedSize) document.documentElement.style.fontSize = savedSize + 'px';
   renderGoalOptions();
 
   // Check for invite link in URL
@@ -1468,6 +1485,9 @@ async function saveGoal() {
     goal_unit: state.goalUnit,
   }).eq('id', state.groupId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
+  // Reset all members' progress when goal changes
+  await db.from('members').update({ pages_today: 0 }).eq('group_id', state.groupId);
+  state.myPages = 0;
   state.groupData.goal_amount = state.goalPages;
   state.groupData.goal_unit   = state.goalUnit;
   document.getElementById('pages-goal-label').textContent = '/ ' + state.goalPages + ' ' + (unitLabels[state.goalUnit] || 'صفحة');
