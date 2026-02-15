@@ -63,6 +63,7 @@ create policy "public update groups"  on groups  for update using (true);
 create policy "public read members"   on members for select using (true);
 create policy "public insert members" on members for insert with check (true);
 create policy "public update members" on members for update using (true);
+create policy "public delete members" on members for delete using (true);
 
 -- ── Migrations (safe to run on existing DB) ──
 alter table groups  add column if not exists created_by uuid references auth.users(id);

@@ -1189,9 +1189,9 @@ function renderMembers(members) {
 }
 
 async function removeMember(memberId) {
-  if (!confirm('هل تريد إزالة هذا العضو؟')) return;
   const { error } = await db.from('members').delete().eq('id', memberId);
-  if (error) toast('حدث خطأ');
+  if (error) { toast('حدث خطأ: ' + error.message); return; }
+  toast('تم إزالة العضو ✓');
 }
 
 function updateMyProgress() {
