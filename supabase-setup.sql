@@ -72,6 +72,20 @@ alter table groups  add column if not exists timezone         text default 'Asia
 alter table groups  add column if not exists last_reset_date  text default '';
 alter table members add column if not exists email            text default '';
 
+-- ── Push Subscriptions ────────────────────────
+create table if not exists push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  group_id uuid references groups(id) on delete cascade,
+  subscription jsonb not null,
+  created_at timestamptz default now()
+);
+alter table push_subscriptions enable row level security;
+drop policy if exists "users manage own subscriptions" on push_subscriptions;
+create policy "users manage own subscriptions" on push_subscriptions
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+-- Allow edge function to read all (via service role key)
+
 -- ── Realtime ──────────────────────────────────
 do $$
 begin

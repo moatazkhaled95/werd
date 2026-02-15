@@ -734,6 +734,7 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+const VAPID_PUBLIC_KEY = 'BDR4tYfWiPIIPEuN6e1ntH0eOvFE5uxn4zE5OZqn8g0nshO4dvxjnti3n4aFJhw2YHvhJQyYUkEbtuFV79XSv_Q';
 
 const unitLabels = {
   page: 'صفحة',
@@ -1265,6 +1266,7 @@ async function openDashboard() {
   await checkAndResetDaily(group);
   await loadMembers();
   subscribeToMembers();
+  setupPush();
   show('dashboard');
 }
 
@@ -1340,7 +1342,7 @@ async function addPages(n) {
   state.myPages = Math.max(0, state.myPages + n);
   if (prevPages < goal && state.myPages >= goal) {
     goalNotify('🎉 ما شاء الله! أتممت الهدف اليوم!');
-    sendGoalEmails();
+    sendGoalNotification();
   }
   updateMyProgress();
   await db.from('members').update({ pages_today: state.myPages }).eq('id', state.memberId);
@@ -1423,18 +1425,39 @@ function toast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
 }
 
-async function sendGoalEmails() {
+async function setupPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
   try {
-    const { data: members } = await db.from('members').select('email, name').eq('group_id', state.groupId);
-    if (!members) return;
-    const others = members.filter(m => m.email && m.email !== state.user.email);
-    if (!others.length) return;
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+    const existing = await reg.pushManager.getSubscription();
+    const sub = existing || await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    });
+    // Save subscription for this user+group
+    await db.from('push_subscriptions')
+      .upsert({ user_id: state.user.id, group_id: state.groupId, subscription: sub.toJSON() },
+               { onConflict: 'user_id,group_id' });
+  } catch(e) { /* silent */ }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
+async function sendGoalNotification() {
+  try {
     const myName = state.profile?.first_name || state.user.email;
     const groupName = state.groupData?.name || '';
     await db.functions.invoke('send-goal-notification', {
-      body: { members: others, senderName: myName, groupName },
+      body: { groupId: state.groupId, senderUserId: state.user.id, senderName: myName, groupName },
     });
-  } catch(e) { /* silent — email is best-effort */ }
+  } catch(e) { /* silent */ }
 }
 
 let goalBannerTimer = null;
