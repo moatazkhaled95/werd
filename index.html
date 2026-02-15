@@ -469,7 +469,10 @@
         </div>
         <div class="form-group" style="margin-top:12px">
           <label>كلمة المرور</label>
-          <input type="password" id="signup-password" placeholder="٦ أحرف على الأقل" style="direction:ltr;text-align:left" />
+          <div style="position:relative">
+            <input type="password" id="signup-password" placeholder="٦ أحرف على الأقل" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
+            <button type="button" onclick="togglePass('signup-password',this)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:0;line-height:1">👁</button>
+          </div>
         </div>
         <div class="form-group" style="margin-top:12px">
           <label>الجنس</label>
@@ -516,7 +519,10 @@
         </div>
         <div class="form-group" style="margin-top:12px">
           <label>كلمة المرور</label>
-          <input type="password" id="signin-password" placeholder="كلمة المرور" style="direction:ltr;text-align:left" />
+          <div style="position:relative">
+            <input type="password" id="signin-password" placeholder="كلمة المرور" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
+            <button type="button" onclick="togglePass('signin-password',this)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:0;line-height:1">👁</button>
+          </div>
         </div>
         <div id="signin-error" class="err-text"></div>
       </div>
@@ -866,6 +872,13 @@ function selectSignupGender(g) {
   signupGender = g;
   document.getElementById('signup-card-male').classList.toggle('selected', g === 'male');
   document.getElementById('signup-card-female').classList.toggle('selected', g === 'female');
+}
+
+function togglePass(id, btn) {
+  const input = document.getElementById(id);
+  const isText = input.type === 'text';
+  input.type = isText ? 'password' : 'text';
+  btn.style.opacity = isText ? '0.5' : '1';
 }
 
 async function signUp() {
@@ -1315,7 +1328,8 @@ function toggleAddMember() {
 async function sendInvite() {
   const email = document.getElementById('new-member-email').value.trim();
   if (!email) return toast('أدخل البريد الإلكتروني');
-  const joinLink = window.location.origin + window.location.pathname + '?join=' + state.groupData.invite_code;
+  const prodUrl = 'https://werd-moatazs-projects-f7432b84.vercel.app';
+  const joinLink = prodUrl + '/?join=' + state.groupData.invite_code;
   const { error } = await db.auth.signInWithOtp({
     email,
     options: { emailRedirectTo: joinLink }
