@@ -409,8 +409,7 @@
     </div>
     <div class="auth-card" style="margin-top:16px">
       <p style="font-size:13px;color:#6b7280;margin-bottom:16px;text-align:center">نحتاج بعض المعلومات لإكمال حسابك</p>
-      <input id="cp-first" type="text" placeholder="الاسم الأول *" class="form-input" style="margin-bottom:10px;width:100%" />
-      <input id="cp-last" type="text" placeholder="اسم العائلة" class="form-input" style="margin-bottom:16px;width:100%" />
+      <input id="cp-first" type="text" placeholder="الاسم *" class="form-input" style="margin-bottom:16px;width:100%" />
       <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:8px">الجنس *</label>
       <div class="radio-group" style="margin-bottom:16px">
         <label class="radio-card" id="cp-card-male" onclick="selectCpGender('male')">
@@ -460,15 +459,9 @@
     </div>
     <div class="screen-body">
       <div class="card">
-        <div class="form-row">
-          <div class="form-group">
-            <label>الاسم الأول</label>
-            <input type="text" id="signup-firstname" placeholder="محمد" />
-          </div>
-          <div class="form-group">
-            <label>اسم العائلة</label>
-            <input type="text" id="signup-lastname" placeholder="العمري" />
-          </div>
+        <div class="form-group">
+          <label>الاسم</label>
+          <input type="text" id="signup-firstname" placeholder="محمد" />
         </div>
         <div class="form-group" style="margin-top:12px">
           <label>البريد الإلكتروني</label>
@@ -784,29 +777,14 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
-async function loadProfile(user) {
-  const { data } = await db.from('profiles').select('*').eq('id', user.id).single();
-  if (data) {
-    state.profile = data;
-  } else if (user.user_metadata?.full_name) {
-    // Google user — create profile if missing
-    const nameParts = (user.user_metadata.full_name || '').split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName  = nameParts.slice(1).join(' ') || '';
-    const { data: newProfile } = await db.from('profiles').upsert({
-      id: user.id,
-      first_name: firstName,
-      last_name: lastName,
-      email: user.email,
-      gender: '',
-    }).select().single();
-    state.profile = newProfile;
-    // If Google user has no gender, ask them
-    if (!state.profile?.gender) {
-      show('complete-profile');
-      return;
-    }
-  }
+function loadProfile(user) {
+  // Read directly from user_metadata — no DB call needed
+  const meta = user.user_metadata || {};
+  state.profile = {
+    first_name: meta.name || meta.full_name?.split(' ')[0] || '',
+    gender:     meta.gender || '',
+    email:      user.email || '',
+  };
 }
 
 async function afterLogin() {
@@ -863,26 +841,12 @@ async function saveCompleteProfile() {
   const firstName = document.getElementById('cp-first').value.trim();
   const errEl = document.getElementById('cp-error');
   errEl.classList.remove('show');
-  if (!firstName) return showErr(errEl, 'أدخل اسمك الأول');
+  if (!firstName) return showErr(errEl, 'أدخل اسمك');
   if (!cpGender) return showErr(errEl, 'اختر الجنس');
-  const lastName = document.getElementById('cp-last').value.trim();
-  // Try update first, then insert if no row exists
-  const { error: upErr } = await db.from('profiles').update({
-    first_name: firstName, last_name: lastName, gender: cpGender,
-  }).eq('id', state.user.id);
-
-  if (upErr) {
-    // Row might not exist yet — try insert
-    const { error: insErr } = await db.from('profiles').insert({
-      id: state.user.id,
-      first_name: firstName,
-      last_name: lastName,
-      email: state.user.email || '',
-      gender: cpGender,
-    });
-    if (insErr) return showErr(errEl, insErr.message || 'حدث خطأ، حاول مجدداً');
-  }
-  state.profile = { first_name: firstName, last_name: lastName, email: state.user.email, gender: cpGender };
+  // Save to user metadata (no DB table needed)
+  const { error } = await db.auth.updateUser({ data: { name: firstName, gender: cpGender } });
+  if (error) return showErr(errEl, error.message || 'حدث خطأ، حاول مجدداً');
+  state.profile = { first_name: firstName, gender: cpGender, email: state.user.email };
   await afterLogin();
 }
 
@@ -894,35 +858,25 @@ function selectSignupGender(g) {
 
 async function signUp() {
   const firstName = document.getElementById('signup-firstname').value.trim();
-  const lastName  = document.getElementById('signup-lastname').value.trim();
-  const email     = document.getElementById('signup-email').value.trim();
-  const password  = document.getElementById('signup-password').value;
-  const errEl     = document.getElementById('signup-error');
+  const email    = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const errEl    = document.getElementById('signup-error');
 
   errEl.classList.remove('show');
-  if (!firstName)    return showErr(errEl, 'أدخل الاسم الأول');
+  if (!firstName)    return showErr(errEl, 'أدخل اسمك');
   if (!email)        return showErr(errEl, 'أدخل البريد الإلكتروني');
   if (password.length < 6) return showErr(errEl, 'كلمة المرور يجب أن تكون ٦ أحرف على الأقل');
   if (!signupGender) return showErr(errEl, 'اختر الجنس');
 
   const { data, error } = await db.auth.signUp({
     email, password,
-    options: { data: { first_name: firstName, last_name: lastName } }
+    options: { data: { name: firstName, gender: signupGender } }
   });
 
   if (error) return showErr(errEl, error.message);
 
-  // Create profile
-  await db.from('profiles').upsert({
-    id: data.user.id,
-    first_name: firstName,
-    last_name: lastName,
-    email,
-    gender: signupGender,
-  });
-
   state.user = data.user;
-  state.profile = { first_name: firstName, last_name: lastName, email, gender: signupGender };
+  state.profile = { first_name: firstName, gender: signupGender, email };
   toast('تم إنشاء الحساب ✓');
   // onAuthStateChange SIGNED_IN will fire and handle navigation
 }
