@@ -689,7 +689,7 @@
             <span class="mc-title">الأعضاء</span>
             <span id="members-count" style="font-size:12px;color:#9ca3af"></span>
           </div>
-          <button class="add-member-btn" onclick="toggleAddMember()">+ إضافة عضو</button>
+          <button id="add-member-btn" class="add-member-btn" onclick="toggleAddMember()" style="display:none">+ إضافة عضو</button>
         </div>
         <div id="add-member-form" style="display:none;padding:12px 0 4px;border-top:1px solid #f3f4f6;margin-top:8px">
           <input id="new-member-email" type="email" placeholder="البريد الإلكتروني" class="form-input" style="margin-bottom:8px;width:100%;direction:ltr;text-align:left" />
@@ -706,10 +706,6 @@
             <div id="group-code-display" style="font-size:32px;font-weight:800;letter-spacing:6px;color:#059669;direction:ltr"></div>
             <button onclick="copyCode()" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#059669;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap">نسخ الرقم</button>
           </div>
-        </div>
-        <div class="invite-link-row">
-          <div class="invite-link-box" id="invite-link-display"></div>
-          <button class="copy-btn" onclick="copyLink()">نسخ</button>
         </div>
       </div>
     </div>
@@ -1080,6 +1076,7 @@ async function createGroup() {
 
   try {
     const invite_code = String(Math.floor(100000 + Math.random() * 900000));
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const { data: group, error: ge } = await db.from('groups').insert({
       name,
       goal_amount: state.goalPages,
@@ -1088,6 +1085,7 @@ async function createGroup() {
       restriction: state.restriction,
       created_by: state.user.id,
       invite_code,
+      timezone,
     }).select().single();
     if (ge) throw ge;
 
@@ -1190,6 +1188,7 @@ async function joinGroup() {
 //  DASHBOARD
 // ══════════════════════════════════════════
 let realtimeSub = null;
+let prevMemberPages = {}; // memberId → pages_today, to detect goal crossing
 
 function renderAddButtons(goalUnit) {
   const el = document.getElementById('add-pages-btns');
@@ -1225,6 +1224,17 @@ function renderAddButtons(goalUnit) {
   }
 }
 
+async function checkAndResetDaily(group) {
+  const tz = group.timezone || 'Asia/Riyadh';
+  const todayInTz = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date());
+  if (todayInTz === group.last_reset_date) return; // already reset today
+  // New day — reset all members' pages to 0
+  await db.from('members').update({ pages_today: 0 }).eq('group_id', group.id);
+  await db.from('groups').update({ last_reset_date: todayInTz }).eq('id', group.id);
+  state.groupData.last_reset_date = todayInTz;
+  state.myPages = 0;
+}
+
 async function openDashboard() {
   const group = state.groupData;
   document.getElementById('dash-group-name').textContent = group.name;
@@ -1238,9 +1248,10 @@ async function openDashboard() {
   if (group.restriction === 'women') badgeEl.innerHTML += '<span class="badge">👩 للنساء فقط</span>';
 
   document.getElementById('group-code-display').textContent = group.invite_code;
-  const baseUrl = window.location.origin + window.location.pathname;
-  document.getElementById('invite-link-display').textContent = baseUrl + '?join=' + group.invite_code;
+  const isCreator = group.created_by === state.user?.id;
+  document.getElementById('add-member-btn').style.display = isCreator ? '' : 'none';
 
+  await checkAndResetDaily(group);
   await loadMembers();
   subscribeToMembers();
   show('dashboard');
@@ -1249,6 +1260,18 @@ async function openDashboard() {
 async function loadMembers() {
   const { data: members } = await db.from('members').select('*').eq('group_id', state.groupId);
   if (!members) return;
+  const goal = state.groupData.goal_amount;
+
+  // Detect goal-reached for other members
+  members.forEach(m => {
+    if (m.id === state.memberId) return; // skip self — they already see celebration
+    const prev = prevMemberPages[m.id];
+    if (prev !== undefined && prev < goal && m.pages_today >= goal) {
+      toast('🎉 ' + m.name + ' أتمّ الهدف اليوم!');
+    }
+    prevMemberPages[m.id] = m.pages_today;
+  });
+
   const me = members.find(m => m.id === state.memberId);
   if (me) state.myPages = me.pages_today;
   renderMembers(members);
@@ -1319,6 +1342,7 @@ function subscribeToMembers() {
 
 async function leaveDashboard() {
   if (realtimeSub) { realtimeSub.unsubscribe(); realtimeSub = null; }
+  prevMemberPages = {};
   localStorage.removeItem('werd_member_id');
   localStorage.removeItem('werd_group_id');
   Object.assign(state, { groupId: null, groupData: null, memberId: null, myPages: 0, joinGroupData: null });

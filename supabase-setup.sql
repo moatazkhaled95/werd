@@ -66,8 +66,10 @@ create policy "public update members" on members for update using (true);
 create policy "public delete members" on members for delete using (true);
 
 -- ── Migrations (safe to run on existing DB) ──
-alter table groups  add column if not exists created_by uuid references auth.users(id);
-alter table members add column if not exists user_id    uuid references auth.users(id);
+alter table groups  add column if not exists created_by       uuid references auth.users(id);
+alter table members add column if not exists user_id          uuid references auth.users(id);
+alter table groups  add column if not exists timezone         text default 'Asia/Riyadh';
+alter table groups  add column if not exists last_reset_date  text default '';
 
 -- ── Realtime ──────────────────────────────────
 do $$
