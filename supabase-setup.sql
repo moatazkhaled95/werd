@@ -1,9 +1,10 @@
 -- ================================================
 -- وِرْدٌ — Supabase Database Setup
--- Run this once in your Supabase SQL Editor
+-- Run this in your Supabase SQL Editor
+-- Safe to re-run (uses IF NOT EXISTS + DROP IF EXISTS for policies)
 -- ================================================
 
--- Profiles table (linked to Supabase Auth users)
+-- ── Profiles ──────────────────────────────────
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   first_name text not null default '',
@@ -14,11 +15,16 @@ create table if not exists profiles (
 );
 
 alter table profiles enable row level security;
+
+drop policy if exists "users read own profile"   on profiles;
+drop policy if exists "users insert own profile" on profiles;
+drop policy if exists "users update own profile" on profiles;
+
 create policy "users read own profile"   on profiles for select using (auth.uid() = id);
 create policy "users insert own profile" on profiles for insert with check (auth.uid() = id);
 create policy "users update own profile" on profiles for update using (auth.uid() = id);
 
--- Groups table
+-- ── Groups ────────────────────────────────────
 create table if not exists groups (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -30,7 +36,7 @@ create table if not exists groups (
   created_at timestamptz default now()
 );
 
--- Members table
+-- ── Members ───────────────────────────────────
 create table if not exists members (
   id uuid primary key default gen_random_uuid(),
   group_id uuid references groups(id) on delete cascade,
@@ -40,17 +46,35 @@ create table if not exists members (
   created_at timestamptz default now()
 );
 
--- Enable Row Level Security
-alter table groups enable row level security;
+-- ── RLS ───────────────────────────────────────
+alter table groups  enable row level security;
 alter table members enable row level security;
 
--- Open policies (suitable for public app without auth)
-create policy "public read groups"   on groups  for select using (true);
-create policy "public insert groups" on groups  for insert with check (true);
-create policy "public update groups" on groups  for update using (true);
-create policy "public read members"  on members for select using (true);
+drop policy if exists "public read groups"    on groups;
+drop policy if exists "public insert groups"  on groups;
+drop policy if exists "public update groups"  on groups;
+drop policy if exists "public read members"   on members;
+drop policy if exists "public insert members" on members;
+drop policy if exists "public update members" on members;
+
+create policy "public read groups"    on groups  for select using (true);
+create policy "public insert groups"  on groups  for insert with check (true);
+create policy "public update groups"  on groups  for update using (true);
+create policy "public read members"   on members for select using (true);
 create policy "public insert members" on members for insert with check (true);
 create policy "public update members" on members for update using (true);
 
--- Enable realtime for members table
-alter publication supabase_realtime add table members;
+-- ── Migrations (safe to run on existing DB) ──
+alter table groups  add column if not exists created_by uuid references auth.users(id);
+alter table members add column if not exists user_id    uuid references auth.users(id);
+
+-- ── Realtime ──────────────────────────────────
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'members'
+  ) then
+    alter publication supabase_realtime add table members;
+  end if;
+end $$;
