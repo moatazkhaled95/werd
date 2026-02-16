@@ -1571,11 +1571,8 @@ async function addPages(n) {
     if (prevPages > goal && newPages >= goal) {
       // Was above goal, still at/above → undo 1 extra point
       pointsDelta = -1;
-    } else if (prevPages >= goal && newPages < goal && state.pointsToday > 0) {
-      // Dropped below goal → lose ALL today's points
-      pointsDelta = -state.pointsToday;
-      toast('تم خصم النقاط — الهدف لم يكتمل بعد');
     }
+    // Dropping to/below goal: no point change — keep earned points
   }
 
   if (pointsDelta !== 0) {
