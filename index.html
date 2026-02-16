@@ -1518,6 +1518,7 @@ function renderMembers(members) {
       const canRemove = isCreator && !isMe;
       list.innerHTML += `
         <div class="member-item">
+          ${canRemove ? `<button onclick="removeMember('${m.id}')" style="background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;padding:4px 8px;line-height:1;order:-1">×</button>` : ''}
           <div class="member-avatar ${isMe ? 'me' : ''}">${m.name[0]}</div>
           <div class="member-info">
             <div class="member-name-row">
@@ -1526,7 +1527,7 @@ function renderMembers(members) {
             </div>
             <div class="member-bar-bg"><div class="member-bar-fill" style="width:${pct}%"></div></div>
           </div>
-          ${canRemove ? `<button onclick="removeMember('${m.id}')" style="background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;padding:4px 8px;line-height:1">×</button>` : `<div class="member-check">${done ? '✅' : ''}</div>`}
+          <div class="member-check">${done ? '✅' : ''}</div>
         </div>`;
     });
   }
