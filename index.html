@@ -406,7 +406,7 @@
     html[data-theme="dark"] .progress-card,
     html[data-theme="dark"] .members-card,
     html[data-theme="dark"] .invite-card { background: rgba(10,20,35,0.88) !important; }
-    html[data-theme="dark"] #dashboard { background: #0a1628 !important; }
+    html[data-theme="dark"] #dashboard { background: transparent !important; }
     html[data-theme="dark"] .screen-body { background: transparent; }
     html[data-theme="dark"] .card,
     html[data-theme="dark"] .progress-card,
@@ -467,7 +467,9 @@
       display: flex; flex-direction: column; padding: 0; box-shadow: 4px 0 24px rgba(0,0,0,.18);
     }
     .ham-drawer.open { transform: translateX(0); }
-    html[data-theme="dark"] .ham-drawer { background: #0f1f2e; }
+    html[data-theme="dark"] .ham-drawer { background: #000 !important; }
+    html[data-theme="dark"] .ham-head { background: linear-gradient(135deg,#5c3d00,#8a5c00) !important; }
+    html[data-theme="dark"] .ham-head p { color: #d4a94a !important; }
     .ham-head {
       background: linear-gradient(135deg,#134e4a,#0f766e);
       padding: 48px 20px 20px; color: #fff;
