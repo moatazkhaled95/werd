@@ -385,40 +385,27 @@
     #goal-banner.show { top: 0; }
 
     /* ── Background image on all screens ── */
-    body { background: url('/back.jpg') center top / cover no-repeat fixed; }
-    #app { background: rgba(255,255,255,0.5); }
-    .screen-header, .dash-header {
-      background: transparent !important;
-      overflow: hidden;
-    }
-    .screen-header::after, .dash-header::after { display: none; }
-    #auth { background: transparent !important; position: relative; overflow: hidden; }
-    #auth::after { display: none; }
-    #loading { background: transparent !important; }
-    #dashboard { background: transparent !important; }
+    body { background: url('/islamic%20background%20white.jpg') center center / cover no-repeat fixed; }
+    #app, .screen, #auth, #loading, #dashboard,
     #create-group, #join-group, #choose-action, #complete-profile, #signin, #signup,
-    #verify-email { background: transparent !important; }
+    #verify-email, #complete-profile { background: transparent !important; }
+    .screen-header, .dash-header { background: transparent !important; overflow: hidden; }
+    .screen-header::after, .dash-header::after { display: none; }
     .screen-body, .dash-body { background: transparent; }
     .card, .auth-card, .progress-card, .members-card, .invite-card {
-      background: rgba(255,255,255,0.92) !important;
-      backdrop-filter: blur(6px);
+      background: rgba(255,255,255,0.88) !important;
+      backdrop-filter: blur(8px);
     }
+    .logo-icon { box-shadow: 0 0 0 8px rgba(255,255,255,.15), 0 0 0 16px rgba(255,255,255,.07); }
+
+    /* ── Night mode ── */
+    html[data-theme="dark"] body { background: url('/islamic%20background.jpg') center center / cover no-repeat fixed; }
+    html[data-theme="dark"] #app { background: rgba(0,0,0,0.35) !important; }
     html[data-theme="dark"] .card,
     html[data-theme="dark"] .auth-card,
     html[data-theme="dark"] .progress-card,
     html[data-theme="dark"] .members-card,
-    html[data-theme="dark"] .invite-card {
-      background: rgba(15,31,46,0.92) !important;
-    }
-    .logo-icon { box-shadow: 0 0 0 8px rgba(255,255,255,.07), 0 0 0 16px rgba(255,255,255,.04); }
-
-    /* ── Night mode ── */
-    html[data-theme="dark"] body { background: url('/back.jpg') center top / cover no-repeat fixed; }
-    html[data-theme="dark"] #app { background: rgba(5,15,25,0.72); }
-    html[data-theme="dark"] #auth,
-    html[data-theme="dark"] #signin, html[data-theme="dark"] #signup,
-    html[data-theme="dark"] #create-group, html[data-theme="dark"] #join-group,
-    html[data-theme="dark"] #choose-action, html[data-theme="dark"] #complete-profile { background: transparent !important; }
+    html[data-theme="dark"] .invite-card { background: rgba(10,20,35,0.88) !important; }
     html[data-theme="dark"] #dashboard { background: #0a1628 !important; }
     html[data-theme="dark"] .screen-body { background: transparent; }
     html[data-theme="dark"] .card,
