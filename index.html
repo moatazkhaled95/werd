@@ -708,7 +708,10 @@
   <!-- ══════════ Create Group ══════════ -->
   <div id="create-group" class="screen">
     <div class="screen-header">
-      <button class="back-btn" onclick="showMyGroups()">← رجوع</button>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <button class="back-btn" onclick="showMyGroups()">← رجوع</button>
+        <button class="ham-btn" onclick="openMenu(false)">☰</button>
+      </div>
       <h2>إنشاء مجموعة</h2>
       <p>أنشئ حلقة القرآن الخاصة بك</p>
     </div>
@@ -796,7 +799,10 @@
   <!-- ══════════ Join Group ══════════ -->
   <div id="join-group" class="screen">
     <div class="screen-header">
-      <button class="back-btn" onclick="showMyGroups()">← رجوع</button>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <button class="back-btn" onclick="showMyGroups()">← رجوع</button>
+        <button class="ham-btn" onclick="openMenu(false)">☰</button>
+      </div>
       <h2>الانضمام لمجموعة</h2>
       <p>أدخل رقم المجموعة المكون من ٦ أرقام</p>
     </div>
@@ -1663,8 +1669,12 @@ async function addPages(n) {
     const { data: me } = await db.from('members').select('total_points, points_today').eq('id', state.memberId).single();
     const newTotal = Math.max(0, (me?.total_points || 0) + pointsDelta);
     state.pointsToday = Math.max(0, (me?.points_today || state.pointsToday) + pointsDelta);
-    const { error: ptErr } = await db.from('members').update({ total_points: newTotal, points_today: state.pointsToday }).eq('id', state.memberId);
-    if (ptErr) console.error('points update error:', ptErr);
+    // Try updating with points_today; if column missing, fall back to total_points only
+    let { error: ptErr } = await db.from('members').update({ total_points: newTotal, points_today: state.pointsToday }).eq('id', state.memberId);
+    if (ptErr) {
+      console.warn('points_today column missing, updating total_points only');
+      await db.from('members').update({ total_points: newTotal }).eq('id', state.memberId);
+    }
   }
 
   updateMyProgress();
