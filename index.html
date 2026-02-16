@@ -1435,22 +1435,26 @@ function renderAddButtons(goalUnit) {
 }
 
 async function checkAndResetDaily(group) {
-  const tz = group.timezone || 'Asia/Riyadh';
+  const tz = 'Asia/Riyadh';
   const todayInTz = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date());
-  alert('آخر تصفير: ' + (group.last_reset_date || 'لا يوجد') + '\nاليوم: ' + todayInTz);
-  if (todayInTz === group.last_reset_date) return; // already reset today
-  if (!group.last_reset_date) {
+  const lsKey = 'werd_reset_' + group.id;
+  // Use localStorage as primary tracker (works even if DB columns missing)
+  const lastReset = localStorage.getItem(lsKey) || group.last_reset_date || '';
+  if (lastReset === todayInTz) return; // already reset today
+  if (!lastReset) {
     // First time — just record today, don't wipe existing progress
-    await db.from('groups').update({ last_reset_date: todayInTz }).eq('id', group.id);
-    state.groupData.last_reset_date = todayInTz;
+    localStorage.setItem(lsKey, todayInTz);
+    db.from('groups').update({ last_reset_date: todayInTz }).eq('id', group.id).then(() => {});
     return;
   }
   // New day — reset daily progress only, keep cumulative points
   await db.from('members').update({ pages_today: 0, points_today: 0 }).eq('group_id', group.id);
-  await db.from('groups').update({ last_reset_date: todayInTz }).eq('id', group.id);
+  localStorage.setItem(lsKey, todayInTz);
+  db.from('groups').update({ last_reset_date: todayInTz }).eq('id', group.id).then(() => {});
   state.groupData.last_reset_date = todayInTz;
   state.myPages = 0;
   state.pointsToday = 0;
+  toast('تم تصفير الأهداف اليومية ✓');
 }
 
 async function openDashboard() {
