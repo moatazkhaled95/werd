@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
@@ -9,7 +9,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
-      background: #f0fdfa;
+      background: url('/islamic%20background.jpg') center center / cover no-repeat fixed;
       display: flex;
       justify-content: center;
       min-height: 100vh;
@@ -18,7 +18,7 @@
       width: 100%;
       max-width: 428px;
       min-height: 100vh;
-      background: #fff;
+      background: rgba(0,0,0,0.35);
       position: relative;
     }
 
@@ -384,120 +384,86 @@
     }
     #goal-banner.show { top: 0; }
 
-    /* ── Background image on all screens ── */
-    body { background: url('/islamic%20background%20white.jpg') center center / cover no-repeat fixed; }
+    /* ── All screens transparent over background ── */
     #app, .screen, #auth, #loading, #dashboard,
     #create-group, #join-group, #choose-action, #complete-profile, #signin, #signup,
-    #verify-email, #complete-profile { background: transparent !important; }
+    #verify-email { background: transparent !important; }
     .screen-header, .dash-header { background: transparent !important; overflow: hidden; }
     .screen-header::after, .dash-header::after { display: none; }
     .screen-body, .dash-body { background: transparent; }
-    .card, .auth-card, .progress-card, .members-card, .invite-card {
-      background: rgba(255,255,255,0.88) !important;
-      backdrop-filter: blur(8px);
-    }
+    .card, .progress-card, .members-card, .invite-card,
+    .auth-card { background: #162032; box-shadow: 0 1px 6px rgba(0,0,0,.4); }
+    .card h3, .mc-title, .pc-label, .form-group label { color: #7ab8a0; }
+    .member-name, .auth-card h2, .option-text .option-title { color: #e2f0eb; }
+    .member-item { border-color: #1e3347; }
+    .member-bar-bg, .progress-bar-bg { background: #1e3347; }
+    .form-input, .form-group input[type="text"],
+    .form-group input[type="email"], .form-group input[type="password"],
+    .form-group input[type="number"] { background: #1e3347; border-color: #2a4a63; color: #e2f0eb; }
+    .radio-card { border-color: #2a4a63; background: #1e3347; }
+    .radio-card.selected { border-color: #0d9488; background: #0a2e2e; }
+    .radio-card .radio-label { color: #b8d4ca; }
+    .option-card { border-color: #2a4a63; background: #1e3347; }
+    .option-card.selected { border-color: #0d9488; background: #0a2e2e; }
+    .option-text .option-desc { color: #6b9e8a; }
+    .quick-btn { background: #1e3347; border-color: #2a4a63; color: #2dd4bf; }
+    .quick-btn.selected,
+    .quick-btn:hover { background: #0d9488 !important; color: #fff !important; border-color: #0d9488 !important; }
+    .inc-btn { background: #1e3347; border-color: #2a4a63; color: #2dd4bf; }
+    #add-pages-btns button { background: #1e3347 !important; }
+    .goal-input-row input { background: #1e3347; border-color: #2a4a63; }
+    .btn-google { background: #1e3347; border-color: #2a4a63; color: #e2f0eb; }
+    .btn-secondary { border-color: #0d9488; color: #2dd4bf; }
+    .btn-secondary:hover { background: #0a2e2e; }
+    .auth-link { color: #7ab8a0; }
+    .pc-goal, .member-count { color: #2dd4bf; }
+    .divider { color: #2a4a63; }
+    .divider::before, .divider::after { background: #2a4a63; }
+    #toast { background: #162032; border: 1px solid #2a4a63; }
+    .group-info-box { background: linear-gradient(135deg, #0a2e2e, #0d3d3d); border-color: #0d9488; }
+    .group-info-box .gi-name { color: #99f6e4; }
+    .invite-link-box { background: #1e3347; border-color: #2a4a63; color: #7ab8a0; }
     .logo-icon { box-shadow: 0 0 0 8px rgba(255,255,255,.15), 0 0 0 16px rgba(255,255,255,.07); }
 
-    /* ── Night mode ── */
-    html[data-theme="dark"] body { background: url('/islamic%20background.jpg') center center / cover no-repeat fixed; }
-    html[data-theme="dark"] #app { background: rgba(0,0,0,0.35) !important; }
-    html[data-theme="dark"] .card,
-    html[data-theme="dark"] .auth-card,
-    html[data-theme="dark"] .progress-card,
-    html[data-theme="dark"] .members-card,
-    html[data-theme="dark"] .invite-card { background: rgba(10,20,35,0.88) !important; }
-    html[data-theme="dark"] #dashboard { background: transparent !important; }
-    html[data-theme="dark"] .screen-body { background: transparent; }
-    html[data-theme="dark"] .card,
-    html[data-theme="dark"] .progress-card,
-    html[data-theme="dark"] .members-card,
-    html[data-theme="dark"] .invite-card,
-    html[data-theme="dark"] .auth-card { background: #162032; box-shadow: 0 1px 6px rgba(0,0,0,.4); }
-    html[data-theme="dark"] .card h3, html[data-theme="dark"] .mc-title,
-    html[data-theme="dark"] .pc-label, html[data-theme="dark"] .form-group label { color: #7ab8a0; }
-    html[data-theme="dark"] .member-name, html[data-theme="dark"] .auth-card h2,
-    html[data-theme="dark"] .option-text .option-title { color: #e2f0eb; }
-    html[data-theme="dark"] .member-item { border-color: #1e3347; }
-    html[data-theme="dark"] .member-bar-bg, html[data-theme="dark"] .progress-bar-bg { background: #1e3347; }
-    html[data-theme="dark"] .form-input, html[data-theme="dark"] .form-group input[type="text"],
-    html[data-theme="dark"] .form-group input[type="email"], html[data-theme="dark"] .form-group input[type="password"],
-    html[data-theme="dark"] .form-group input[type="number"] { background: #1e3347; border-color: #2a4a63; color: #e2f0eb; }
-    html[data-theme="dark"] .radio-card { border-color: #2a4a63; background: #1e3347; }
-    html[data-theme="dark"] .radio-card.selected { border-color: #0d9488; background: #0a2e2e; }
-    html[data-theme="dark"] .radio-card .radio-label { color: #b8d4ca; }
-    html[data-theme="dark"] .option-card { border-color: #2a4a63; background: #1e3347; }
-    html[data-theme="dark"] .option-card.selected { border-color: #0d9488; background: #0a2e2e; }
-    html[data-theme="dark"] .option-text .option-desc { color: #6b9e8a; }
-    html[data-theme="dark"] .quick-btn { background: #1e3347; border-color: #2a4a63; color: #2dd4bf; }
-    html[data-theme="dark"] .quick-btn.selected,
-    html[data-theme="dark"] .quick-btn:hover { background: #0d9488 !important; color: #fff !important; border-color: #0d9488 !important; }
-    html[data-theme="dark"] .inc-btn { background: #1e3347; border-color: #2a4a63; color: #2dd4bf; }
-    html[data-theme="dark"] #add-pages-btns button { background: #1e3347 !important; }
-    html[data-theme="dark"] .goal-input-row input { background: #1e3347; border-color: #2a4a63; }
-    html[data-theme="dark"] .btn-google { background: #1e3347; border-color: #2a4a63; color: #e2f0eb; }
-    html[data-theme="dark"] .btn-secondary { border-color: #0d9488; color: #2dd4bf; }
-    html[data-theme="dark"] .btn-secondary:hover { background: #0a2e2e; }
-    html[data-theme="dark"] .auth-link { color: #7ab8a0; }
-    html[data-theme="dark"] .pc-goal, html[data-theme="dark"] .member-count { color: #2dd4bf; }
-    html[data-theme="dark"] .divider { color: #2a4a63; }
-    html[data-theme="dark"] .divider::before, html[data-theme="dark"] .divider::after { background: #2a4a63; }
-    html[data-theme="dark"] #toast { background: #162032; border: 1px solid #2a4a63; }
-    html[data-theme="dark"] .group-info-box { background: linear-gradient(135deg, #0a2e2e, #0d3d3d); border-color: #0d9488; }
-    html[data-theme="dark"] .group-info-box .gi-name { color: #99f6e4; }
-    html[data-theme="dark"] .invite-link-box { background: #1e3347; border-color: #2a4a63; color: #7ab8a0; }
-
     /* ── Leaderboard ── */
-    .view-tabs { display: flex; gap: 0; margin-bottom: 14px; border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; }
-    .view-tab { flex: 1; padding: 8px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; background: #f9fafb; color: #6b7280; font-family: inherit; transition: all .2s; }
+    .view-tabs { display: flex; gap: 0; margin-bottom: 14px; border-radius: 10px; overflow: hidden; border: 1px solid #2a4a63; }
+    .view-tab { flex: 1; padding: 8px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; background: #1e3347; color: #7ab8a0; font-family: inherit; transition: all .2s; }
     .view-tab.active { background: #0d9488; color: #fff; }
-    html[data-theme="dark"] .view-tabs { border-color: #2a4a63; }
-    html[data-theme="dark"] .view-tab { background: #1e3347; color: #7ab8a0; }
-    html[data-theme="dark"] .view-tab.active { background: #0d9488; color: #fff; }
     .rank-medal { font-size: 18px; width: 28px; text-align: center; flex-shrink: 0; }
-    .points-badge { font-size: 12px; font-weight: 800; color: #d97706; background: #fef3c7; padding: 2px 8px; border-radius: 20px; }
-    html[data-theme="dark"] .points-badge { background: #3d2a00; color: #fbbf24; }
+    .points-badge { font-size: 12px; font-weight: 800; color: #fbbf24; background: #3d2a00; padding: 2px 8px; border-radius: 20px; }
 
     /* ── Hamburger Menu ── */
     .ham-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 998; }
     .ham-overlay.open { display: block; }
     .ham-drawer {
       position: fixed; top: 0; left: 0; height: 100vh; width: 78%; max-width: 300px;
-      background: #fff; z-index: 999;
+      background: #000; z-index: 999;
       transform: translateX(-100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
       display: flex; flex-direction: column; padding: 0; box-shadow: 4px 0 24px rgba(0,0,0,.18);
     }
     .ham-drawer.open { transform: translateX(0); }
-    html[data-theme="dark"] .ham-drawer { background: #000 !important; }
-    html[data-theme="dark"] .ham-head { background: linear-gradient(135deg,#5c3d00,#8a5c00) !important; }
-    html[data-theme="dark"] .ham-head p { color: #d4a94a !important; }
     .ham-head {
-      background: linear-gradient(135deg,#134e4a,#0f766e);
+      background: linear-gradient(135deg,#5c3d00,#8a5c00);
       padding: 48px 20px 20px; color: #fff;
     }
     .ham-head h3 { font-size: 20px; font-weight: 800; margin: 0; }
-    .ham-head p  { font-size: 13px; color: #99f6e4; margin: 4px 0 0; }
+    .ham-head p  { font-size: 13px; color: #d4a94a; margin: 4px 0 0; }
     .ham-items { display: flex; flex-direction: column; padding: 12px 12px; gap: 4px; flex: 1; }
     .ham-item {
       display: flex; align-items: center; gap: 14px;
       padding: 13px 16px; border-radius: 12px; border: none;
       background: none; font-size: 15px; font-weight: 600; cursor: pointer;
-      width: 100%; text-align: right; font-family: inherit; color: #1f2937;
+      width: 100%; text-align: right; font-family: inherit; color: #e2f0eb;
       transition: background .15s;
     }
-    .ham-item:hover { background: #f0fdfa; }
+    .ham-item:hover { background: #162032; }
     .ham-item .ham-icon { font-size: 20px; width: 28px; text-align: center; }
-    html[data-theme="dark"] .ham-item { color: #e2f0eb; }
-    html[data-theme="dark"] .ham-item:hover { background: #162032; }
     .ham-item.danger { color: #ef4444; }
-    .ham-item.danger:hover { background: #fef2f2; }
-    html[data-theme="dark"] .ham-item.danger:hover { background: #2a1515; }
-    .ham-divider { height: 1px; background: #f3f4f6; margin: 6px 16px; }
-    html[data-theme="dark"] .ham-divider { background: #1e3347; }
+    .ham-item.danger:hover { background: #2a1515; }
+    .ham-divider { height: 1px; background: #1e3347; margin: 6px 16px; }
     .ham-font-row { display: flex; align-items: center; gap: 8px; padding: 10px 16px; }
-    .ham-font-row span { flex: 1; font-size: 15px; font-weight: 600; color: #1f2937; }
-    html[data-theme="dark"] .ham-font-row span { color: #e2f0eb; }
-    .ham-font-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e5e7eb; background: #f9fafb; color: #374151; font-size: 16px; font-weight: 700; cursor: pointer; }
-    html[data-theme="dark"] .ham-font-btn { background: #1e3347; border-color: #2a4a63; color: #e2f0eb; }
+    .ham-font-row span { flex: 1; font-size: 15px; font-weight: 600; color: #e2f0eb; }
+    .ham-font-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #2a4a63; background: #1e3347; color: #e2f0eb; font-size: 16px; font-weight: 700; cursor: pointer; }
     .ham-btn { background: rgba(255,255,255,.15); border: none; color: #fff; font-size: 20px; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .screen-header .ham-btn, .dash-header .ham-btn { position: absolute; top: 16px; left: 16px; }
   </style>
@@ -520,9 +486,6 @@
       <span class="ham-icon">🚪</span> مغادرة المجموعة
     </button>
     <div class="ham-divider"></div>
-    <button class="ham-item" onclick="toggleNightMode()" id="ham-night-btn">
-      <span class="ham-icon" id="ham-night-icon">🌙</span> الوضع الليلي
-    </button>
     <div class="ham-font-row">
       <span>حجم الخط</span>
       <button class="ham-font-btn" onclick="changeFontSize(-1)">−</button>
@@ -925,13 +888,6 @@ function changeFontSize(delta) {
   localStorage.setItem('werd_font_size', next);
 }
 
-function toggleNightMode() {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
-  localStorage.setItem('werd_night_mode', isDark ? '' : 'dark');
-  const icon = document.getElementById('ham-night-icon');
-  if (icon) icon.textContent = isDark ? '🌙' : '☀️';
-}
 
 function openMenu(inDashboard) {
   document.getElementById('ham-overlay').classList.add('open');
@@ -951,12 +907,6 @@ function closeMenu() {
 window.addEventListener('DOMContentLoaded', async () => {
   const savedSize = localStorage.getItem('werd_font_size');
   if (savedSize) document.getElementById('app').style.zoom = savedSize;
-  const savedTheme = localStorage.getItem('werd_night_mode');
-  if (savedTheme === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    const icon = document.getElementById('ham-night-icon');
-    if (icon) icon.textContent = '☀️';
-  }
   renderGoalOptions();
 
   // Check for invite link in URL
