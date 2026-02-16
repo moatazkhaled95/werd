@@ -1568,11 +1568,14 @@ async function addPages(n) {
       toast('+1 نقطة 📖');
     }
   } else if (n < 0) {
-    if (prevPages > goal && newPages >= goal) {
-      // Was above goal, still at/above → undo 1 extra point
+    if (prevPages > goal) {
+      // Was above goal → undo 1 extra point
       pointsDelta = -1;
+    } else if (prevPages === goal && newPages < goal && state.pointsToday > 0) {
+      // Was exactly at goal, dropped below → remove goal completion bonus
+      pointsDelta = -state.pointsToday;
+      toast('تم خصم نقاط إتمام الهدف');
     }
-    // Dropping to/below goal: no point change — keep earned points
   }
 
   if (pointsDelta !== 0) {
