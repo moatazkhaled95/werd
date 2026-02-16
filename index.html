@@ -1438,16 +1438,9 @@ async function checkAndResetDaily(group) {
   const tz = 'Asia/Riyadh';
   const todayInTz = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date());
   const lsKey = 'werd_reset_' + group.id;
-  // Use localStorage as primary tracker (works even if DB columns missing)
   const lastReset = localStorage.getItem(lsKey) || group.last_reset_date || '';
   if (lastReset === todayInTz) return; // already reset today
-  if (!lastReset) {
-    // First time — just record today, don't wipe existing progress
-    localStorage.setItem(lsKey, todayInTz);
-    db.from('groups').update({ last_reset_date: todayInTz }).eq('id', group.id).then(() => {});
-    return;
-  }
-  // New day — reset daily progress only, keep cumulative points
+  // New day (or first time) — always reset
   await db.from('members').update({ pages_today: 0, points_today: 0 }).eq('group_id', group.id);
   localStorage.setItem(lsKey, todayInTz);
   db.from('groups').update({ last_reset_date: todayInTz }).eq('id', group.id).then(() => {});
