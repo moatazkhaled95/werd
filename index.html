@@ -1003,9 +1003,21 @@ async function showMyGroups() {
 }
 
 async function enterGroup(groupId, memberId) {
-  const { data: group }  = await db.from('groups').select('*').eq('id', groupId).single();
-  const { data: member } = await db.from('members').select('*').eq('id', memberId).single();
-  if (!group || !member) { toast('حدث خطأ'); return; }
+  const { data: group } = await db.from('groups').select('*').eq('id', groupId).single();
+  if (!group) { toast('حدث خطأ في تحميل المجموعة'); return; }
+
+  let member = null;
+  if (memberId && memberId !== 'undefined') {
+    const { data } = await db.from('members').select('*').eq('id', memberId).single();
+    member = data;
+  }
+  // Fallback: find by user_id + group_id
+  if (!member) {
+    const { data } = await db.from('members').select('*').eq('group_id', groupId).eq('user_id', state.user.id).single();
+    member = data;
+  }
+  if (!member) { toast('لم يتم العثور على عضويتك في هذه المجموعة'); return; }
+
   state.groupId = group.id; state.groupData = group;
   state.memberId = member.id; state.myPages = member.pages_today;
   await openDashboard();
