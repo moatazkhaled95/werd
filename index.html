@@ -431,6 +431,8 @@
     html[data-theme="dark"] .option-card.selected { border-color: #059669; background: #0a2e1e; }
     html[data-theme="dark"] .option-text .option-desc { color: #6b9e8a; }
     html[data-theme="dark"] .quick-btn { background: #1e3347; border-color: #2a4a63; color: #34d399; }
+    html[data-theme="dark"] .quick-btn.selected,
+    html[data-theme="dark"] .quick-btn:hover { background: #059669 !important; color: #fff !important; border-color: #059669 !important; }
     html[data-theme="dark"] .inc-btn { background: #1e3347; border-color: #2a4a63; color: #34d399; }
     html[data-theme="dark"] #add-pages-btns button { background: #1e3347 !important; }
     html[data-theme="dark"] .goal-input-row input { background: #1e3347; border-color: #2a4a63; }
@@ -916,10 +918,10 @@ let signupGender = '';
 //  INIT
 // ══════════════════════════════════════════
 function changeFontSize(delta) {
-  const root = document.documentElement;
-  const current = parseFloat(getComputedStyle(root).fontSize) || 16;
-  const next = Math.min(22, Math.max(12, current + delta));
-  root.style.fontSize = next + 'px';
+  const app = document.getElementById('app');
+  const current = parseFloat(app.style.zoom) || 1;
+  const next = Math.min(1.4, Math.max(0.75, +(current + delta * 0.08).toFixed(2)));
+  app.style.zoom = next;
   localStorage.setItem('werd_font_size', next);
 }
 
@@ -948,7 +950,7 @@ function closeMenu() {
 
 window.addEventListener('DOMContentLoaded', async () => {
   const savedSize = localStorage.getItem('werd_font_size');
-  if (savedSize) document.documentElement.style.fontSize = savedSize + 'px';
+  if (savedSize) document.getElementById('app').style.zoom = savedSize;
   const savedTheme = localStorage.getItem('werd_night_mode');
   if (savedTheme === 'dark') {
     document.documentElement.setAttribute('data-theme', 'dark');
