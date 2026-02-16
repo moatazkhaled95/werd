@@ -1444,7 +1444,7 @@ async function checkAndResetDaily(group) {
     state.groupData.last_reset_date = todayInTz;
     return;
   }
-  // New day — reset all members' pages and today's points to 0
+  // New day — reset daily progress only, keep cumulative points
   await db.from('members').update({ pages_today: 0, points_today: 0 }).eq('group_id', group.id);
   await db.from('groups').update({ last_reset_date: todayInTz }).eq('id', group.id);
   state.groupData.last_reset_date = todayInTz;
@@ -1739,7 +1739,7 @@ async function saveGoal() {
     goal_unit: state.goalUnit,
   }).eq('id', state.groupId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
-  // Reset all members' progress when goal changes
+  // Reset daily progress when goal changes (total_points untouched)
   await db.from('members').update({ pages_today: 0, points_today: 0 }).eq('group_id', state.groupId);
   state.myPages = 0;
   state.pointsToday = 0;
