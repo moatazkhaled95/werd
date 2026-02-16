@@ -1532,28 +1532,6 @@ function renderMembers(members) {
   }
 }
 
-async function awardPoints() {
-  // Count how many members already reached the goal before me
-  const { data: alreadyDone } = await db.from('members')
-    .select('id')
-    .eq('group_id', state.groupId)
-    .gte('pages_today', state.groupData.goal_amount)
-    .neq('id', state.memberId);
-
-  const rank = (alreadyDone?.length || 0); // 0 = first, 1 = second, 2 = third+
-  const basePoints = 3; // everyone who completes gets 3
-  const bonusPoints = rank === 0 ? 3 : rank === 1 ? 2 : rank === 2 ? 1 : 0;
-  const totalPts = basePoints + bonusPoints;
-
-  const { data: me } = await db.from('members').select('total_points').eq('id', state.memberId).single();
-  await db.from('members').update({ total_points: (me?.total_points || 0) + totalPts, points_today: totalPts }).eq('id', state.memberId);
-  state.pointsToday = totalPts;
-
-  const rankMsg = rank === 0 ? '🥇 أول من أتمّ الهدف! +3 إضافية' :
-                  rank === 1 ? '🥈 ثاني من أتمّ الهدف! +2 إضافية' :
-                  rank === 2 ? '🥉 ثالث من أتمّ الهدف! +1 إضافية' : '';
-  toast(`✅ أتممت الهدف! +${totalPts} نقاط ${rankMsg}`);
-}
 
 async function removeMember(memberId) {
   const { error } = await db.from('members').delete().eq('id', memberId);
@@ -1574,23 +1552,58 @@ async function addPages(n) {
   const prevPages = state.myPages;
   const goal = state.groupData.goal_amount;
   state.myPages = Math.max(0, state.myPages + n);
+  const newPages = state.myPages;
 
-  if (prevPages < goal && state.myPages >= goal) {
-    // Crossed above goal → award points
-    goalNotify('🎉 ما شاء الله! أتممت الهدف اليوم!');
-    sendGoalNotification();
-    await awardPoints();
-  } else if (prevPages >= goal && state.myPages < goal && state.pointsToday > 0) {
-    // Crossed below goal → deduct today's points
+  let pointsDelta = 0;
+
+  if (n > 0) {
+    if (prevPages < goal && newPages >= goal) {
+      // Just reached the goal → base(3) + rank bonus
+      goalNotify('🎉 ما شاء الله! أتممت الهدف اليوم!');
+      sendGoalNotification();
+      pointsDelta = await calcGoalPoints();
+    } else if (prevPages >= goal) {
+      // Already past goal → +1 per extra unit
+      pointsDelta = 1;
+      toast('+1 نقطة 📖');
+    }
+  } else if (n < 0) {
+    if (prevPages > goal && newPages >= goal) {
+      // Was above goal, still at/above → undo 1 extra point
+      pointsDelta = -1;
+    } else if (prevPages >= goal && newPages < goal && state.pointsToday > 0) {
+      // Dropped below goal → lose ALL today's points
+      pointsDelta = -state.pointsToday;
+      toast('تم خصم النقاط — الهدف لم يكتمل بعد');
+    }
+  }
+
+  if (pointsDelta !== 0) {
     const { data: me } = await db.from('members').select('total_points').eq('id', state.memberId).single();
-    const newTotal = Math.max(0, (me?.total_points || 0) - state.pointsToday);
-    await db.from('members').update({ total_points: newTotal, points_today: 0 }).eq('id', state.memberId);
-    state.pointsToday = 0;
-    toast('تم خصم النقاط — لم تكتمل الهدف بعد');
+    const newTotal = Math.max(0, (me?.total_points || 0) + pointsDelta);
+    state.pointsToday = Math.max(0, state.pointsToday + pointsDelta);
+    await db.from('members').update({ total_points: newTotal, points_today: state.pointsToday }).eq('id', state.memberId);
   }
 
   updateMyProgress();
-  await db.from('members').update({ pages_today: state.myPages }).eq('id', state.memberId);
+  await db.from('members').update({ pages_today: newPages }).eq('id', state.memberId);
+}
+
+async function calcGoalPoints() {
+  // Count members who already reached goal before me
+  const { data: alreadyDone } = await db.from('members')
+    .select('id')
+    .eq('group_id', state.groupId)
+    .gte('pages_today', state.groupData.goal_amount)
+    .neq('id', state.memberId);
+  const rank = alreadyDone?.length || 0;
+  const bonus = rank === 0 ? 3 : rank === 1 ? 2 : rank === 2 ? 1 : 0;
+  const total = 3 + bonus;
+  const rankMsg = rank === 0 ? '🥇 أول من أتمّ! +3 إضافية' :
+                  rank === 1 ? '🥈 ثاني من أتمّ! +2 إضافية' :
+                  rank === 2 ? '🥉 ثالث من أتمّ! +1 إضافية' : '';
+  toast(`✅ أتممت الهدف! +${total} نقاط ${rankMsg}`);
+  return total;
 }
 
 function subscribeToMembers() {
