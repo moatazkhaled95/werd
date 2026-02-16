@@ -384,27 +384,38 @@
     }
     #goal-banner.show { top: 0; }
 
-    /* ── Islamic geometric pattern on headers ── */
-    .screen-header::after, .dash-header::after {
-      content: '';
-      position: absolute; inset: 0; pointer-events: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.08)' stroke-width='1'%3E%3Cpolygon points='40,4 49,26 72,26 54,41 61,63 40,50 19,63 26,41 8,26 31,26'/%3E%3Ccircle cx='40' cy='40' r='14'/%3E%3C/g%3E%3C/svg%3E");
-      background-size: 80px 80px;
+    /* ── Background image on all screens ── */
+    body { background: url('/back.jpg') center top / cover no-repeat fixed; }
+    #app { background: transparent; }
+    .screen-header, .dash-header {
+      background: transparent !important;
+      overflow: hidden;
     }
-    #auth::after {
-      content: '';
-      position: absolute; inset: 0; pointer-events: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.07)' stroke-width='1'%3E%3Cpolygon points='40,4 49,26 72,26 54,41 61,63 40,50 19,63 26,41 8,26 31,26'/%3E%3Ccircle cx='40' cy='40' r='14'/%3E%3C/g%3E%3C/svg%3E");
-      background-size: 80px 80px;
+    .screen-header::after, .dash-header::after { display: none; }
+    #auth { background: transparent !important; position: relative; overflow: hidden; }
+    #auth::after { display: none; }
+    #loading { background: transparent !important; }
+    #dashboard { background: transparent !important; }
+    #create-group, #join-group, #choose-action, #complete-profile, #signin, #signup,
+    #verify-email { background: transparent !important; }
+    .screen-body, .dash-body { background: transparent; }
+    .card, .auth-card, .progress-card, .members-card, .invite-card {
+      background: rgba(255,255,255,0.92) !important;
+      backdrop-filter: blur(6px);
     }
-    #auth { position: relative; overflow: hidden; }
-    .screen-header, .dash-header { overflow: hidden; }
+    html[data-theme="dark"] .card,
+    html[data-theme="dark"] .auth-card,
+    html[data-theme="dark"] .progress-card,
+    html[data-theme="dark"] .members-card,
+    html[data-theme="dark"] .invite-card {
+      background: rgba(15,31,46,0.92) !important;
+    }
     .logo-icon { box-shadow: 0 0 0 8px rgba(255,255,255,.07), 0 0 0 16px rgba(255,255,255,.04); }
 
     /* ── Night mode ── */
-    html[data-theme="dark"] body { background: #0a1628; }
-    html[data-theme="dark"] #app { background: #0f1f2e; }
-    html[data-theme="dark"] #auth { background: linear-gradient(160deg, #021a12 0%, #032a1a 50%, #043d25 100%); }
+    html[data-theme="dark"] body { background: url('/back.jpg') center top / cover no-repeat fixed; }
+    html[data-theme="dark"] #app { background: rgba(10,22,40,0.55); }
+    html[data-theme="dark"] #auth { background: transparent !important; }
     html[data-theme="dark"] #signin, html[data-theme="dark"] #signup,
     html[data-theme="dark"] #create-group, html[data-theme="dark"] #join-group,
     html[data-theme="dark"] #choose-action, html[data-theme="dark"] #complete-profile { background: #0f1f2e !important; }
