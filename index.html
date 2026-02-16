@@ -934,7 +934,8 @@ async function afterLogin() {
 }
 
 async function showMyGroups() {
-  const displayName = state.profile.first_name || state.user.email;
+  show('choose-action');
+  const displayName = (state.profile?.first_name) || state.user?.email || '';
   document.getElementById('choose-hi').textContent = 'أهلاً ' + displayName + '!';
 
   // Fetch groups I created + groups I joined + all public groups
