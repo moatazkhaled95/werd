@@ -456,10 +456,81 @@
     .rank-medal { font-size: 18px; width: 28px; text-align: center; flex-shrink: 0; }
     .points-badge { font-size: 12px; font-weight: 800; color: #d97706; background: #fef3c7; padding: 2px 8px; border-radius: 20px; }
     html[data-theme="dark"] .points-badge { background: #3d2a00; color: #fbbf24; }
+
+    /* ── Hamburger Menu ── */
+    .ham-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 998; }
+    .ham-overlay.open { display: block; }
+    .ham-drawer {
+      position: fixed; top: 0; left: 0; height: 100vh; width: 78%; max-width: 300px;
+      background: #fff; z-index: 999;
+      transform: translateX(-100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
+      display: flex; flex-direction: column; padding: 0; box-shadow: 4px 0 24px rgba(0,0,0,.18);
+    }
+    .ham-drawer.open { transform: translateX(0); }
+    html[data-theme="dark"] .ham-drawer { background: #0f1f2e; }
+    .ham-head {
+      background: linear-gradient(135deg,#064e3b,#047857);
+      padding: 48px 20px 20px; color: #fff;
+    }
+    .ham-head h3 { font-size: 20px; font-weight: 800; margin: 0; }
+    .ham-head p  { font-size: 13px; color: #a7f3d0; margin: 4px 0 0; }
+    .ham-items { display: flex; flex-direction: column; padding: 12px 12px; gap: 4px; flex: 1; }
+    .ham-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 16px; border-radius: 12px; border: none;
+      background: none; font-size: 15px; font-weight: 600; cursor: pointer;
+      width: 100%; text-align: right; font-family: inherit; color: #1f2937;
+      transition: background .15s;
+    }
+    .ham-item:hover { background: #f0fdf4; }
+    .ham-item .ham-icon { font-size: 20px; width: 28px; text-align: center; }
+    html[data-theme="dark"] .ham-item { color: #e2f0eb; }
+    html[data-theme="dark"] .ham-item:hover { background: #162032; }
+    .ham-item.danger { color: #ef4444; }
+    .ham-item.danger:hover { background: #fef2f2; }
+    html[data-theme="dark"] .ham-item.danger:hover { background: #2a1515; }
+    .ham-divider { height: 1px; background: #f3f4f6; margin: 6px 16px; }
+    html[data-theme="dark"] .ham-divider { background: #1e3347; }
+    .ham-font-row { display: flex; align-items: center; gap: 8px; padding: 10px 16px; }
+    .ham-font-row span { flex: 1; font-size: 15px; font-weight: 600; color: #1f2937; }
+    html[data-theme="dark"] .ham-font-row span { color: #e2f0eb; }
+    .ham-font-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e5e7eb; background: #f9fafb; color: #374151; font-size: 16px; font-weight: 700; cursor: pointer; }
+    html[data-theme="dark"] .ham-font-btn { background: #1e3347; border-color: #2a4a63; color: #e2f0eb; }
+    .ham-btn { background: rgba(255,255,255,.15); border: none; color: #fff; font-size: 20px; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   </style>
 </head>
 <body>
 <div id="goal-banner"></div>
+
+<!-- ══════════ Hamburger Drawer ══════════ -->
+<div id="ham-overlay" class="ham-overlay" onclick="closeMenu()"></div>
+<div id="ham-drawer" class="ham-drawer">
+  <div class="ham-head">
+    <h3>وِرْدٌ 📖</h3>
+    <p id="ham-username"></p>
+  </div>
+  <div class="ham-items">
+    <button class="ham-item" onclick="closeMenu(); leaveDashboard && leaveDashboard();" id="ham-mygroups" style="display:none">
+      <span class="ham-icon">🏠</span> مجموعاتي
+    </button>
+    <button class="ham-item" id="ham-leave" onclick="closeMenu(); leaveGroup && leaveGroup();" style="display:none">
+      <span class="ham-icon">🚪</span> مغادرة المجموعة
+    </button>
+    <div class="ham-divider"></div>
+    <div class="ham-font-row">
+      <span>حجم الخط</span>
+      <button class="ham-font-btn" onclick="changeFontSize(-1)">−</button>
+      <button class="ham-font-btn" onclick="changeFontSize(1)">+</button>
+    </div>
+    <button class="ham-item" onclick="toggleNightMode()" id="ham-night-btn">
+      <span class="ham-icon" id="ham-night-icon">🌙</span> الوضع الليلي
+    </button>
+    <div class="ham-divider"></div>
+    <button class="ham-item danger" onclick="closeMenu(); signOut()">
+      <span class="ham-icon">⬅️</span> تسجيل الخروج
+    </button>
+  </div>
+</div>
 <div id="app">
 
   <!-- ══════════ Loading ══════════ -->
@@ -619,17 +690,9 @@
     <div class="screen-header">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <h2 id="choose-hi">أهلاً!</h2>
-        <button onclick="signOut()" style="background:#ef4444;border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;padding:6px 14px;border-radius:8px;font-family:inherit">تسجيل الخروج</button>
+        <button class="ham-btn" onclick="openMenu(false)">☰</button>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
-        <p style="margin:0">مجموعاتي</p>
-        <div style="display:flex;align-items:center;gap:4px">
-          <span style="font-size:11px;color:#a7f3d0">الخط</span>
-          <button onclick="changeFontSize(-1)" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:14px;font-weight:700;width:26px;height:26px;border-radius:6px;cursor:pointer;line-height:1">−</button>
-          <button onclick="changeFontSize(1)"  style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:14px;font-weight:700;width:26px;height:26px;border-radius:6px;cursor:pointer;line-height:1">+</button>
-          <button onclick="toggleNightMode()" id="night-btn" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:15px;width:26px;height:26px;border-radius:6px;cursor:pointer;line-height:1">🌙</button>
-        </div>
-      </div>
+      <p style="margin:6px 0 0;color:#a7f3d0;font-size:13px">مجموعاتي</p>
     </div>
     <div class="screen-body">
       <div id="my-groups-list" style="margin-bottom:16px"></div>
@@ -759,14 +822,12 @@
     <div class="dash-header">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <button class="back-btn" onclick="leaveDashboard()">← مجموعاتي</button>
-        <div style="display:flex;gap:6px;align-items:center">
-          <button id="leave-group-btn" onclick="leaveGroup()" style="display:none;background:#ef4444;border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;padding:6px 14px;border-radius:8px;font-family:inherit">مغادرة المجموعة</button>
-          <button onclick="signOut()" style="background:#ef4444;border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;padding:6px 14px;border-radius:8px;font-family:inherit">تسجيل الخروج</button>
-        </div>
+        <button class="ham-btn" onclick="openMenu(true)">☰</button>
       </div>
       <h2 id="dash-group-name">مجموعتي</h2>
       <div class="sub" id="dash-sub"></div>
       <div class="badges" id="dash-badges"></div>
+      <span id="leave-group-btn-hidden" data-show="false" style="display:none"></span>
     </div>
     <div class="dash-body">
       <div class="progress-card">
@@ -867,7 +928,23 @@ function toggleNightMode() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
   localStorage.setItem('werd_night_mode', isDark ? '' : 'dark');
-  document.getElementById('night-btn').textContent = isDark ? '🌙' : '☀️';
+  const icon = document.getElementById('ham-night-icon');
+  if (icon) icon.textContent = isDark ? '🌙' : '☀️';
+}
+
+function openMenu(inDashboard) {
+  document.getElementById('ham-overlay').classList.add('open');
+  document.getElementById('ham-drawer').classList.add('open');
+  document.getElementById('ham-mygroups').style.display = inDashboard ? '' : 'none';
+  const leaveBtn = document.getElementById('ham-leave');
+  leaveBtn.style.display = (inDashboard && document.getElementById('leave-group-btn-hidden')?.dataset.show === 'true') ? '' : 'none';
+  const username = state.profile?.first_name || state.user?.email || '';
+  document.getElementById('ham-username').textContent = username;
+}
+
+function closeMenu() {
+  document.getElementById('ham-overlay').classList.remove('open');
+  document.getElementById('ham-drawer').classList.remove('open');
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -876,8 +953,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   const savedTheme = localStorage.getItem('werd_night_mode');
   if (savedTheme === 'dark') {
     document.documentElement.setAttribute('data-theme', 'dark');
-    const btn = document.getElementById('night-btn');
-    if (btn) btn.textContent = '☀️';
+    const icon = document.getElementById('ham-night-icon');
+    if (icon) icon.textContent = '☀️';
   }
   renderGoalOptions();
 
@@ -1442,8 +1519,11 @@ async function openDashboard() {
   if (isPrivate) document.getElementById('group-code-display').textContent = group.invite_code;
   const isCreator = group.created_by === state.user?.id;
   document.getElementById('add-member-btn').style.display = isCreator ? '' : 'none';
-  document.getElementById('leave-group-btn').style.display = isCreator ? 'none' : '';
   document.getElementById('edit-goal-btn').style.display = isCreator ? '' : 'none';
+  // Store leave-group visibility for hamburger menu
+  const leaveHidden = document.getElementById('leave-group-btn-hidden');
+  if (leaveHidden) leaveHidden.dataset.show = isCreator ? 'false' : 'true';
+  document.getElementById('ham-leave').style.display = 'none'; // reset until menu opens
 
   await checkAndResetDaily(group);
   await loadMembers();
