@@ -1437,6 +1437,7 @@ function renderAddButtons(goalUnit) {
 async function checkAndResetDaily(group) {
   const tz = group.timezone || 'Asia/Riyadh';
   const todayInTz = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date());
+  toast('آخر تصفير: ' + (group.last_reset_date || 'لا يوجد') + ' | اليوم: ' + todayInTz);
   if (todayInTz === group.last_reset_date) return; // already reset today
   if (!group.last_reset_date) {
     // First time — just record today, don't wipe existing progress
