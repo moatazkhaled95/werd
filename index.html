@@ -432,6 +432,7 @@
     html[data-theme="dark"] .option-text .option-desc { color: #6b9e8a; }
     html[data-theme="dark"] .quick-btn { background: #1e3347; border-color: #2a4a63; color: #34d399; }
     html[data-theme="dark"] .inc-btn { background: #1e3347; border-color: #2a4a63; color: #34d399; }
+    html[data-theme="dark"] #add-pages-btns button { background: #1e3347 !important; }
     html[data-theme="dark"] .goal-input-row input { background: #1e3347; border-color: #2a4a63; }
     html[data-theme="dark"] .btn-google { background: #1e3347; border-color: #2a4a63; color: #e2f0eb; }
     html[data-theme="dark"] .btn-secondary { border-color: #059669; color: #34d399; }
@@ -1395,35 +1396,13 @@ let prevMemberPages = {}; // memberId → pages_today, to detect goal crossing
 function renderAddButtons(goalUnit) {
   const el = document.getElementById('add-pages-btns');
   if (!el) return;
-  const isFrac = goalUnit && (goalUnit.includes('-quarter') || goalUnit.includes('-half') || goalUnit.includes('-third'));
-  const isPage = !goalUnit || goalUnit === 'page';
-
-  if (isPage) {
-    el.innerHTML = `
-      <div class="inc-btns">
-        ${[1,2,3,5,10].map(n=>`<button class="inc-btn" onclick="addPages(${n})">+${n}</button>`).join('')}
-      </div>
-      <div class="inc-btns" style="margin-top:6px">
-        ${[1,2,3,5,10].map(n=>`<button class="inc-btn" style="background:#fee2e2;color:#ef4444" onclick="addPages(-${n})">-${n}</button>`).join('')}
-      </div>`;
-  } else if (isFrac) {
-    el.innerHTML = `
-      <div class="inc-btns">
-        <button class="inc-btn" onclick="addPages(1)">+1</button>
-      </div>
-      <div class="inc-btns" style="margin-top:6px">
-        <button class="inc-btn" style="background:#fee2e2;color:#ef4444" onclick="addPages(-1)">-1</button>
-      </div>`;
-  } else {
-    // full hizb or full juz
-    el.innerHTML = `
-      <div class="inc-btns">
-        ${[1,2,3].map(n=>`<button class="inc-btn" onclick="addPages(${n})">+${n}</button>`).join('')}
-      </div>
-      <div class="inc-btns" style="margin-top:6px">
-        ${[1,2,3].map(n=>`<button class="inc-btn" style="background:#fee2e2;color:#ef4444" onclick="addPages(-${n})">-${n}</button>`).join('')}
-      </div>`;
-  }
+  const label = unitLabels[goalUnit] || 'صفحة';
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:10px">
+      <button onclick="addPages(-1)" style="width:48px;height:48px;border-radius:50%;border:2px solid #fee2e2;background:#fff;color:#ef4444;font-size:24px;font-weight:700;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">−</button>
+      <span style="font-size:15px;font-weight:700;color:#059669;min-width:80px;text-align:center">${label}</span>
+      <button onclick="addPages(1)" style="width:48px;height:48px;border-radius:50%;border:2px solid #bbf7d0;background:#fff;color:#059669;font-size:24px;font-weight:700;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">+</button>
+    </div>`;
 }
 
 async function checkAndResetDaily(group) {
@@ -1552,20 +1531,25 @@ function renderMembers(members) {
 }
 
 async function awardPoints() {
-  // Count how many members have already reached the goal (before me)
+  // Count how many members already reached the goal before me
   const { data: alreadyDone } = await db.from('members')
     .select('id')
     .eq('group_id', state.groupId)
     .gte('pages_today', state.groupData.goal_amount)
     .neq('id', state.memberId);
 
-  const rank = (alreadyDone?.length || 0); // 0 = first, 1 = second, 2 = third
-  const pts = rank === 0 ? 3 : rank === 1 ? 2 : rank === 2 ? 1 : 0;
-  if (pts > 0) {
-    const { data: me } = await db.from('members').select('total_points').eq('id', state.memberId).single();
-    await db.from('members').update({ total_points: (me?.total_points || 0) + pts }).eq('id', state.memberId);
-    toast(rank === 0 ? '🥇 أول من أتمّ الهدف! +3 نقاط' : rank === 1 ? '🥈 ثاني من أتمّ الهدف! +2 نقاط' : '🥉 ثالث من أتمّ الهدف! +1 نقطة');
-  }
+  const rank = (alreadyDone?.length || 0); // 0 = first, 1 = second, 2 = third+
+  const basePoints = 3; // everyone who completes gets 3
+  const bonusPoints = rank === 0 ? 3 : rank === 1 ? 2 : rank === 2 ? 1 : 0;
+  const totalPts = basePoints + bonusPoints;
+
+  const { data: me } = await db.from('members').select('total_points').eq('id', state.memberId).single();
+  await db.from('members').update({ total_points: (me?.total_points || 0) + totalPts }).eq('id', state.memberId);
+
+  const rankMsg = rank === 0 ? '🥇 أول من أتمّ الهدف! +3 إضافية' :
+                  rank === 1 ? '🥈 ثاني من أتمّ الهدف! +2 إضافية' :
+                  rank === 2 ? '🥉 ثالث من أتمّ الهدف! +1 إضافية' : '';
+  toast(`✅ أتممت الهدف! +${totalPts} نقاط ${rankMsg}`);
 }
 
 async function removeMember(memberId) {
