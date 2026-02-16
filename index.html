@@ -1579,10 +1579,11 @@ async function addPages(n) {
   }
 
   if (pointsDelta !== 0) {
-    const { data: me } = await db.from('members').select('total_points').eq('id', state.memberId).single();
+    const { data: me } = await db.from('members').select('total_points, points_today').eq('id', state.memberId).single();
     const newTotal = Math.max(0, (me?.total_points || 0) + pointsDelta);
-    state.pointsToday = Math.max(0, state.pointsToday + pointsDelta);
-    await db.from('members').update({ total_points: newTotal, points_today: state.pointsToday }).eq('id', state.memberId);
+    state.pointsToday = Math.max(0, (me?.points_today || state.pointsToday) + pointsDelta);
+    const { error: ptErr } = await db.from('members').update({ total_points: newTotal, points_today: state.pointsToday }).eq('id', state.memberId);
+    if (ptErr) console.error('points update error:', ptErr);
   }
 
   updateMyProgress();
