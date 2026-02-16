@@ -386,7 +386,7 @@
 
     /* ── Background image on all screens ── */
     body { background: url('/back.jpg') center top / cover no-repeat fixed; }
-    #app { background: transparent; }
+    #app { background: rgba(255,255,255,0.5); }
     .screen-header, .dash-header {
       background: transparent !important;
       overflow: hidden;
@@ -414,11 +414,11 @@
 
     /* ── Night mode ── */
     html[data-theme="dark"] body { background: url('/back.jpg') center top / cover no-repeat fixed; }
-    html[data-theme="dark"] #app { background: rgba(10,22,40,0.55); }
-    html[data-theme="dark"] #auth { background: transparent !important; }
+    html[data-theme="dark"] #app { background: rgba(5,15,25,0.72); }
+    html[data-theme="dark"] #auth,
     html[data-theme="dark"] #signin, html[data-theme="dark"] #signup,
     html[data-theme="dark"] #create-group, html[data-theme="dark"] #join-group,
-    html[data-theme="dark"] #choose-action, html[data-theme="dark"] #complete-profile { background: #0f1f2e !important; }
+    html[data-theme="dark"] #choose-action, html[data-theme="dark"] #complete-profile { background: transparent !important; }
     html[data-theme="dark"] #dashboard { background: #0a1628 !important; }
     html[data-theme="dark"] .screen-body { background: transparent; }
     html[data-theme="dark"] .card,
