@@ -1022,6 +1022,7 @@ async function enterGroup(groupId, memberId) {
 
   state.groupId = group.id; state.groupData = group;
   state.memberId = member.id; state.myPages = member.pages_today;
+  state.pointsToday = member.points_today || 0;
   await openDashboard();
 }
 
@@ -1415,11 +1416,12 @@ async function checkAndResetDaily(group) {
     state.groupData.last_reset_date = todayInTz;
     return;
   }
-  // New day — reset all members' pages to 0
-  await db.from('members').update({ pages_today: 0 }).eq('group_id', group.id);
+  // New day — reset all members' pages and today's points to 0
+  await db.from('members').update({ pages_today: 0, points_today: 0 }).eq('group_id', group.id);
   await db.from('groups').update({ last_reset_date: todayInTz }).eq('id', group.id);
   state.groupData.last_reset_date = todayInTz;
   state.myPages = 0;
+  state.pointsToday = 0;
 }
 
 async function openDashboard() {
@@ -1544,7 +1546,8 @@ async function awardPoints() {
   const totalPts = basePoints + bonusPoints;
 
   const { data: me } = await db.from('members').select('total_points').eq('id', state.memberId).single();
-  await db.from('members').update({ total_points: (me?.total_points || 0) + totalPts }).eq('id', state.memberId);
+  await db.from('members').update({ total_points: (me?.total_points || 0) + totalPts, points_today: totalPts }).eq('id', state.memberId);
+  state.pointsToday = totalPts;
 
   const rankMsg = rank === 0 ? '🥇 أول من أتمّ الهدف! +3 إضافية' :
                   rank === 1 ? '🥈 ثاني من أتمّ الهدف! +2 إضافية' :
@@ -1571,11 +1574,21 @@ async function addPages(n) {
   const prevPages = state.myPages;
   const goal = state.groupData.goal_amount;
   state.myPages = Math.max(0, state.myPages + n);
+
   if (prevPages < goal && state.myPages >= goal) {
+    // Crossed above goal → award points
     goalNotify('🎉 ما شاء الله! أتممت الهدف اليوم!');
     sendGoalNotification();
-    awardPoints();
+    await awardPoints();
+  } else if (prevPages >= goal && state.myPages < goal && state.pointsToday > 0) {
+    // Crossed below goal → deduct today's points
+    const { data: me } = await db.from('members').select('total_points').eq('id', state.memberId).single();
+    const newTotal = Math.max(0, (me?.total_points || 0) - state.pointsToday);
+    await db.from('members').update({ total_points: newTotal, points_today: 0 }).eq('id', state.memberId);
+    state.pointsToday = 0;
+    toast('تم خصم النقاط — لم تكتمل الهدف بعد');
   }
+
   updateMyProgress();
   await db.from('members').update({ pages_today: state.myPages }).eq('id', state.memberId);
 }
@@ -1677,8 +1690,9 @@ async function saveGoal() {
   }).eq('id', state.groupId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
   // Reset all members' progress when goal changes
-  await db.from('members').update({ pages_today: 0 }).eq('group_id', state.groupId);
+  await db.from('members').update({ pages_today: 0, points_today: 0 }).eq('group_id', state.groupId);
   state.myPages = 0;
+  state.pointsToday = 0;
   state.groupData.goal_amount = state.goalPages;
   state.groupData.goal_unit   = state.goalUnit;
   document.getElementById('pages-goal-label').textContent = '/ ' + state.goalPages + ' ' + (unitLabels[state.goalUnit] || 'صفحة');

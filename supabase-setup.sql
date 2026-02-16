@@ -101,3 +101,5 @@ end $$;
 
 -- ── Points system ──────────────────────────────────
 alter table members add column if not exists total_points int not null default 0;
+
+alter table members add column if not exists points_today int not null default 0;
