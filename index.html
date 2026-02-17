@@ -516,9 +516,9 @@
       font-size: 12px; font-weight: 700; color: #8b6b3c;
     }
     .mushaf-text {
-      font-size: 21px; line-height: 2.1; text-align: justify;
+      font-size: 22px; line-height: 2.0; text-align: justify;
       color: #1a0e00; font-family: 'Scheherazade New', serif; direction: rtl;
-      flex: 1;
+      flex: 1; word-spacing: 2px;
     }
     .mushaf-ayah-num { color: #8b6b3c; font-size: 15px; }
     .mushaf-surah-header {
@@ -925,6 +925,10 @@
         <button class="mushaf-bar-btn" onclick="showQuranReader()">← السور</button>
         <button class="mushaf-bar-btn" onclick="savePageBookmark()">🔖 حفظ</button>
         <span class="mushaf-page-num" id="mushaf-page-num"></span>
+        <div style="display:flex;gap:4px;align-items:center">
+          <button class="mushaf-bar-btn" onclick="changeFontSize(-1)" style="padding:6px 10px;font-size:16px;font-weight:900">−</button>
+          <button class="mushaf-bar-btn" onclick="changeFontSize(1)" style="padding:6px 10px;font-size:16px;font-weight:900">+</button>
+        </div>
         <button class="mushaf-bar-btn" onclick="goToBookmark()">📖 العلامة</button>
       </div>
     </div>
@@ -2149,12 +2153,11 @@ function renderPage(pageIndex) {
   html += '<div class="mushaf-text">';
   page.ayahs.forEach(a => {
     const hKey = a.surahId + ':' + a.ayahNum;
-    // New surah header
+    // New surah boundary
     if (a.surahId !== lastSurahId) {
       if (lastSurahId !== 0) html += '</div>'; // close previous text div
-      const sName = quranData[a.surahId - 1]?.name || '';
-      html += `<div class="mushaf-surah-header">${sName}</div>`;
-      if (a.surahId !== 1 && a.surahId !== 9) {
+      // Bismillah only on page 1 (Al-Fatiha)
+      if (pageIndex === 0 && a.surahId === 1) {
         html += '<div class="mushaf-bismillah">﷽</div>';
       }
       if (lastSurahId !== 0) html += '<div class="mushaf-text">'; // reopen
@@ -2205,18 +2208,20 @@ function renderCurrentPage() {
   autoFitText();
 }
 
+let mushafFontSize = parseInt(localStorage.getItem('werd_mushaf_font') || '22');
+
 function autoFitText() {
   const page = document.querySelector('.mushaf-page');
   if (!page) return;
-  const textEl = page.querySelector('.mushaf-text');
-  if (!textEl) return;
-  let size = 21;
-  textEl.style.fontSize = size + 'px';
-  // Shrink text until it fits without vertical scroll
-  while (page.scrollHeight > page.clientHeight && size > 12) {
-    size -= 0.5;
-    textEl.style.fontSize = size + 'px';
-  }
+  const texts = page.querySelectorAll('.mushaf-text');
+  texts.forEach(t => t.style.fontSize = mushafFontSize + 'px');
+}
+
+function changeFontSize(delta) {
+  mushafFontSize = Math.max(14, Math.min(32, mushafFontSize + delta));
+  localStorage.setItem('werd_mushaf_font', mushafFontSize);
+  const texts = document.querySelectorAll('.mushaf-text');
+  texts.forEach(t => t.style.fontSize = mushafFontSize + 'px');
 }
 
 function setupSwipe() {
@@ -2252,12 +2257,9 @@ function setupSwipe() {
         nextPageEl.style.zIndex = '0';
         container.insertBefore(nextPageEl, curPage);
         if (curPage) curPage.style.zIndex = '1';
-        // Auto-fit the next page too
-        const txt = nextPageEl.querySelector('.mushaf-text');
-        if (txt) {
-          let sz = 21; txt.style.fontSize = sz + 'px';
-          while (nextPageEl.scrollHeight > nextPageEl.clientHeight && sz > 12) { sz -= 0.5; txt.style.fontSize = sz + 'px'; }
-        }
+        // Apply user font size to next page
+        const txts = nextPageEl.querySelectorAll('.mushaf-text');
+        txts.forEach(t => t.style.fontSize = mushafFontSize + 'px');
       }
     }
   };
