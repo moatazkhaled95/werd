@@ -655,8 +655,8 @@
       <h2>مرحباً بك</h2>
       <!-- Google Sign-In hidden for now -->
 
-      <button class="btn-primary" onclick="show('signup')">إنشاء حساب جديد</button>
-      <button class="btn-secondary" onclick="show('signin')">تسجيل الدخول</button>
+      <button class="btn-primary" onclick="show('signin')">تسجيل الدخول</button>
+      <button class="btn-secondary" onclick="show('signup')">إنشاء حساب جديد</button>
     </div>
   </div>
 
@@ -678,10 +678,21 @@
           <input type="email" id="signup-email" placeholder="example@email.com" style="direction:ltr;text-align:left" />
         </div>
         <div class="form-group" style="margin-top:12px">
+          <label>تأكيد البريد الإلكتروني</label>
+          <input type="email" id="signup-email-confirm" placeholder="أعد كتابة البريد الإلكتروني" style="direction:ltr;text-align:left" />
+        </div>
+        <div class="form-group" style="margin-top:12px">
           <label>كلمة المرور</label>
           <div style="position:relative">
             <input type="password" id="signup-password" placeholder="حرف كبير + صغير + رقم + رمز" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
             <button type="button" onclick="togglePass('signup-password',this)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:0;line-height:1">👁</button>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:12px">
+          <label>تأكيد كلمة المرور</label>
+          <div style="position:relative">
+            <input type="password" id="signup-password-confirm" placeholder="أعد كتابة كلمة المرور" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
+            <button type="button" onclick="togglePass('signup-password-confirm',this)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:0;line-height:1">👁</button>
           </div>
         </div>
         <div id="signup-error" class="err-text"></div>
@@ -1169,17 +1180,21 @@ function togglePass(id, btn) {
 async function signUp() {
   const firstName = document.getElementById('signup-firstname').value.trim();
   const email    = document.getElementById('signup-email').value.trim();
+  const emailConfirm = document.getElementById('signup-email-confirm').value.trim();
   const password = document.getElementById('signup-password').value;
+  const passwordConfirm = document.getElementById('signup-password-confirm').value;
   const errEl    = document.getElementById('signup-error');
 
   errEl.classList.remove('show');
   if (!firstName)    return showErr(errEl, 'أدخل اسمك');
   if (!email)        return showErr(errEl, 'أدخل البريد الإلكتروني');
+  if (email !== emailConfirm) return showErr(errEl, 'البريد الإلكتروني غير متطابق');
   if (password.length < 6) return showErr(errEl, 'كلمة المرور يجب أن تكون ٦ أحرف على الأقل');
   if (!/[a-z]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على حرف صغير (a-z)');
   if (!/[A-Z]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على حرف كبير (A-Z)');
   if (!/[0-9]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على رقم (0-9)');
   if (!/[^a-zA-Z0-9]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على رمز (!@#$...)');
+  if (password !== passwordConfirm) return showErr(errEl, 'كلمة المرور غير متطابقة');
 
   const { data, error } = await db.auth.signUp({
     email, password,
