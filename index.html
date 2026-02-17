@@ -2178,7 +2178,7 @@ function openPage(pageIndex) {
 
 function renderCurrentPage() {
   const container = document.getElementById('mushaf-container');
-  container.innerHTML = `<div class="mushaf-page">${renderPage(currentPage)}</div>`;
+  container.innerHTML = `<div class="mushaf-page" id="page-current">${renderPage(currentPage)}</div>`;
   document.getElementById('mushaf-page-num').textContent = (currentPage + 1) + ' / 604';
   autoFitText();
 }
@@ -2199,39 +2199,74 @@ function autoFitText() {
 
 function setupSwipe() {
   const container = document.getElementById('mushaf-container');
+  let nextPageEl = null;
+
   container.ontouchstart = (e) => {
     touchStartX = e.touches[0].clientX;
     touchDeltaX = 0;
     swiping = true;
+    // Remove any leftover next page
+    const old = document.getElementById('page-next');
+    if (old) old.remove();
+    nextPageEl = null;
   };
+
   container.ontouchmove = (e) => {
     if (!swiping) return;
     touchDeltaX = e.touches[0].clientX - touchStartX;
-    const page = container.querySelector('.mushaf-page');
-    if (page) page.style.transform = `translateX(${touchDeltaX}px)`;
+    const curPage = document.getElementById('page-current');
+    if (curPage) {
+      curPage.style.transition = 'none';
+      curPage.style.transform = `translateX(${touchDeltaX}px)`;
+    }
+    // Pre-render next page behind current one
+    if (!nextPageEl && Math.abs(touchDeltaX) > 20) {
+      const targetPage = touchDeltaX > 0 ? currentPage + 1 : currentPage - 1;
+      if (targetPage >= 0 && targetPage <= 603) {
+        nextPageEl = document.createElement('div');
+        nextPageEl.className = 'mushaf-page';
+        nextPageEl.id = 'page-next';
+        nextPageEl.innerHTML = renderPage(targetPage);
+        nextPageEl.style.zIndex = '0';
+        container.insertBefore(nextPageEl, curPage);
+        if (curPage) curPage.style.zIndex = '1';
+        // Auto-fit the next page too
+        const txt = nextPageEl.querySelector('.mushaf-text');
+        if (txt) {
+          let sz = 21; txt.style.fontSize = sz + 'px';
+          while (nextPageEl.scrollHeight > nextPageEl.clientHeight && sz > 12) { sz -= 0.5; txt.style.fontSize = sz + 'px'; }
+        }
+      }
+    }
   };
+
   container.ontouchend = () => {
     if (!swiping) return;
     swiping = false;
-    const threshold = 60;
-    // Arabic RTL: swipe right (positive delta) = next page, swipe left = previous
+    const threshold = 50;
+    const curPage = document.getElementById('page-current');
+    // Arabic RTL: swipe right = next page, swipe left = previous
     if (touchDeltaX > threshold && currentPage < 603) {
-      animatePageTransition('right', () => { currentPage++; renderCurrentPage(); autoFitText(); });
+      if (curPage) {
+        curPage.style.transition = 'transform .2s ease';
+        curPage.style.transform = 'translateX(110%)';
+      }
+      setTimeout(() => { currentPage++; renderCurrentPage(); autoFitText(); }, 210);
     } else if (touchDeltaX < -threshold && currentPage > 0) {
-      animatePageTransition('left', () => { currentPage--; renderCurrentPage(); autoFitText(); });
+      if (curPage) {
+        curPage.style.transition = 'transform .2s ease';
+        curPage.style.transform = 'translateX(-110%)';
+      }
+      setTimeout(() => { currentPage--; renderCurrentPage(); autoFitText(); }, 210);
     } else {
-      const page = container.querySelector('.mushaf-page');
-      if (page) page.style.transform = '';
+      // Snap back
+      if (curPage) {
+        curPage.style.transition = 'transform .15s ease';
+        curPage.style.transform = '';
+      }
+      if (nextPageEl) { nextPageEl.remove(); nextPageEl = null; }
     }
   };
-}
-
-function animatePageTransition(direction, cb) {
-  const page = document.querySelector('.mushaf-page');
-  if (!page) { cb(); return; }
-  page.style.transition = 'transform .25s ease';
-  page.style.transform = `translateX(${direction === 'left' ? '-110%' : '110%'})`;
-  setTimeout(cb, 260);
 }
 
 function savePageBookmark() {
