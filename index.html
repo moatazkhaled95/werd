@@ -1489,14 +1489,15 @@ async function checkAndResetDaily(group) {
   const lsKey = 'werd_reset_v2_' + group.id;
   const lastReset = localStorage.getItem(lsKey) || group.last_reset_date || '';
   if (lastReset === todayInTz) return; // already reset today
-  // New day (or first time) — always reset
+  const isFirstTime = !lastReset;
+  // New day — reset all members' daily progress
   await db.from('members').update({ pages_today: 0, points_today: 0 }).eq('group_id', group.id);
   localStorage.setItem(lsKey, todayInTz);
   db.from('groups').update({ last_reset_date: todayInTz }).eq('id', group.id).then(() => {});
   state.groupData.last_reset_date = todayInTz;
   state.myPages = 0;
   state.pointsToday = 0;
-  toast('تم تصفير الأهداف اليومية ✓');
+  if (!isFirstTime) toast('تم تصفير الأهداف اليومية ✓');
 }
 
 async function openDashboard() {
