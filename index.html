@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>وِرْدٌ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -387,7 +388,7 @@
     /* ── All screens transparent over background ── */
     #app, .screen, #auth, #loading, #dashboard,
     #create-group, #join-group, #choose-action, #complete-profile, #signin, #signup,
-    #verify-email { background: transparent !important; }
+    #verify-email, #main-menu, #quran-reader, #quran-surah-view { background: transparent !important; }
     .screen-header, .dash-header { background: transparent !important; overflow: hidden; }
     .screen-header::after, .dash-header::after { display: none; }
     .screen-body, .dash-body { background: transparent; }
@@ -466,6 +467,19 @@
     .ham-font-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #2a4a63; background: #1e3347; color: #e2f0eb; font-size: 16px; font-weight: 700; cursor: pointer; }
     .ham-btn { background: rgba(255,255,255,.15); border: none; color: #fff; font-size: 20px; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .screen-header .ham-btn, .dash-header .ham-btn { position: absolute; top: 16px; left: 16px; }
+
+    /* ── Main Menu Cards ── */
+    .menu-card {
+      width: 85%; max-width: 280px; padding: 32px 20px;
+      border: none; border-radius: 20px; cursor: pointer;
+      background: rgba(255,255,255,0.95); box-shadow: 0 4px 20px rgba(0,0,0,.2);
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      transition: transform .2s, box-shadow .2s; font-family: inherit;
+    }
+    .menu-card:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(0,0,0,.3); }
+    .menu-card:active { transform: scale(0.97); }
+    .menu-card-icon { font-size: 48px; }
+    .menu-card-label { font-size: 20px; font-weight: 800; color: #0f766e; }
   </style>
 </head>
 <body>
@@ -479,8 +493,11 @@
     <p id="ham-username"></p>
   </div>
   <div class="ham-items">
+    <button class="ham-item" onclick="closeMenu(); showMainMenu();" id="ham-home">
+      <span class="ham-icon">🏠</span> القائمة الرئيسية
+    </button>
     <button class="ham-item" onclick="closeMenu(); leaveDashboard && leaveDashboard();" id="ham-mygroups" style="display:none">
-      <span class="ham-icon">🏠</span> مجموعاتي
+      <span class="ham-icon">👥</span> مجموعاتي
     </button>
     <button class="ham-item" id="ham-leave" onclick="closeMenu(); leaveGroup && leaveGroup();" style="display:none">
       <span class="ham-icon">🚪</span> مغادرة المجموعة
@@ -651,6 +668,25 @@
     </div>
   </div>
 
+  <!-- ══════════ Main Menu ══════════ -->
+  <div id="main-menu" class="screen">
+    <div class="screen-header">
+      <button class="ham-btn" onclick="openMenu(false)">☰</button>
+      <h2 id="menu-hi">أهلاً!</h2>
+      <p style="margin:6px 0 0;color:#99f6e4;font-size:13px">اختر ما تريد</p>
+    </div>
+    <div class="screen-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding-top:40px">
+      <button class="menu-card" onclick="showQuranReader()">
+        <span class="menu-card-icon">📖</span>
+        <span class="menu-card-label">القرآن الكريم</span>
+      </button>
+      <button class="menu-card" onclick="showMyGroups()">
+        <span class="menu-card-icon">👥</span>
+        <span class="menu-card-label">مجموعاتي</span>
+      </button>
+    </div>
+  </div>
+
   <!-- ══════════ My Groups ══════════ -->
   <div id="choose-action" class="screen">
     <div class="screen-header">
@@ -785,6 +821,30 @@
           <button class="btn-primary" style="margin-top:4px" onclick="joinGroup()">انضم الآن ✓</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Quran Reader ══════════ -->
+  <div id="quran-reader" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="showMainMenu()">← القائمة</button>
+      <button class="ham-btn" onclick="openMenu(false)">☰</button>
+      <h2>القرآن الكريم</h2>
+      <p style="margin:4px 0 0;color:#99f6e4;font-size:13px">اختر سورة للقراءة</p>
+    </div>
+    <div class="screen-body" id="quran-surah-list">
+      <div style="text-align:center;padding:40px;color:#6b7280">جاري التحميل...</div>
+    </div>
+  </div>
+
+  <!-- ══════════ Quran Surah View ══════════ -->
+  <div id="quran-surah-view" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="show('quran-reader')">← السور</button>
+      <button class="ham-btn" onclick="openMenu(false)">☰</button>
+      <h2 id="surah-view-title">سورة</h2>
+    </div>
+    <div class="screen-body" id="quran-ayah-container" style="padding:16px">
     </div>
   </div>
 
@@ -965,7 +1025,20 @@ async function afterLogin() {
     await autoJoinGroup(pendingJoin);
     return;
   }
-  await showMyGroups();
+  showMainMenu();
+}
+
+function showMainMenu() {
+  if (realtimeSub) { realtimeSub.unsubscribe(); realtimeSub = null; }
+  Object.assign(state, { groupId: null, groupData: null, memberId: null, myPages: 0, joinGroupData: null });
+  const displayName = (state.profile?.first_name) || state.user?.email || '';
+  document.getElementById('menu-hi').textContent = 'أهلاً ' + displayName + '!';
+  show('main-menu');
+}
+
+function showQuranReader() {
+  show('quran-reader');
+  loadQuranSurahList();
 }
 
 async function showMyGroups() {
@@ -1854,6 +1927,53 @@ function show(id) {
   if (!el) { console.error('show(): screen not found:', id); return; }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   el.classList.add('active');
+}
+
+// ══════════════════════════════════════════
+//  QURAN READER
+// ══════════════════════════════════════════
+let quranData = null;
+
+async function loadQuranSurahList() {
+  const container = document.getElementById('quran-surah-list');
+  if (!quranData) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:#6b7280">جاري تحميل القرآن...</div>';
+    try {
+      const resp = await fetch('/quran.json');
+      quranData = await resp.json();
+    } catch(e) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444">خطأ في تحميل القرآن</div>';
+      return;
+    }
+  }
+  container.innerHTML = quranData.map((s, i) => `
+    <div class="card surah-card" onclick="openSurah(${i})" style="cursor:pointer;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+      <div style="width:36px;height:36px;border-radius:50%;background:#0d9488;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">${s.id}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:16px;font-weight:700;color:#1f2937">${s.name}</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px">${s.type === 'meccan' ? 'مكية' : 'مدنية'} · ${s.total_verses} آية</div>
+      </div>
+      <div style="font-size:22px;font-weight:700;color:#0d9488;font-family:'Scheherazade New',serif">${s.name}</div>
+    </div>
+  `).join('');
+}
+
+function openSurah(index) {
+  const surah = quranData[index];
+  document.getElementById('surah-view-title').textContent = surah.name;
+  const container = document.getElementById('quran-ayah-container');
+  let html = '';
+  if (surah.id !== 1 && surah.id !== 9) {
+    html += '<div style="text-align:center;font-size:22px;color:#0d9488;margin-bottom:20px;font-family:\'Scheherazade New\',serif">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>';
+  }
+  html += '<div style="font-size:22px;line-height:2.2;text-align:justify;color:#1f2937;font-family:\'Scheherazade New\',serif;direction:rtl">';
+  surah.verses.forEach(v => {
+    html += `<span>${v.text}</span> <span style="color:#0d9488;font-size:16px">﴿${v.id}﴾</span> `;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+  container.scrollTop = 0;
+  show('quran-surah-view');
 }
 
 let toastTimer;
