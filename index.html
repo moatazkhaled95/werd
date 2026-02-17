@@ -703,6 +703,11 @@
             <div class="radio-icon">📗</div>
             <div class="radio-label">جزء</div>
           </label>
+          <label class="radio-card" id="unit-kahf" onclick="selectUnit('kahf')">
+            <input type="radio" name="unit" value="kahf" />
+            <div class="radio-icon">🕌</div>
+            <div class="radio-label">سورة الكهف</div>
+          </label>
         </div>
         <div id="goal-amount-section"></div>
       </div>
@@ -864,6 +869,7 @@ const unitLabels = {
   page: 'صفحة',
   hizb: 'حزب', 'hizb-quarter': 'ربع حزب', 'hizb-half': 'نصف حزب', 'hizb-third': 'ثلاثة أرباع حزب',
   juz:  'جزء',  'juz-quarter':  'ربع جزء',  'juz-half':  'نصف جزء',  'juz-third':  'ثلاثة أرباع جزء',
+  kahf: 'سورة الكهف',
 };
 
 const state = {
@@ -1183,10 +1189,14 @@ function showErr(el, msg) {
 // ══════════════════════════════════════════
 function selectUnit(u) {
   state.goalBaseUnit = u;
-  state.goalSubUnit = u === 'page' ? 'none' : null;
-  state.goalUnit = u === 'page' ? 'page' : null;
-  state.goalPages = u === 'page' ? 2 : 1;
-  ['page','hizb','juz'].forEach(x =>
+  if (u === 'kahf') {
+    state.goalSubUnit = 'none'; state.goalUnit = 'kahf'; state.goalPages = 1;
+  } else if (u === 'page') {
+    state.goalSubUnit = 'none'; state.goalUnit = 'page'; state.goalPages = 2;
+  } else {
+    state.goalSubUnit = null; state.goalUnit = null; state.goalPages = 1;
+  }
+  ['page','hizb','juz','kahf'].forEach(x =>
     document.getElementById('unit-' + x).classList.toggle('selected', x === u)
   );
   renderGoalOptions();
@@ -1221,14 +1231,18 @@ function renderGoalOptions() {
   if (!sec) return;
   const base = state.goalBaseUnit;
 
+  if (base === 'kahf') {
+    sec.innerHTML = `<div style="text-align:center;padding:8px;color:#0f766e;font-weight:600">قراءة سورة الكهف كل جمعة</div>`;
+    return;
+  }
+
   if (base === 'page') {
     sec.innerHTML = `
-      <div class="goal-input-row" style="margin-bottom:10px">
-        <input type="number" id="goal-pages" value="${state.goalPages}" min="1" max="100" oninput="syncGoalInput()" />
+      <div class="goal-input-row" style="margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:12px">
+        <button class="inc-btn" onclick="setGoal(Math.max(1,state.goalPages-1))" style="width:40px;height:40px;border-radius:50%;border:2px solid #99f6e4;background:#f0fdfa;color:#0f766e;font-size:20px;font-weight:700;cursor:pointer">−</button>
+        <input type="number" id="goal-pages" value="${state.goalPages}" min="1" max="100" oninput="syncGoalInput()" style="width:70px;text-align:center" />
+        <button class="inc-btn" onclick="setGoal(Math.min(100,state.goalPages+1))" style="width:40px;height:40px;border-radius:50%;border:2px solid #99f6e4;background:#f0fdfa;color:#0f766e;font-size:20px;font-weight:700;cursor:pointer">+</button>
         <span id="goal-unit-label">صفحة في اليوم</span>
-      </div>
-      <div class="quick-btns" id="goal-quick">
-        ${[1,2,3,5,10].map(n => `<button class="quick-btn${state.goalPages===n?' selected':''}" onclick="setGoal(${n})">${n}</button>`).join('')}
       </div>`;
     return;
   }
@@ -1663,7 +1677,8 @@ function toggleEditGoal() {
     const base = unit.includes('-') ? unit.split('-')[0] : unit;
     state.goalBaseUnit = base;
     state.goalPages = g.goal_amount;
-    if (unit === 'page') { state.goalSubUnit = 'none'; state.goalUnit = 'page'; }
+    if (unit === 'kahf') { state.goalSubUnit = 'none'; state.goalUnit = 'kahf'; }
+    else if (unit === 'page') { state.goalSubUnit = 'none'; state.goalUnit = 'page'; }
     else if (unit === base) { state.goalSubUnit = 'full'; state.goalUnit = base; }
     else { state.goalSubUnit = unit.replace(base + '-', ''); state.goalUnit = unit; }
     renderEditGoalOptions();
@@ -1672,9 +1687,13 @@ function toggleEditGoal() {
 
 function editSelectUnit(u) {
   state.goalBaseUnit = u;
-  state.goalSubUnit = u === 'page' ? 'none' : null;
-  state.goalUnit = u === 'page' ? 'page' : null;
-  state.goalPages = u === 'page' ? 1 : 1;
+  if (u === 'kahf') {
+    state.goalSubUnit = 'none'; state.goalUnit = 'kahf'; state.goalPages = 1;
+  } else if (u === 'page') {
+    state.goalSubUnit = 'none'; state.goalUnit = 'page'; state.goalPages = 1;
+  } else {
+    state.goalSubUnit = null; state.goalUnit = null; state.goalPages = 1;
+  }
   renderEditGoalOptions();
 }
 
@@ -1694,17 +1713,21 @@ function renderEditGoalOptions() {
       <label class="radio-card${base==='juz'?' selected':''}" onclick="editSelectUnit('juz')">
         <div class="radio-icon">📗</div><div class="radio-label">جزء</div>
       </label>
+      <label class="radio-card${base==='kahf'?' selected':''}" onclick="editSelectUnit('kahf')">
+        <div class="radio-icon">🕌</div><div class="radio-label">سورة الكهف</div>
+      </label>
     </div>`;
 
   let amountHtml = '';
-  if (base === 'page') {
+  if (base === 'kahf') {
+    amountHtml = `<div style="text-align:center;padding:8px;color:#0f766e;font-weight:600">قراءة سورة الكهف كل جمعة</div>`;
+  } else if (base === 'page') {
     amountHtml = `
-      <div class="goal-input-row" style="margin-bottom:10px">
-        <input type="number" id="edit-goal-pages" value="${state.goalPages}" min="1" max="100" oninput="state.goalPages=parseInt(this.value)||1" />
+      <div class="goal-input-row" style="margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:12px">
+        <button class="inc-btn" onclick="state.goalPages=Math.max(1,state.goalPages-1);renderEditGoalOptions()" style="width:40px;height:40px;border-radius:50%;border:2px solid #99f6e4;background:#f0fdfa;color:#0f766e;font-size:20px;font-weight:700;cursor:pointer">−</button>
+        <input type="number" id="edit-goal-pages" value="${state.goalPages}" min="1" max="100" oninput="state.goalPages=parseInt(this.value)||1" style="width:70px;text-align:center" />
+        <button class="inc-btn" onclick="state.goalPages=Math.min(100,state.goalPages+1);renderEditGoalOptions()" style="width:40px;height:40px;border-radius:50%;border:2px solid #99f6e4;background:#f0fdfa;color:#0f766e;font-size:20px;font-weight:700;cursor:pointer">+</button>
         <span>صفحة في اليوم</span>
-      </div>
-      <div class="quick-btns">
-        ${[1,2,3,5,10].map(n=>`<button class="quick-btn${state.goalPages===n?' selected':''}" onclick="state.goalPages=${n};renderEditGoalOptions()">${n}</button>`).join('')}
       </div>`;
   } else if (base) {
     const baseLabel = base === 'hizb' ? 'حزب' : 'جزء';
