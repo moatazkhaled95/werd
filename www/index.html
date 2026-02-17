@@ -2183,7 +2183,7 @@ function renderPage(pageIndex) {
       const sName = quranData[a.surahId - 1]?.name || '';
       html += `<div class="mushaf-surah-header">${sName}</div>`;
       if (a.surahId !== 1 && a.surahId !== 9) {
-        html += '<div class="mushaf-bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>';
+        html += '<div class="mushaf-bismillah">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>';
       }
       if (lastSurahId !== 0) html += '<div class="mushaf-text">'; // reopen
     }
@@ -2198,7 +2198,7 @@ function renderPage(pageIndex) {
       html += `<div class="mushaf-hizb">۞ ${label}</div>`;
     }
     // Color لفظ الجلالة (Allah's name) in red
-    const coloredText = a.text.replace(/(ٱللَّهِ|ٱللَّهُ|ٱللَّهَ|ٱللَّهۚ|ٱللَّهۖ|ٱللَّهۗ|ٱللَّهۙ|ٱللّهِ|ٱللّهُ|ٱللّهَ|لِلَّهِ|لِلَّهُ|لِلّهِ|بِٱللَّهِ|وَٱللَّهُ|وَٱللَّهِ|وَٱللَّهَ)/g, '<span class="allah-name">$1</span>');
+    const coloredText = a.text.replace(/(ٱللَّهَ|ٱللَّهُ|ٱللَّهِ|ٱللَّه[ۖۗۚۙۘ]|لِلَّهِ|لِلَّهُ|لِلَّهَ|ٱللّهَ|ٱللّهُ|ٱللّهِ)/g, '<span class="allah-name">$1</span>');
     html += `${coloredText} <span class="mushaf-ayah-num">${toArabicNum(a.ayahNum)}</span> `;
   });
   html += '</div>';
