@@ -532,7 +532,11 @@
     }
     .mushaf-text .allah-name { color: #b91c1c; }
     .mushaf-ayah-num {
-      color: #5a3e1b; font-family: 'UthmanicHafs', 'Amiri Quran', serif;
+      color: #8b6b3c; font-size: 0.7em;
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 1.6em; height: 1.6em; margin: 0 1px;
+      border: 1.5px solid #c9a96e; border-radius: 50%;
+      vertical-align: middle; font-family: sans-serif;
     }
     .mushaf-surah-header {
       text-align: center; margin: 10px 0 4px; padding: 10px 16px;
@@ -2194,7 +2198,7 @@ function renderPage(pageIndex) {
     }
     // Color لفظ الجلالة (Allah's name) in red
     const coloredText = a.text.replace(/(ٱللَّهَ|ٱللَّهُ|ٱللَّهِ|ٱللَّه[ۖۗۚۙۘ]|لِلَّهِ|لِلَّهُ|لِلَّهَ|ٱللّهَ|ٱللّهُ|ٱللّهِ)/g, '<span class="allah-name">$1</span>');
-    html += `${coloredText} <span class="mushaf-ayah-num">\u06DD${toArabicNum(a.ayahNum)}</span> `;
+    html += `${coloredText} <span class="mushaf-ayah-num">${toArabicNum(a.ayahNum)}</span> `;
   });
   html += '</div>';
   return html;
