@@ -480,6 +480,43 @@
     .menu-card:active { transform: scale(0.97); }
     .menu-card-icon { font-size: 48px; }
     .menu-card-label { font-size: 20px; font-weight: 800; color: #0f766e; }
+
+    /* ── Mushaf Background for Quran screens ── */
+    #quran-surah-view .screen-body {
+      background: linear-gradient(170deg, #f5e6c8 0%, #ecdbb0 30%, #e8d5a8 60%, #f0ddb5 100%) !important;
+      border: 2px solid #c9a96e;
+      margin: 0 4px;
+      border-radius: 0 0 8px 8px;
+      box-shadow: inset 0 0 40px rgba(139,107,60,0.15);
+    }
+    #quran-reader .screen-body {
+      background: linear-gradient(170deg, #f5e6c8 0%, #ecdbb0 50%, #f0ddb5 100%) !important;
+    }
+    .surah-card { background: rgba(255,255,255,0.7) !important; }
+
+    /* ── Bookmark button ── */
+    .bookmark-btn {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, #8b6b3c, #a0834e); color: #fff;
+      border: none; border-radius: 30px; padding: 10px 22px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,.3); z-index: 50;
+      font-family: inherit; display: flex; align-items: center; gap: 8px;
+    }
+    .bookmark-resume {
+      background: linear-gradient(135deg, #0d9488, #0f766e); color: #fff;
+      border: none; border-radius: 14px; padding: 12px 18px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      font-family: inherit; display: flex; align-items: center; gap: 8px;
+      width: 100%; justify-content: center; margin-bottom: 12px;
+    }
+
+    /* ── Juz divider ── */
+    .juz-divider {
+      text-align: center; margin: 20px 0; padding: 12px;
+      background: linear-gradient(135deg, #8b6b3c, #a0834e);
+      border-radius: 12px; color: #fff; font-size: 18px; font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -1995,6 +2032,12 @@ const hizbQuarters = {
   "78:1":"حزب 59","80:1":"ربع","82:1":"نصف","84:1":"ثلاثة أرباع",
   "87:1":"حزب 60","90:1":"ربع","94:1":"نصف","100:9":"ثلاثة أرباع"
 };
+const juzPositions = {
+  "1:1":1,"2:142":2,"2:253":3,"3:93":4,"4:24":5,"4:148":6,"5:82":7,"6:111":8,
+  "7:88":9,"8:41":10,"9:93":11,"11:6":12,"12:53":13,"15:1":14,"16:51":15,
+  "17:1":16,"18:75":17,"20:1":18,"21:1":19,"22:1":20,"23:1":21,"25:21":22,
+  "27:56":23,"28:51":24,"29:46":25,"33:31":26,"36:28":27,"38:21":28,"39:32":29,"41:47":30
+};
 
 async function loadQuranSurahList() {
   const container = document.getElementById('quran-surah-list');
@@ -2008,42 +2051,89 @@ async function loadQuranSurahList() {
       return;
     }
   }
-  container.innerHTML = quranData.map((s, i) => `
+  // Show bookmark resume button if exists
+  const bm = JSON.parse(localStorage.getItem('werd_quran_bookmark') || 'null');
+  let bmHtml = '';
+  if (bm) {
+    const bmSurah = quranData[bm.surahIndex];
+    bmHtml = `<button class="bookmark-resume" onclick="openSurah(${bm.surahIndex}, ${bm.ayahId})">
+      🔖 متابعة من ${bmSurah.name} - آية ${bm.ayahId}
+    </button>`;
+  }
+  container.innerHTML = bmHtml + quranData.map((s, i) => `
     <div class="card surah-card" onclick="openSurah(${i})" style="cursor:pointer;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
-      <div style="width:36px;height:36px;border-radius:50%;background:#0d9488;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">${s.id}</div>
+      <div style="width:36px;height:36px;border-radius:50%;background:#8b6b3c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">${s.id}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:16px;font-weight:700;color:#1f2937">${s.name}</div>
-        <div style="font-size:12px;color:#6b7280;margin-top:2px">${s.type === 'meccan' ? 'مكية' : 'مدنية'} · ${s.total_verses} آية</div>
+        <div style="font-size:16px;font-weight:700;color:#3d2a00">${s.name}</div>
+        <div style="font-size:12px;color:#7a6840;margin-top:2px">${s.type === 'meccan' ? 'مكية' : 'مدنية'} · ${s.total_verses} آية</div>
       </div>
-      <div style="font-size:22px;font-weight:700;color:#0d9488;font-family:'Scheherazade New',serif">${s.name}</div>
     </div>
   `).join('');
 }
 
-function openSurah(index) {
+function openSurah(index, scrollToAyah) {
   const surah = quranData[index];
   document.getElementById('surah-view-title').textContent = surah.name;
   const container = document.getElementById('quran-ayah-container');
   let html = '';
   if (surah.id !== 1 && surah.id !== 9) {
-    html += '<div style="text-align:center;font-size:24px;color:#d4a94a;margin-bottom:20px;font-family:\'Scheherazade New\',serif">﷽</div>';
+    html += '<div style="text-align:center;font-size:28px;color:#8b6b3c;margin-bottom:20px;font-family:\'Scheherazade New\',serif">﷽</div>';
   }
-  html += '<div style="font-size:22px;line-height:2.2;text-align:justify;color:#fff;font-family:\'Scheherazade New\',serif;direction:rtl">';
+  html += '<div style="font-size:22px;line-height:2.2;text-align:justify;color:#2a1a00;font-family:\'Scheherazade New\',serif;direction:rtl">';
   surah.verses.forEach(v => {
     const hKey = surah.id + ':' + v.id;
+    // Juz marker
+    const juz = juzPositions[hKey];
+    if (juz) {
+      html += `<div class="juz-divider">الجزء ${juz}</div>`;
+    }
+    // Hizb marker
     const hizb = hizbQuarters[hKey];
-    if (hizb) {
+    if (hizb && !juz) {
       const isMain = hizb.startsWith('حزب');
-      html += `<div style="text-align:center;margin:16px 0;padding:8px 0;border-top:1px solid ${isMain ? '#d4a94a' : 'rgba(255,255,255,0.2)'};border-bottom:1px solid ${isMain ? '#d4a94a' : 'rgba(255,255,255,0.2)'}">
-        <span style="font-size:14px;font-weight:700;color:${isMain ? '#d4a94a' : '#99f6e4'};font-family:inherit">۞ ${hizb}</span>
+      html += `<div style="text-align:center;margin:14px 0;padding:6px 0;border-top:2px solid ${isMain ? '#8b6b3c' : '#c9a96e'};border-bottom:2px solid ${isMain ? '#8b6b3c' : '#c9a96e'}">
+        <span style="font-size:14px;font-weight:700;color:#8b6b3c;font-family:inherit">۞ ${hizb}</span>
+      </div>`;
+    } else if (hizb && juz) {
+      const isMain = hizb.startsWith('حزب');
+      html += `<div style="text-align:center;margin:4px 0 14px;padding:6px 0;border-bottom:2px solid #c9a96e">
+        <span style="font-size:14px;font-weight:700;color:#8b6b3c;font-family:inherit">۞ ${hizb}</span>
       </div>`;
     }
-    html += `<span>${v.text}</span> <span style="color:#d4a94a;font-size:16px">﴿${v.id}﴾</span> `;
+    html += `<span id="ayah-${v.id}">${v.text}</span> <span style="color:#8b6b3c;font-size:16px">﴿${v.id}﴾</span> `;
   });
   html += '</div>';
+  // Bookmark button
+  html += `<button class="bookmark-btn" onclick="saveBookmark(${index})">🔖 حفظ العلامة هنا</button>`;
+  html += '<div style="height:80px"></div>'; // spacer for bookmark button
   container.innerHTML = html;
-  container.scrollTop = 0;
   show('quran-surah-view');
+  if (scrollToAyah) {
+    setTimeout(() => {
+      const el = document.getElementById('ayah-' + scrollToAyah);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 200);
+  } else {
+    container.scrollTop = 0;
+  }
+  // Track current surah for bookmark
+  state.currentSurahIndex = index;
+}
+
+function saveBookmark(surahIndex) {
+  const container = document.getElementById('quran-ayah-container');
+  const ayahs = container.querySelectorAll('span[id^="ayah-"]');
+  let closestAyah = 1;
+  const containerTop = container.getBoundingClientRect().top + 100;
+  for (const el of ayahs) {
+    const rect = el.getBoundingClientRect();
+    if (rect.top <= containerTop) closestAyah = parseInt(el.id.replace('ayah-', ''));
+    else break;
+  }
+  const surah = quranData[surahIndex];
+  const bookmark = { surahIndex, ayahId: closestAyah };
+  localStorage.setItem('werd_quran_bookmark', JSON.stringify(bookmark));
+  toast('🔖 تم حفظ العلامة عند ' + surah.name + ' آية ' + closestAyah);
 }
 
 let toastTimer;
