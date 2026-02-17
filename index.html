@@ -1222,11 +1222,40 @@ async function signIn() {
 }
 
 async function signInWithGoogle() {
-  const { error } = await db.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin + window.location.pathname }
-  });
-  if (error) toast('حدث خطأ في تسجيل الدخول');
+  // Check if running inside Capacitor (native app)
+  const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
+
+  if (isNative) {
+    // Native app: open in Chrome Custom Tab (in-app browser)
+    const redirectUrl = 'https://werd-moatazs-projects-f7432b84.vercel.app';
+    const { data, error } = await db.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl,
+        skipBrowserRedirect: true,
+      }
+    });
+    if (error) { toast('حدث خطأ في تسجيل الدخول'); return; }
+    // Open OAuth URL in Chrome Custom Tab
+    const { Browser } = window.Capacitor.Plugins;
+    await Browser.open({ url: data.url, windowName: '_self' });
+    // Listen for the app to return from the browser
+    Browser.addListener('browserFinished', async () => {
+      const { data: sessionData } = await db.auth.getSession();
+      if (sessionData?.session) {
+        state.user = sessionData.session.user;
+        loadProfile(state.user);
+        await afterLogin();
+      }
+    });
+  } else {
+    // Web: normal redirect flow
+    const { error } = await db.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + window.location.pathname }
+    });
+    if (error) toast('حدث خطأ في تسجيل الدخول');
+  }
 }
 
 async function signOut() {
