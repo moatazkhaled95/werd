@@ -2157,20 +2157,17 @@ function renderPage(pageIndex) {
   html += '<div class="mushaf-text">';
   page.ayahs.forEach(a => {
     const hKey = a.surahId + ':' + a.ayahNum;
-    // New surah boundary
-    if (a.surahId !== lastSurahId) {
-      if (lastSurahId !== 0) {
-        html += '</div>'; // close previous text div
-        // Show surah header + bismillah for new surah mid-page
-        const sName = quranData[a.surahId - 1]?.name || '';
-        html += `<div class="mushaf-surah-header">${sName}</div>`;
-        if (a.surahId !== 9) {
-          html += '<div class="mushaf-bismillah">﷽</div>';
-        }
-        html += '<div class="mushaf-text">'; // reopen
+    // New surah: show header + bismillah
+    if (a.surahId !== lastSurahId && a.ayahNum === 1) {
+      if (lastSurahId !== 0) html += '</div>'; // close previous text div
+      const sName = quranData[a.surahId - 1]?.name || '';
+      html += `<div class="mushaf-surah-header">${sName}</div>`;
+      if (a.surahId !== 1 && a.surahId !== 9) {
+        html += '<div class="mushaf-bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>';
       }
-      lastSurahId = a.surahId;
+      if (lastSurahId !== 0) html += '<div class="mushaf-text">'; // reopen
     }
+    if (a.surahId !== lastSurahId) lastSurahId = a.surahId;
     // Hizb marker
     const hizb = hizbQuarters[hKey];
     if (hizb) {
