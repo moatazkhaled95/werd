@@ -14,6 +14,7 @@
       font-display: swap;
     }
   </style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1222,35 +1223,57 @@ async function signIn() {
   // onAuthStateChange will fire and handle the rest
 }
 
+const GOOGLE_CLIENT_ID = '460386778396-5qqe0gg7krgc1uk1ducj4gt3hbgj8kb4.apps.googleusercontent.com';
+
 async function signInWithGoogle() {
-  // Check if running inside Capacitor (native app)
   const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
 
-  if (isNative) {
-    // Native app: open in Chrome Custom Tab (in-app browser)
-    const redirectUrl = 'https://werd-moatazs-projects-f7432b84.vercel.app';
-    const { data, error } = await db.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl,
-        skipBrowserRedirect: true,
-      }
-    });
-    if (error) { toast('حدث خطأ في تسجيل الدخول'); return; }
-    // Open OAuth URL in Chrome Custom Tab
-    const { Browser } = window.Capacitor.Plugins;
-    await Browser.open({ url: data.url, windowName: '_self' });
-    // Listen for the app to return from the browser
-    Browser.addListener('browserFinished', async () => {
-      const { data: sessionData } = await db.auth.getSession();
-      if (sessionData?.session) {
-        state.user = sessionData.session.user;
-        loadProfile(state.user);
-        await afterLogin();
-      }
-    });
+  if (isNative || window.google?.accounts) {
+    // Native app or supported browser: use Google One Tap (stays in-app)
+    try {
+      const idToken = await new Promise((resolve, reject) => {
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: (response) => resolve(response.credential),
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+        google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            // One Tap not available, fall back to popup
+            google.accounts.oauth2.initCodeClient({
+              client_id: GOOGLE_CLIENT_ID,
+              scope: 'email profile',
+              ux_mode: 'popup',
+              callback: async (response) => {
+                if (response.error) { reject(response.error); return; }
+                // For code flow, use OAuth redirect as fallback
+                const { error } = await db.auth.signInWithOAuth({
+                  provider: 'google',
+                  options: { redirectTo: window.location.origin + window.location.pathname }
+                });
+                if (error) reject(error);
+              },
+            }).requestCode();
+          }
+        });
+      });
+
+      // Sign in to Supabase with the Google ID token
+      const { data, error } = await db.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
+      });
+      if (error) { toast('حدث خطأ في تسجيل الدخول'); return; }
+      state.user = data.user;
+      loadProfile(data.user);
+      await afterLogin();
+    } catch(e) {
+      console.error('Google sign-in error:', e);
+      toast('حدث خطأ في تسجيل الدخول');
+    }
   } else {
-    // Web: normal redirect flow
+    // Fallback: redirect flow
     const { error } = await db.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin + window.location.pathname }
