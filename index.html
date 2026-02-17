@@ -1767,9 +1767,9 @@ async function removeMember(memberId) {
 }
 
 async function resetGroupActivity() {
-  if (!confirm('هل أنت متأكد؟ سيتم تصفير تقدّم جميع الأعضاء اليوم (النقاط الإجمالية لن تتأثر).')) return;
+  if (!confirm('هل أنت متأكد؟ سيتم تصفير تقدّم جميع الأعضاء والنقاط الإجمالية.')) return;
   const { error } = await db.from('members')
-    .update({ pages_today: 0, points_today: 0 })
+    .update({ pages_today: 0, points_today: 0, total_points: 0 })
     .eq('group_id', state.groupId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
   state.myPages = 0;
