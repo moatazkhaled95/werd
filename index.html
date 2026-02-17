@@ -498,9 +498,8 @@
     #quran-page-view { background: transparent !important; }
     #quran-page-view .screen-body { padding: 0 !important; overflow: hidden !important; }
     .mushaf-container {
-      width: 100%; height: calc(100vh - 140px);
+      width: 100%; height: calc(100vh - 50px);
       overflow: hidden; position: relative; touch-action: pan-x;
-      direction: rtl;
     }
     .mushaf-page {
       width: 100%; height: 100%; position: absolute; top: 0;
@@ -508,7 +507,7 @@
       border: 1px solid #c9a96e;
       box-shadow: inset 0 0 30px rgba(139,107,60,0.12);
       display: flex; flex-direction: column;
-      overflow-y: auto; padding: 14px 16px 60px;
+      overflow-y: auto; padding: 10px 14px 10px;
       transition: transform .3s ease;
     }
     .mushaf-page-header {
@@ -546,10 +545,11 @@
 
     /* ── Fixed bottom bar ── */
     .mushaf-bottom-bar {
-      position: absolute; bottom: 0; left: 0; right: 0;
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 428px;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 8px 12px; background: linear-gradient(0deg, rgba(139,107,60,0.95), rgba(139,107,60,0.85));
-      z-index: 50; gap: 6px;
+      padding: 10px 12px; background: linear-gradient(0deg, rgba(90,62,27,0.97), rgba(120,85,40,0.93));
+      z-index: 999; gap: 6px;
     }
     .mushaf-bar-btn {
       background: none; border: 1px solid rgba(255,255,255,0.4); color: #fff;
@@ -919,7 +919,7 @@
 
   <!-- ══════════ Quran Page View ══════════ -->
   <div id="quran-page-view" class="screen">
-    <div class="screen-body" style="position:relative;height:100vh">
+    <div class="screen-body" style="padding:0;height:100vh">
       <div class="mushaf-container" id="mushaf-container"></div>
       <div class="mushaf-bottom-bar">
         <button class="mushaf-bar-btn" onclick="showQuranReader()">← السور</button>
@@ -2173,12 +2173,28 @@ function openPage(pageIndex) {
   show('quran-page-view');
   renderCurrentPage();
   setupSwipe();
+  setTimeout(autoFitText, 100);
 }
 
 function renderCurrentPage() {
   const container = document.getElementById('mushaf-container');
   container.innerHTML = `<div class="mushaf-page">${renderPage(currentPage)}</div>`;
   document.getElementById('mushaf-page-num').textContent = (currentPage + 1) + ' / 604';
+  autoFitText();
+}
+
+function autoFitText() {
+  const page = document.querySelector('.mushaf-page');
+  if (!page) return;
+  const textEl = page.querySelector('.mushaf-text');
+  if (!textEl) return;
+  let size = 21;
+  textEl.style.fontSize = size + 'px';
+  // Shrink text until it fits without vertical scroll
+  while (page.scrollHeight > page.clientHeight && size > 12) {
+    size -= 0.5;
+    textEl.style.fontSize = size + 'px';
+  }
 }
 
 function setupSwipe() {
@@ -2198,12 +2214,11 @@ function setupSwipe() {
     if (!swiping) return;
     swiping = false;
     const threshold = 60;
-    if (touchDeltaX < -threshold && currentPage < 603) {
-      // Swipe left → next page (in RTL, swipe left = forward in Quran)
-      animatePageTransition('left', () => { currentPage++; renderCurrentPage(); });
-    } else if (touchDeltaX > threshold && currentPage > 0) {
-      // Swipe right → previous page
-      animatePageTransition('right', () => { currentPage--; renderCurrentPage(); });
+    // Arabic RTL: swipe right (positive delta) = next page, swipe left = previous
+    if (touchDeltaX > threshold && currentPage < 603) {
+      animatePageTransition('right', () => { currentPage++; renderCurrentPage(); autoFitText(); });
+    } else if (touchDeltaX < -threshold && currentPage > 0) {
+      animatePageTransition('left', () => { currentPage--; renderCurrentPage(); autoFitText(); });
     } else {
       const page = container.querySelector('.mushaf-page');
       if (page) page.style.transform = '';
