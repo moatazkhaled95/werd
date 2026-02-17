@@ -2146,7 +2146,12 @@ function renderPage(pageIndex) {
     // Hizb marker
     const hizb = hizbQuarters[hKey];
     if (hizb) {
-      html += `<div class="mushaf-hizb">۞ ${hizb}</div>`;
+      // Add "حزب" suffix to quarter labels (ربع→ربع حزب, نصف→نصف حزب, ثلاثة أرباع→ثلاثة أرباع حزب)
+      let label = hizb;
+      if (hizb === 'ربع') label = 'ربع حزب';
+      else if (hizb === 'نصف') label = 'نصف حزب';
+      else if (hizb === 'ثلاثة أرباع') label = 'ثلاثة أرباع حزب';
+      html += `<div class="mushaf-hizb">۞ ${label}</div>`;
     }
     html += `${a.text} <span class="mushaf-ayah-num">﴿${a.ayahNum}﴾</span> `;
   });
