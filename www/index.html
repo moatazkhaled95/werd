@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>وِرْدٌ</title>
+  <title>الْوِرْدُ الْقُرْآنِيُّ</title>
   <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Amiri+Quran&display=swap" rel="stylesheet">
   <style>
     @font-face {
@@ -19,7 +19,8 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
-      background: url('/islamic%20background.jpg') center center / cover no-repeat fixed;
+      background: url('bg.jpg') center center / cover no-repeat;
+      background-attachment: scroll;
       display: flex;
       justify-content: center;
       min-height: 100vh;
@@ -361,15 +362,6 @@
     }
     .copy-btn:hover { background: #0f766e; }
 
-    /* gender btn */
-    .gender-btn {
-      flex: 1; padding: 10px;
-      border: 2px solid #e5e7eb; border-radius: 12px;
-      background: #fff; font-size: 14px; font-weight: 600;
-      cursor: pointer; transition: all .2s; font-family: inherit;
-    }
-    .gender-btn.active { border-color: #0d9488; background: #f0fdfa; color: #0d9488; }
-
     /* error text */
     .err-text { font-size: 12px; color: #dc2626; margin-top: 2px; display: none; }
     .err-text.show { display: block; }
@@ -588,7 +580,7 @@
 <div id="ham-overlay" class="ham-overlay" onclick="closeMenu()"></div>
 <div id="ham-drawer" class="ham-drawer">
   <div class="ham-head">
-    <h3>وِرْدٌ 📖</h3>
+    <h3>الْوِرْدُ الْقُرْآنِيُّ</h3>
     <p id="ham-username"></p>
   </div>
   <div class="ham-items">
@@ -644,19 +636,8 @@
       <h2>أكمل ملفك الشخصي</h2>
     </div>
     <div class="auth-card" style="margin-top:16px">
-      <p style="font-size:13px;color:#6b7280;margin-bottom:16px;text-align:center">نحتاج بعض المعلومات لإكمال حسابك</p>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:16px;text-align:center">نحتاج اسمك لإكمال حسابك</p>
       <input id="cp-first" type="text" placeholder="الاسم *" class="form-input" style="margin-bottom:16px;width:100%" />
-      <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:8px">الجنس *</label>
-      <div class="radio-group" style="margin-bottom:16px">
-        <label class="radio-card" id="cp-card-male" onclick="selectCpGender('male')">
-          <div class="radio-icon">👨</div>
-          <div class="radio-label">ذكر</div>
-        </label>
-        <label class="radio-card" id="cp-card-female" onclick="selectCpGender('female')">
-          <div class="radio-icon">👩</div>
-          <div class="radio-label">أنثى</div>
-        </label>
-      </div>
       <div id="cp-error" class="error-msg"></div>
       <button class="btn-primary" onclick="saveCompleteProfile()">حفظ والمتابعة</button>
     </div>
@@ -665,8 +646,8 @@
   <!-- ══════════ Auth Landing ══════════ -->
   <div id="auth" class="screen">
     <div class="logo">
-      <div class="logo-icon">📖</div>
-      <h1>وِرْدٌ</h1>
+      <div class="logo-icon" style="font-size:28px;font-family:'Scheherazade New',serif;color:#fff">الْقُرْآن</div>
+      <h1>الْوِرْدُ الْقُرْآنِيُّ</h1>
       <p>اقرأ · تابع · وشجّع بعضكم</p>
     </div>
     <div class="auth-card">
@@ -691,7 +672,7 @@
     <div class="screen-header">
       <button class="back-btn" onclick="show('auth')">← رجوع</button>
       <h2>إنشاء حساب</h2>
-      <p>أنشئ حسابك في وِرْدٌ</p>
+      <p>أنشئ حسابك في الْوِرْدُ الْقُرْآنِيُّ</p>
     </div>
     <div class="screen-body">
       <div class="card">
@@ -706,21 +687,8 @@
         <div class="form-group" style="margin-top:12px">
           <label>كلمة المرور</label>
           <div style="position:relative">
-            <input type="password" id="signup-password" placeholder="٦ أحرف على الأقل" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
+            <input type="password" id="signup-password" placeholder="حرف كبير + صغير + رقم + رمز" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
             <button type="button" onclick="togglePass('signup-password',this)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:0;line-height:1">👁</button>
-          </div>
-        </div>
-        <div class="form-group" style="margin-top:12px">
-          <label>الجنس</label>
-          <div class="radio-group">
-            <label class="radio-card" id="signup-card-male" onclick="selectSignupGender('male')">
-              <div class="radio-icon">👨</div>
-              <div class="radio-label">ذكر</div>
-            </label>
-            <label class="radio-card" id="signup-card-female" onclick="selectSignupGender('female')">
-              <div class="radio-icon">👩</div>
-              <div class="radio-label">أنثى</div>
-            </label>
           </div>
         </div>
         <div id="signup-error" class="err-text"></div>
@@ -796,11 +764,7 @@
     <div class="screen-body">
       <div id="my-groups-list" style="margin-bottom:16px"></div>
       <button class="btn-primary" style="margin-top:4px" onclick="show('create-group')">+ إنشاء مجموعة جديدة</button>
-      <button class="btn-secondary" style="margin-top:8px" onclick="show('join-group')">انضم بالرمز السري 🔒</button>
-      <div style="margin-top:20px">
-        <div style="font-weight:700;font-size:14px;color:#374151;margin-bottom:8px">🌐 المجموعات العامة</div>
-        <div id="public-groups-list"></div>
-      </div>
+      <button class="btn-secondary" style="margin-top:8px" onclick="show('join-group')">انضم برقم المجموعة 🔢</button>
     </div>
   </div>
 
@@ -845,53 +809,6 @@
           </label>
         </div>
         <div id="goal-amount-section"></div>
-      </div>
-
-      <div class="card">
-        <h3>الخصوصية</h3>
-        <div class="option-cards">
-          <label class="option-card selected" id="priv-public" onclick="selectPrivacy('public')">
-            <div class="option-icon">🌐</div>
-            <div class="option-text">
-              <div class="option-title">عامة</div>
-              <div class="option-desc">تظهر للجميع ويمكن الانضمام مباشرة</div>
-            </div>
-          </label>
-          <label class="option-card" id="priv-private" onclick="selectPrivacy('private')">
-            <div class="option-icon">🔒</div>
-            <div class="option-text">
-              <div class="option-title">خاصة</div>
-              <div class="option-desc">بالرمز السري فقط</div>
-            </div>
-          </label>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>قيود العضوية</h3>
-        <div class="option-cards" id="restriction-options">
-          <label class="option-card selected" id="restr-all" onclick="selectRestriction('all')">
-            <div class="option-icon">👥</div>
-            <div class="option-text">
-              <div class="option-title">الجميع</div>
-              <div class="option-desc">مفتوح لكل الأعضاء</div>
-            </div>
-          </label>
-          <label class="option-card" id="restr-men" onclick="selectRestriction('men')">
-            <div class="option-icon">👨</div>
-            <div class="option-text">
-              <div class="option-title">للرجال فقط</div>
-              <div class="option-desc">يُقبل الأعضاء الذكور فقط</div>
-            </div>
-          </label>
-          <label class="option-card" id="restr-women" onclick="selectRestriction('women')">
-            <div class="option-icon">👩</div>
-            <div class="option-text">
-              <div class="option-title">للنساء فقط</div>
-              <div class="option-desc">يُقبل الأعضاء الإناث فقط</div>
-            </div>
-          </label>
-        </div>
       </div>
 
       <button class="btn-primary" onclick="createGroup()">إنشاء المجموعة 🕌</button>
@@ -1008,7 +925,7 @@
       <div class="invite-card" id="invite-card-section">
         <div class="ic-title">دعوة الأصدقاء</div>
         <div style="text-align:center;margin-bottom:10px">
-          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">رقم المجموعة السري</div>
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">رقم المجموعة</div>
           <div style="display:flex;align-items:center;justify-content:center;gap:10px">
             <div id="group-code-display" style="font-size:32px;font-weight:800;letter-spacing:6px;color:#0d9488;direction:ltr"></div>
             <button onclick="copyCode()" style="background:#f0fdfa;border:1px solid #99f6e4;color:#0d9488;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap">نسخ الرقم</button>
@@ -1043,13 +960,12 @@ const unitLabels = {
 const state = {
   user: null, profile: null,
   goalUnit: 'page', goalBaseUnit: 'page', goalSubUnit: 'none', goalPages: 2,
-  privacy: 'public', restriction: 'all',
+  privacy: 'private', restriction: 'all',
   groupId: null, groupData: null,
   memberId: null, myPages: 0,
   joinGroupData: null,
 };
 
-let signupGender = '';
 
 // ══════════════════════════════════════════
 //  INIT
@@ -1112,17 +1028,15 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 function loadProfile(user) {
-  // Read directly from user_metadata — no DB call needed
   const meta = user.user_metadata || {};
   state.profile = {
     first_name: meta.name || meta.full_name?.split(' ')[0] || '',
-    gender:     meta.gender || '',
     email:      user.email || '',
   };
 }
 
 async function afterLogin() {
-  if (!state.profile || !state.profile.gender) {
+  if (!state.profile || !state.profile.first_name) {
     show('complete-profile');
     return;
   }
@@ -1154,11 +1068,10 @@ async function showMyGroups() {
   const displayName = (state.profile?.first_name) || state.user?.email || '';
   document.getElementById('choose-hi').textContent = 'أهلاً ' + displayName + '!';
 
-  // Fetch groups I created + groups I joined + all public groups
-  const [{ data: created }, { data: memberships }, { data: publicGroups }] = await Promise.all([
+  // Fetch groups I created + groups I joined
+  const [{ data: created }, { data: memberships }] = await Promise.all([
     db.from('groups').select('*').eq('created_by', state.user.id),
     db.from('members').select('id, pages_today, group_id, groups(*)').eq('user_id', state.user.id),
-    db.from('groups').select('*, members(count)').eq('privacy', 'public').order('created_at', { ascending: false }),
   ]);
 
   const groups = [];
@@ -1191,30 +1104,6 @@ async function showMyGroups() {
         </div>
       </div>`).join('');
   }
-  // Public groups discovery — exclude ones user already belongs to
-  const myGroupIds = new Set(groups.map(g => g.group.id));
-  const discover = (publicGroups || []).filter(g => !myGroupIds.has(g.id));
-
-  const discoverEl = document.getElementById('public-groups-list');
-  if (discoverEl) {
-    if (discover.length === 0) {
-      discoverEl.innerHTML = '<p style="text-align:center;color:#9ca3af;font-size:13px;padding:8px 0">لا توجد مجموعات عامة حالياً</p>';
-    } else {
-      discoverEl.innerHTML = discover.map(g => {
-        const count = g.members?.[0]?.count ?? 0;
-        const unit  = unitLabels[g.goal_unit] || 'صفحة';
-        const restr = g.restriction === 'men' ? ' · 👨 رجال' : g.restriction === 'women' ? ' · 👩 نساء' : '';
-        return `
-          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
-            <div style="min-width:0">
-              <div style="font-weight:600;font-size:15px;color:#111827">${g.name}</div>
-              <div style="font-size:12px;color:#9ca3af;margin-top:3px">🌐 عامة · ${count} عضو · هدف ${g.goal_amount} ${unit}${restr}</div>
-            </div>
-            <button onclick="quickJoinPublic('${g.id}')" style="background:#0d9488;border:none;color:#fff;font-weight:700;font-size:13px;padding:7px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;margin-right:8px">انضم</button>
-          </div>`;
-      }).join('');
-    }
-  }
 
   show('choose-action');
 }
@@ -1245,31 +1134,18 @@ async function enterGroup(groupId, memberId) {
 // ══════════════════════════════════════════
 //  AUTH
 // ══════════════════════════════════════════
-let cpGender = '';
-function selectCpGender(g) {
-  cpGender = g;
-  document.getElementById('cp-card-male').classList.toggle('selected', g === 'male');
-  document.getElementById('cp-card-female').classList.toggle('selected', g === 'female');
-}
 async function saveCompleteProfile() {
   const firstName = document.getElementById('cp-first').value.trim();
   const errEl = document.getElementById('cp-error');
   errEl.classList.remove('show');
   if (!firstName) return showErr(errEl, 'أدخل اسمك');
-  if (!cpGender) return showErr(errEl, 'اختر الجنس');
-  // Save to user metadata (no DB table needed)
-  const { data: updated, error } = await db.auth.updateUser({ data: { name: firstName, gender: cpGender } });
+  const { data: updated, error } = await db.auth.updateUser({ data: { name: firstName } });
   if (error) return showErr(errEl, error.message || 'حدث خطأ، حاول مجدداً');
   if (updated?.user) state.user = updated.user;
-  state.profile = { first_name: firstName, gender: cpGender, email: state.user.email };
+  state.profile = { first_name: firstName, email: state.user.email };
   await afterLogin();
 }
 
-function selectSignupGender(g) {
-  signupGender = g;
-  document.getElementById('signup-card-male').classList.toggle('selected', g === 'male');
-  document.getElementById('signup-card-female').classList.toggle('selected', g === 'female');
-}
 
 function togglePass(id, btn) {
   const input = document.getElementById(id);
@@ -1288,17 +1164,20 @@ async function signUp() {
   if (!firstName)    return showErr(errEl, 'أدخل اسمك');
   if (!email)        return showErr(errEl, 'أدخل البريد الإلكتروني');
   if (password.length < 6) return showErr(errEl, 'كلمة المرور يجب أن تكون ٦ أحرف على الأقل');
-  if (!signupGender) return showErr(errEl, 'اختر الجنس');
+  if (!/[a-z]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على حرف صغير (a-z)');
+  if (!/[A-Z]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على حرف كبير (A-Z)');
+  if (!/[0-9]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على رقم (0-9)');
+  if (!/[^a-zA-Z0-9]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على رمز (!@#$...)');
 
   const { data, error } = await db.auth.signUp({
     email, password,
-    options: { data: { name: firstName, gender: signupGender } }
+    options: { data: { name: firstName } }
   });
 
   if (error) return showErr(errEl, error.message);
 
   state.user = data.user;
-  state.profile = { first_name: firstName, gender: signupGender, email };
+  state.profile = { first_name: firstName, email };
   toast('تم إنشاء الحساب ✓');
   // onAuthStateChange SIGNED_IN will fire and handle navigation
 }
@@ -1344,11 +1223,40 @@ async function signIn() {
 }
 
 async function signInWithGoogle() {
-  const { error } = await db.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin + window.location.pathname }
-  });
-  if (error) toast('حدث خطأ في تسجيل الدخول');
+  // Check if running inside Capacitor (native app)
+  const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
+
+  if (isNative) {
+    // Native app: open in Chrome Custom Tab (in-app browser)
+    const redirectUrl = 'https://werd-moatazs-projects-f7432b84.vercel.app';
+    const { data, error } = await db.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl,
+        skipBrowserRedirect: true,
+      }
+    });
+    if (error) { toast('حدث خطأ في تسجيل الدخول'); return; }
+    // Open OAuth URL in Chrome Custom Tab
+    const { Browser } = window.Capacitor.Plugins;
+    await Browser.open({ url: data.url, windowName: '_self' });
+    // Listen for the app to return from the browser
+    Browser.addListener('browserFinished', async () => {
+      const { data: sessionData } = await db.auth.getSession();
+      if (sessionData?.session) {
+        state.user = sessionData.session.user;
+        loadProfile(state.user);
+        await afterLogin();
+      }
+    });
+  } else {
+    // Web: normal redirect flow
+    const { error } = await db.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + window.location.pathname }
+    });
+    if (error) toast('حدث خطأ في تسجيل الدخول');
+  }
 }
 
 async function signOut() {
@@ -1455,18 +1363,6 @@ function renderGoalOptions() {
     ${quantitySection}`;
 }
 
-function selectPrivacy(p) {
-  state.privacy = p;
-  document.getElementById('priv-public').classList.toggle('selected', p === 'public');
-  document.getElementById('priv-private').classList.toggle('selected', p === 'private');
-}
-
-function selectRestriction(r) {
-  state.restriction = r;
-  ['all','men','women'].forEach(x =>
-    document.getElementById('restr-' + x).classList.toggle('selected', x === r)
-  );
-}
 
 async function createGroup() {
   const name   = document.getElementById('group-name').value.trim();
@@ -1495,7 +1391,6 @@ async function createGroup() {
     const { data: member, error: me } = await db.from('members').insert({
       group_id: group.id,
       name: displayName,
-      gender: state.profile.gender,
       pages_today: 0,
       user_id: state.user.id,
       email: state.user.email || '',
@@ -1520,9 +1415,6 @@ async function createGroup() {
 async function quickJoinPublic(groupId) {
   const { data: group } = await db.from('groups').select('*').eq('id', groupId).single();
   if (!group) { toast('لم يتم العثور على المجموعة'); return; }
-  const gender = state.profile?.gender;
-  if (group.restriction === 'men'   && gender === 'female') { toast('هذه المجموعة للرجال فقط'); return; }
-  if (group.restriction === 'women' && gender === 'male')   { toast('هذه المجموعة للنساء فقط'); return; }
   const { data: existing } = await db.from('members').select('*').eq('group_id', group.id).eq('user_id', state.user.id).single();
   if (existing) {
     state.groupId = group.id; state.groupData = group;
@@ -1531,7 +1423,7 @@ async function quickJoinPublic(groupId) {
   }
   const name = state.profile.first_name || state.user.email;
   const { data: member, error } = await db.from('members').insert({
-    group_id: group.id, name, gender, pages_today: 0, user_id: state.user.id, email: state.user.email || '',
+    group_id: group.id, name, pages_today: 0, user_id: state.user.id, email: state.user.email || '',
   }).select().single();
   if (error) { toast('حدث خطأ: ' + error.message); return; }
   state.groupId = group.id; state.groupData = group;
@@ -1544,10 +1436,6 @@ async function autoJoinGroup(code) {
   const { data: group } = await db.from('groups').select('*').eq('invite_code', code).single();
   if (!group) { toast('رابط الدعوة غير صالح أو منتهي الصلاحية'); await showMyGroups(); return; }
 
-  const gender = state.profile?.gender;
-  if (group.restriction === 'men'   && gender === 'female') { toast('هذه المجموعة للرجال فقط'); await showMyGroups(); return; }
-  if (group.restriction === 'women' && gender === 'male')   { toast('هذه المجموعة للنساء فقط'); await showMyGroups(); return; }
-
   // Check if already a member
   const { data: existing } = await db.from('members').select('*').eq('group_id', group.id).eq('user_id', state.user.id).single();
   if (existing) {
@@ -1559,7 +1447,7 @@ async function autoJoinGroup(code) {
   // Join the group
   const name = state.profile.first_name || state.user.email;
   const { data: member, error } = await db.from('members').insert({
-    group_id: group.id, name, gender, pages_today: 0, user_id: state.user.id, email: state.user.email || '',
+    group_id: group.id, name, pages_today: 0, user_id: state.user.id, email: state.user.email || '',
   }).select().single();
   if (error) { toast('حدث خطأ: ' + error.message); await showMyGroups(); return; }
 
@@ -1587,17 +1475,13 @@ async function lookupGroup() {
 
 async function joinGroup() {
   const group  = state.joinGroupData;
-  const gender = state.profile?.gender;
   const name   = state.profile.first_name || state.user.email;
 
   if (!group)  { toast('ابحث عن المجموعة أولاً'); return; }
 
-  if (group.restriction === 'men'   && gender === 'female') { toast('هذه المجموعة للرجال فقط'); return; }
-  if (group.restriction === 'women' && gender === 'male')   { toast('هذه المجموعة للنساء فقط'); return; }
-
   try {
     const { data: member, error } = await db.from('members').insert({
-      group_id: group.id, name, gender, pages_today: 0, user_id: state.user.id, email: state.user.email || '',
+      group_id: group.id, name, pages_today: 0, user_id: state.user.id, email: state.user.email || '',
     }).select().single();
     if (error) throw error;
 
@@ -1635,14 +1519,15 @@ async function checkAndResetDaily(group) {
   const lsKey = 'werd_reset_v2_' + group.id;
   const lastReset = localStorage.getItem(lsKey) || group.last_reset_date || '';
   if (lastReset === todayInTz) return; // already reset today
-  // New day (or first time) — always reset
+  const isFirstTime = !lastReset;
+  // New day — reset all members' daily progress
   await db.from('members').update({ pages_today: 0, points_today: 0 }).eq('group_id', group.id);
   localStorage.setItem(lsKey, todayInTz);
   db.from('groups').update({ last_reset_date: todayInTz }).eq('id', group.id).then(() => {});
   state.groupData.last_reset_date = todayInTz;
   state.myPages = 0;
   state.pointsToday = 0;
-  toast('تم تصفير الأهداف اليومية ✓');
+  if (!isFirstTime) toast('تم تصفير الأهداف اليومية ✓');
 }
 
 async function openDashboard() {
@@ -1653,14 +1538,10 @@ async function openDashboard() {
 
   const badgeEl = document.getElementById('dash-badges');
   badgeEl.innerHTML = '';
-  if (group.privacy === 'private')   badgeEl.innerHTML += '<span class="badge">🔒 خاصة</span>';
-  if (group.restriction === 'men')   badgeEl.innerHTML += '<span class="badge">👨 للرجال فقط</span>';
-  if (group.restriction === 'women') badgeEl.innerHTML += '<span class="badge">👩 للنساء فقط</span>';
 
-  // Only show invite code card for private groups
-  const isPrivate = group.privacy === 'private';
-  document.getElementById('invite-card-section').style.display = isPrivate ? '' : 'none';
-  if (isPrivate) document.getElementById('group-code-display').textContent = group.invite_code;
+  // Always show invite code
+  document.getElementById('invite-card-section').style.display = '';
+  document.getElementById('group-code-display').textContent = group.invite_code;
   const isCreator = group.created_by === state.user?.id;
   document.getElementById('add-member-btn').style.display = isCreator ? '' : 'none';
   document.getElementById('edit-goal-btn').style.display = isCreator ? '' : 'none';
@@ -1767,9 +1648,9 @@ async function removeMember(memberId) {
 }
 
 async function resetGroupActivity() {
-  if (!confirm('هل أنت متأكد؟ سيتم تصفير تقدّم جميع الأعضاء اليوم (النقاط الإجمالية لن تتأثر).')) return;
+  if (!confirm('هل أنت متأكد؟ سيتم تصفير تقدّم جميع الأعضاء والنقاط الإجمالية.')) return;
   const { error } = await db.from('members')
-    .update({ pages_today: 0, points_today: 0 })
+    .update({ pages_today: 0, points_today: 0, total_points: 0 })
     .eq('group_id', state.groupId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
   state.myPages = 0;
