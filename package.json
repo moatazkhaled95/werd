@@ -1,6 +1,11 @@
 {
   "name": "claude-quran-integration",
   "version": "0.1.0",
+  "overrides": {
+    "@codetrix-studio/capacitor-google-auth": {
+      "@capacitor/core": "^8.1.0"
+    }
+  },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
     "@capacitor/browser": "^8.0.1",
