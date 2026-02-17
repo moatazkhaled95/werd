@@ -979,6 +979,28 @@ function closeMenu() {
   document.getElementById('ham-drawer').classList.remove('open');
 }
 
+// Handle deep link from email confirmation (com.werd.quran://confirm#access_token=...)
+async function handleDeepLink(url) {
+  try {
+    const hash = url.split('#')[1];
+    if (!hash) return;
+    const params = new URLSearchParams(hash);
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    if (accessToken && refreshToken) {
+      await db.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      // onAuthStateChange will fire and handle login
+    }
+  } catch (e) { console.error('Deep link error:', e); }
+}
+
+// Listen for deep links from Capacitor App plugin
+if (window.Capacitor?.Plugins?.App) {
+  window.Capacitor.Plugins.App.addListener('appUrlOpen', (data) => {
+    if (data.url) handleDeepLink(data.url);
+  });
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
   const savedSize = localStorage.getItem('werd_font_size');
   if (savedSize) document.getElementById('app').style.zoom = savedSize;
@@ -988,6 +1010,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(window.location.search);
   const joinCode = params.get('join');
   if (joinCode) localStorage.setItem('werd_pending_join', joinCode);
+
+  // Check if opened via deep link with hash tokens (web fallback)
+  if (window.location.hash && window.location.hash.includes('access_token')) {
+    await handleDeepLink(window.location.href);
+  }
 
   let authBusy = false;
 
@@ -1156,7 +1183,10 @@ async function signUp() {
 
   const { data, error } = await db.auth.signUp({
     email, password,
-    options: { data: { name: firstName } }
+    options: {
+      data: { name: firstName },
+      emailRedirectTo: 'com.werd.quran://confirm'
+    }
   });
 
   if (error) return showErr(errEl, error.message);
