@@ -1233,8 +1233,20 @@ async function signInWithGoogle() {
     try {
       const GoogleAuth = window.Capacitor.Plugins.GoogleAuth;
       if (!GoogleAuth) { toast('خدمة Google غير متوفرة'); return; }
+
+      // Initialize the plugin
+      try {
+        await GoogleAuth.initialize({
+          clientId: GOOGLE_CLIENT_ID,
+          scopes: ['profile', 'email'],
+          grantOfflineAccess: false,
+        });
+      } catch(initErr) {
+        // May already be initialized, continue
+      }
+
       const googleUser = await GoogleAuth.signIn();
-      const idToken = googleUser.authentication.idToken;
+      const idToken = googleUser.authentication?.idToken;
       if (!idToken) { toast('لم يتم الحصول على رمز الدخول'); return; }
 
       const { data, error } = await db.auth.signInWithIdToken({
@@ -1249,7 +1261,7 @@ async function signInWithGoogle() {
     } catch(e) {
       if (e.message?.includes('canceled') || e.message?.includes('cancelled')) return;
       console.error('Google sign-in error:', e);
-      toast('حدث خطأ في تسجيل الدخول');
+      toast('خطأ: ' + (e.message || JSON.stringify(e)));
     }
   } else {
     // Web: use Google One Tap or redirect
