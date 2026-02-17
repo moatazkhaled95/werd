@@ -1225,34 +1225,58 @@ async function signIn() {
 
 const GOOGLE_CLIENT_ID = '460386778396-5qqe0gg7krgc1uk1ducj4gt3hbgj8kb4.apps.googleusercontent.com';
 
-async function handleGoogleCredential(idToken) {
-  const { data, error } = await db.auth.signInWithIdToken({
-    provider: 'google',
-    token: idToken,
-  });
-  if (error) { toast('حدث خطأ: ' + error.message); return; }
-  state.user = data.user;
-  loadProfile(data.user);
-  toast('تم تسجيل الدخول ✓');
-  await afterLogin();
-}
-
 async function signInWithGoogle() {
-  if (!window.google?.accounts?.id) {
-    // Google script not loaded, fall back to redirect
-    const { error } = await db.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin + window.location.pathname }
-    });
-    if (error) toast('حدث خطأ في تسجيل الدخول');
-    return;
-  }
+  const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
 
-  google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback: (response) => handleGoogleCredential(response.credential),
-  });
-  google.accounts.id.prompt();
+  if (isNative) {
+    // Android app: use native Google Sign-In (stays in-app)
+    try {
+      const GoogleAuth = window.Capacitor.Plugins.GoogleAuth;
+      if (!GoogleAuth) { toast('خدمة Google غير متوفرة'); return; }
+      const googleUser = await GoogleAuth.signIn();
+      const idToken = googleUser.authentication.idToken;
+      if (!idToken) { toast('لم يتم الحصول على رمز الدخول'); return; }
+
+      const { data, error } = await db.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
+      });
+      if (error) { toast('حدث خطأ: ' + error.message); return; }
+      state.user = data.user;
+      loadProfile(data.user);
+      toast('تم تسجيل الدخول ✓');
+      await afterLogin();
+    } catch(e) {
+      if (e.message?.includes('canceled') || e.message?.includes('cancelled')) return;
+      console.error('Google sign-in error:', e);
+      toast('حدث خطأ في تسجيل الدخول');
+    }
+  } else {
+    // Web: use Google One Tap or redirect
+    if (window.google?.accounts?.id) {
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (response) => {
+          const { data, error } = await db.auth.signInWithIdToken({
+            provider: 'google',
+            token: response.credential,
+          });
+          if (error) { toast('حدث خطأ: ' + error.message); return; }
+          state.user = data.user;
+          loadProfile(data.user);
+          toast('تم تسجيل الدخول ✓');
+          await afterLogin();
+        },
+      });
+      google.accounts.id.prompt();
+    } else {
+      const { error } = await db.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin + window.location.pathname }
+      });
+      if (error) toast('حدث خطأ في تسجيل الدخول');
+    }
+  }
 }
 
 async function signOut() {
