@@ -34,7 +34,7 @@ module.exports = async (req, res) => {
   }
 
   const payload = JSON.stringify({
-    title: 'وِرْدٌ',
+    title: 'الْوِرْدُ الْقُرْآنِيُّ',
     body: `🎉 ${senderName} أتمّ الهدف في ${groupName}!`,
   });
 

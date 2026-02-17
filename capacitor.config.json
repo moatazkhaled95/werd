@@ -1,0 +1,11 @@
+{
+  "appId": "com.werd.quran",
+  "appName": "الْوِرْدُ الْقُرْآنِيُّ",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

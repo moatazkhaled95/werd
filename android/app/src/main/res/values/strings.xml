@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">الْوِرْدُ الْقُرْآنِيُّ</string>
+    <string name="title_activity_main">الْوِرْدُ الْقُرْآنِيُّ</string>
+    <string name="package_name">com.werd.quran</string>
+    <string name="custom_url_scheme">com.werd.quran</string>
+</resources>
