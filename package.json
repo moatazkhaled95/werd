@@ -1,0 +1,11 @@
+{
+  "name": "claude-quran-integration",
+  "version": "0.1.0",
+  "dependencies": {
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/cli": "^8.1.0",
+    "@capacitor/core": "^8.1.0",
+    "@supabase/supabase-js": "^2.49.1",
+    "web-push": "^3.6.7"
+  }
+}
