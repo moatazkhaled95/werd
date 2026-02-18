@@ -2287,21 +2287,29 @@ function toast(msg) {
 }
 
 async function setupPush() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.log('Push not supported (WebView or unsupported browser)');
+    return;
+  }
   try {
     const reg = await navigator.serviceWorker.register('/sw.js');
     const permission = await Notification.requestPermission();
-    if (permission !== 'granted') return;
+    if (permission !== 'granted') {
+      console.log('Notification permission denied');
+      return;
+    }
     const existing = await reg.pushManager.getSubscription();
     const sub = existing || await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
     });
     // Save subscription for this user+group
-    await db.from('push_subscriptions')
+    const { error } = await db.from('push_subscriptions')
       .upsert({ user_id: state.user.id, group_id: state.groupId, subscription: sub.toJSON() },
                { onConflict: 'user_id,group_id' });
-  } catch(e) { /* silent */ }
+    if (error) console.error('Push subscription save error:', error);
+    else console.log('Push subscription saved successfully');
+  } catch(e) { console.error('Push setup error:', e); }
 }
 
 function urlBase64ToUint8Array(base64String) {
