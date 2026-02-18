@@ -1752,12 +1752,15 @@ async function addPages(n) {
       toast('+1 نقطة 📖');
     }
   } else if (n < 0) {
+    // Fetch actual points from DB to avoid stale local state
+    const { data: current } = await db.from('members').select('points_today, total_points').eq('id', state.memberId).single();
+    const actualPointsToday = current?.points_today || 0;
     if (prevPages > goal) {
       // Was above goal → undo 1 extra point
       pointsDelta = -1;
-    } else if (prevPages === goal && newPages < goal && state.pointsToday > 0) {
-      // Was exactly at goal, dropped below → remove goal completion bonus
-      pointsDelta = -state.pointsToday;
+    } else if (prevPages <= goal && newPages < goal && actualPointsToday > 0) {
+      // Dropped below goal → remove all today's points
+      pointsDelta = -actualPointsToday;
       toast('تم خصم نقاط إتمام الهدف');
     }
   }
@@ -1765,7 +1768,7 @@ async function addPages(n) {
   if (pointsDelta !== 0) {
     const { data: me } = await db.from('members').select('total_points, points_today').eq('id', state.memberId).single();
     const newTotal = Math.max(0, (me?.total_points || 0) + pointsDelta);
-    state.pointsToday = Math.max(0, (me?.points_today || state.pointsToday) + pointsDelta);
+    state.pointsToday = Math.max(0, (me?.points_today || 0) + pointsDelta);
     // Try updating with points_today; if column missing, fall back to total_points only
     let { error: ptErr } = await db.from('members').update({ total_points: newTotal, points_today: state.pointsToday }).eq('id', state.memberId);
     if (ptErr) {
