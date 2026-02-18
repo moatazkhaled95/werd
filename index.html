@@ -907,12 +907,7 @@
           </div>
           <div style="display:flex;gap:6px;align-items:center">
             <button id="reset-group-btn" onclick="resetGroupActivity()" style="display:none;background:none;border:1px solid #fee2e2;color:#ef4444;font-size:12px;border-radius:8px;padding:4px 10px;cursor:pointer;white-space:nowrap">🔄 تصفير</button>
-            <button id="add-member-btn" class="add-member-btn" onclick="toggleAddMember()" style="display:none">+ إضافة عضو</button>
           </div>
-        </div>
-        <div id="add-member-form" style="display:none;padding:12px 0 4px;border-top:1px solid #f3f4f6;margin-top:8px">
-          <input id="new-member-email" type="email" placeholder="البريد الإلكتروني" class="form-input" style="margin-bottom:8px;width:100%;direction:ltr;text-align:left" />
-          <button class="btn-primary" style="width:100%;padding:10px" onclick="sendInvite()">إرسال دعوة 📧</button>
         </div>
         <div class="view-tabs">
           <button class="view-tab active" id="tab-today" onclick="setMemberView('today')">اليوم</button>
@@ -1620,7 +1615,6 @@ async function openDashboard() {
   document.getElementById('invite-card-section').style.display = '';
   document.getElementById('group-code-display').textContent = group.invite_code;
   const isCreator = group.created_by === state.user?.id;
-  document.getElementById('add-member-btn').style.display = isCreator ? '' : 'none';
   document.getElementById('edit-goal-btn').style.display = isCreator ? '' : 'none';
   document.getElementById('reset-group-btn').style.display = isCreator ? '' : 'none';
   // Store leave-group visibility for hamburger menu
@@ -1980,30 +1974,6 @@ async function leaveDashboard() {
   await showMyGroups();
 }
 
-// ══════════════════════════════════════════
-//  ADD MEMBER FROM DASHBOARD
-// ══════════════════════════════════════════
-function toggleAddMember() {
-  const form = document.getElementById('add-member-form');
-  const isHidden = form.style.display === 'none';
-  form.style.display = isHidden ? 'block' : 'none';
-  if (isHidden) document.getElementById('new-member-email').value = '';
-}
-
-async function sendInvite() {
-  const email = document.getElementById('new-member-email').value.trim();
-  if (!email) return toast('أدخل البريد الإلكتروني');
-  const prodUrl = 'https://werd-moatazs-projects-f7432b84.vercel.app';
-  const joinLink = prodUrl + '/?join=' + state.groupData.invite_code;
-  const { error } = await db.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: joinLink }
-  });
-  if (error) return toast('حدث خطأ: ' + error.message);
-  toast('تم إرسال الدعوة ✓');
-  document.getElementById('new-member-email').value = '';
-  toggleAddMember();
-}
 
 function copyLink() {
   const link = document.getElementById('invite-link-display').textContent;
