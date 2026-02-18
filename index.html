@@ -1565,6 +1565,7 @@ async function joinGroup() {
     state.memberId = member.id; state.myPages = 0;
     localStorage.setItem('werd_member_id', member.id);
     localStorage.setItem('werd_group_id', group.id);
+    sendGroupNotification('join', group.id, group.name);
     await openDashboard();
   } catch(e) {
     toast('حدث خطأ: ' + e.message);
@@ -1943,6 +1944,7 @@ async function saveGoal() {
 
 async function leaveGroup() {
   if (!confirm('هل أنت متأكد أنك تريد مغادرة المجموعة؟')) return;
+  sendGroupNotification('leave');
   const { error } = await db.from('members').delete().eq('id', state.memberId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
   toast('تم مغادرة المجموعة');
@@ -1951,6 +1953,9 @@ async function leaveGroup() {
 
 async function leaveGroupFromList(memberId) {
   if (!confirm('هل أنت متأكد أنك تريد مغادرة المجموعة؟')) return;
+  // Get group info before leaving
+  const { data: memberData } = await db.from('members').select('group_id, groups(name)').eq('id', memberId).single();
+  if (memberData) sendGroupNotification('leave', memberData.group_id, memberData.groups?.name);
   const { error } = await db.from('members').delete().eq('id', memberId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
   toast('تم مغادرة المجموعة');
@@ -2336,17 +2341,19 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
 }
 
-async function sendGoalNotification() {
+async function sendGroupNotification(type, groupId, groupName) {
   try {
     const myName = state.profile?.first_name || state.user.email;
-    const groupName = state.groupData?.name || '';
+    const gId = groupId || state.groupId;
+    const gName = groupName || state.groupData?.name || '';
     await fetch('/api/send-notification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ groupId: state.groupId, senderUserId: state.user.id, senderName: myName, groupName }),
+      body: JSON.stringify({ groupId: gId, senderUserId: state.user.id, senderName: myName, groupName: gName, type }),
     });
   } catch(e) { /* silent */ }
 }
+function sendGoalNotification() { sendGroupNotification('goal'); }
 
 let goalBannerTimer = null;
 function goalNotify(msg) {

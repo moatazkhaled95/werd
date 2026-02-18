@@ -6,8 +6,8 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { groupId, senderUserId, senderName, groupName } = req.body || {};
-  if (!groupId || !senderUserId || !senderName) {
+  const { groupId, senderUserId, senderName, groupName, type } = req.body || {};
+  if (!groupId || !senderUserId) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
@@ -33,16 +33,31 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 
+  // Build message based on type
+  let body;
+  switch (type) {
+    case 'goal':
+      body = `🎉 ${senderName} أتمّ الهدف في ${groupName}!`;
+      break;
+    case 'join':
+      body = `👋 ${senderName} انضم إلى مجموعة ${groupName}`;
+      break;
+    case 'leave':
+      body = `↩ ${senderName} غادر مجموعة ${groupName}`;
+      break;
+    default:
+      body = `🎉 ${senderName} أتمّ الهدف في ${groupName}!`;
+  }
+
   const payload = JSON.stringify({
     title: 'الْوِرْدُ الْقُرْآنِيُّ',
-    body: `🎉 ${senderName} أتمّ الهدف في ${groupName}!`,
+    body,
   });
 
   const results = await Promise.allSettled(
     (subs || []).map(row => {
       const sub = row.subscription;
       return webpush.sendNotification(sub, payload).catch(err => {
-        // If subscription expired (410 Gone), delete it
         if (err.statusCode === 410 || err.statusCode === 404) {
           supabase
             .from('push_subscriptions')

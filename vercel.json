@@ -4,5 +4,11 @@
     { "source": "/privacy-policy", "destination": "/privacy-policy.html" },
     { "source": "/about", "destination": "/about.html" },
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/daily-reminder",
+      "schedule": "0 18 * * *"
+    }
   ]
 }
