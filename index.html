@@ -1111,15 +1111,26 @@ async function showMyGroups() {
     }
   });
 
+  // Fetch member counts for all groups
+  const groupIds = groups.map(g => g.group.id);
+  const memberCounts = {};
+  if (groupIds.length > 0) {
+    const { data: counts } = await db.from('members').select('group_id').in('group_id', groupIds);
+    (counts || []).forEach(c => { memberCounts[c.group_id] = (memberCounts[c.group_id] || 0) + 1; });
+  }
+
   const list = document.getElementById('my-groups-list');
   if (groups.length === 0) {
     list.innerHTML = '<p style="text-align:center;color:#9ca3af;font-size:14px;padding:16px 0">لا توجد مجموعات بعد</p>';
   } else {
-    list.innerHTML = groups.map(({ group, memberId, pages, isCreator }) => `
+    list.innerHTML = groups.map(({ group, memberId, pages, isCreator }) => {
+      const unit = unitLabels[group.goal_unit] || 'صفحة';
+      const count = memberCounts[group.id] || 0;
+      return `
       <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
         <div onclick="enterGroup('${group.id}','${memberId}')" style="flex:1;cursor:pointer;min-width:0">
           <div style="font-weight:600;font-size:15px;color:#111827">${group.name}</div>
-          <div style="font-size:12px;color:#9ca3af;margin-top:3px">${isCreator ? '👑 منشئ' : '👤 عضو'} · ${pages} ${unitLabels[group.goal_unit]||'صفحة'} اليوم</div>
+          <div style="font-size:12px;color:#9ca3af;margin-top:3px">${isCreator ? '👑 منشئ' : '👤 عضو'} · ${count} عضو · هدف ${group.goal_amount} ${unit}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <button onclick="event.stopPropagation();${isCreator ? `deleteGroup('${group.id}')` : `leaveGroupFromList('${memberId}')`}"
@@ -1128,7 +1139,8 @@ async function showMyGroups() {
           </button>
           <span onclick="enterGroup('${group.id}','${memberId}')" style="color:#0d9488;font-size:20px;cursor:pointer">←</span>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
   show('choose-action');
