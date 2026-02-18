@@ -1669,13 +1669,14 @@ function renderMembers(members) {
     const medals = ['🥇', '🥈', '🥉'];
     sorted.forEach((m, i) => {
       const isMe = m.id === state.memberId;
+      const editBtn = isCreator ? `<button onclick="editMemberPoints('${m.id}','${m.name}',${m.total_points||0})" style="background:none;border:none;color:#0d9488;font-size:14px;cursor:pointer;padding:2px 6px">✏️</button>` : '';
       list.innerHTML += `
         <div class="member-item">
           <div class="rank-medal">${medals[i] || (i + 1)}</div>
           <div class="member-info">
             <div class="member-name-row">
               <span class="member-name">${m.name}${isMe ? ' (أنت)' : ''}</span>
-              <span class="points-badge">${m.total_points || 0} نقطة</span>
+              <span class="points-badge">${m.total_points || 0} نقطة ${editBtn}</span>
             </div>
           </div>
         </div>`;
@@ -1708,6 +1709,17 @@ async function removeMember(memberId) {
   const { error } = await db.from('members').delete().eq('id', memberId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
   toast('تم إزالة العضو ✓');
+  await loadMembers();
+}
+
+async function editMemberPoints(memberId, name, currentPoints) {
+  const newPoints = prompt(`تعديل نقاط ${name}\nالنقاط الحالية: ${currentPoints}\n\nأدخل النقاط الجديدة:`, currentPoints);
+  if (newPoints === null) return;
+  const pts = parseInt(newPoints);
+  if (isNaN(pts) || pts < 0) { toast('أدخل رقماً صحيحاً'); return; }
+  const { error } = await db.from('members').update({ total_points: pts }).eq('id', memberId);
+  if (error) { toast('حدث خطأ: ' + error.message); return; }
+  toast(`تم تعديل نقاط ${name} إلى ${pts} ✓`);
   await loadMembers();
 }
 
