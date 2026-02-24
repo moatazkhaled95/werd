@@ -264,8 +264,8 @@
       background: linear-gradient(135deg, #134e4a, #0f766e);
       padding: 52px 20px 20px; color: #fff; position: relative;
     }
-    .dash-header h2 { font-size: 20px; font-weight: 700; }
-    .dash-header .sub { font-size: 13px; color: #99f6e4; margin-top: 2px; }
+    .dash-header h2 { font-size: 26px; font-weight: 800; }
+    .dash-header .sub { font-size: 13px; color: #99f6e4; margin-top: 2px; font-weight: 700; }
     .badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
     .badge {
       font-size: 11px; font-weight: 600;
@@ -1047,10 +1047,9 @@ const state = {
 //  INIT
 // ══════════════════════════════════════════
 function changeFontSize(delta) {
-  const app = document.getElementById('app');
-  const current = parseFloat(app.style.zoom) || 1;
+  const current = parseFloat(document.documentElement.style.zoom) || 1;
   const next = Math.min(1.4, Math.max(0.75, +(current + delta * 0.08).toFixed(2)));
-  app.style.zoom = next;
+  document.documentElement.style.zoom = next;
   localStorage.setItem('werd_font_size', next);
 }
 
@@ -1094,7 +1093,7 @@ if (window.Capacitor?.Plugins?.App) {
 
 window.addEventListener('DOMContentLoaded', async () => {
   const savedSize = localStorage.getItem('werd_font_size');
-  if (savedSize) document.getElementById('app').style.zoom = savedSize;
+  if (savedSize) document.documentElement.style.zoom = savedSize;
   renderGoalOptions();
 
   // Check for invite link in URL
