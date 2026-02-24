@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>الْوِرْدُ الْقُرْآنِيُّ</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#1a5e3a" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
   <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Amiri+Quran&display=swap" rel="stylesheet">
   <style>
     @font-face {
@@ -390,7 +393,7 @@
     /* ── All screens transparent over background ── */
     #app, .screen, #auth, #loading, #dashboard,
     #create-group, #join-group, #choose-action, #complete-profile, #signin, #signup,
-    #verify-email, #main-menu, #quran-reader, #quran-page-view { background: transparent !important; }
+    #verify-email, #main-menu, #quran-reader, #quran-page-view, #forgot-password, #profile-screen { background: transparent !important; }
     .screen-header, .dash-header { background: transparent !important; overflow: hidden; }
     .screen-header::after, .dash-header::after { display: none; }
     .screen-body, .dash-body { background: transparent; }
@@ -588,6 +591,9 @@
     <button class="ham-item" onclick="closeMenu(); showMainMenu();" id="ham-home">
       <span class="ham-icon">🏠</span> القائمة الرئيسية
     </button>
+    <button class="ham-item" onclick="openProfile()">
+      <span class="ham-icon">👤</span> ملفي الشخصي
+    </button>
     <button class="ham-item" onclick="closeMenu(); leaveDashboard && leaveDashboard();" id="ham-mygroups" style="display:none">
       <span class="ham-icon">👥</span> مجموعاتي
     </button>
@@ -655,8 +661,8 @@
       <h2>مرحباً بك</h2>
       <!-- Google Sign-In hidden for now -->
 
-      <button class="btn-primary" onclick="show('signup')">إنشاء حساب جديد</button>
-      <button class="btn-secondary" onclick="show('signin')">تسجيل الدخول</button>
+      <button class="btn-primary" onclick="show('signin')">تسجيل الدخول</button>
+      <button class="btn-secondary" onclick="show('signup')">إنشاء حساب جديد</button>
     </div>
   </div>
 
@@ -678,10 +684,21 @@
           <input type="email" id="signup-email" placeholder="example@email.com" style="direction:ltr;text-align:left" />
         </div>
         <div class="form-group" style="margin-top:12px">
+          <label>تأكيد البريد الإلكتروني</label>
+          <input type="email" id="signup-email-confirm" placeholder="أعد كتابة البريد الإلكتروني" style="direction:ltr;text-align:left" />
+        </div>
+        <div class="form-group" style="margin-top:12px">
           <label>كلمة المرور</label>
           <div style="position:relative">
             <input type="password" id="signup-password" placeholder="حرف كبير + صغير + رقم + رمز" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
             <button type="button" onclick="togglePass('signup-password',this)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:0;line-height:1">👁</button>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:12px">
+          <label>تأكيد كلمة المرور</label>
+          <div style="position:relative">
+            <input type="password" id="signup-password-confirm" placeholder="أعد كتابة كلمة المرور" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
+            <button type="button" onclick="togglePass('signup-password-confirm',this)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:0;line-height:1">👁</button>
           </div>
         </div>
         <div id="signup-error" class="err-text"></div>
@@ -716,7 +733,71 @@
         <div id="signin-error" class="err-text"></div>
       </div>
       <button class="btn-primary" onclick="signIn()">تسجيل الدخول ←</button>
+      <p class="auth-link"><a onclick="show('forgot-password')">نسيت كلمة المرور؟</a></p>
       <p class="auth-link">ليس لديك حساب؟ <a onclick="show('signup')">إنشاء حساب</a></p>
+    </div>
+  </div>
+
+  <!-- ══════════ Forgot Password ══════════ -->
+  <div id="forgot-password" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="show('signin')">← رجوع</button>
+      <h2>استعادة كلمة المرور</h2>
+      <p>أدخل بريدك لإرسال رابط الاستعادة</p>
+    </div>
+    <div class="screen-body">
+      <div class="card">
+        <div class="form-group">
+          <label>البريد الإلكتروني</label>
+          <input type="email" id="forgot-email" placeholder="example@email.com" style="direction:ltr;text-align:left" />
+        </div>
+        <div id="forgot-error" class="err-text"></div>
+      </div>
+      <button class="btn-primary" onclick="sendPasswordReset()">إرسال رابط الاستعادة ←</button>
+      <p class="auth-link"><a onclick="show('signin')">← العودة لتسجيل الدخول</a></p>
+    </div>
+  </div>
+
+  <!-- ══════════ Profile Screen ══════════ -->
+  <div id="profile-screen" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="closeMenu(); showMainMenu()">← رجوع</button>
+      <h2>ملفي الشخصي</h2>
+      <p>تعديل بياناتك</p>
+    </div>
+    <div class="screen-body">
+      <div class="card" style="gap:14px;display:flex;flex-direction:column">
+        <div class="form-group">
+          <label>الاسم</label>
+          <input type="text" id="profile-name" placeholder="اسمك" />
+        </div>
+        <div class="form-group">
+          <label>البريد الإلكتروني</label>
+          <input type="email" id="profile-email" placeholder="example@email.com" style="direction:ltr;text-align:left" />
+        </div>
+        <div id="profile-error" class="err-text"></div>
+        <button class="btn-primary" onclick="saveProfile()">حفظ التغييرات ✓</button>
+      </div>
+
+      <div class="card" style="gap:14px;display:flex;flex-direction:column;margin-top:4px">
+        <h3 style="margin-bottom:0">تغيير كلمة المرور</h3>
+        <div class="form-group">
+          <label>كلمة المرور الجديدة</label>
+          <div style="position:relative">
+            <input type="password" id="profile-new-password" placeholder="كلمة المرور الجديدة" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
+            <button type="button" onclick="togglePass('profile-new-password',this)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:0;line-height:1">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>تأكيد كلمة المرور الجديدة</label>
+          <div style="position:relative">
+            <input type="password" id="profile-confirm-password" placeholder="أعد كتابة كلمة المرور" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
+            <button type="button" onclick="togglePass('profile-confirm-password',this)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:0;line-height:1">👁</button>
+          </div>
+        </div>
+        <div id="profile-pass-error" class="err-text"></div>
+        <button class="btn-primary" onclick="saveNewPassword()">تغيير كلمة المرور ✓</button>
+      </div>
     </div>
   </div>
 
@@ -860,7 +941,17 @@
     <div class="dash-header">
       <button class="back-btn" onclick="leaveDashboard()">← مجموعاتي</button>
       <button class="ham-btn" onclick="openMenu(true)">☰</button>
-      <h2 id="dash-group-name">مجموعتي</h2>
+      <div style="display:flex;align-items:center;gap:8px">
+        <h2 id="dash-group-name">مجموعتي</h2>
+        <button id="edit-group-name-btn" onclick="toggleEditGroupName()" style="display:none;background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1">✏️</button>
+      </div>
+      <div id="edit-group-name-form" style="display:none;margin-top:6px">
+        <div style="display:flex;gap:8px">
+          <input type="text" id="edit-group-name-input" style="flex:1;padding:8px 12px;border-radius:10px;border:none;font-size:14px;background:rgba(255,255,255,.9);color:#1f2937;font-family:inherit" />
+          <button onclick="saveGroupName()" style="background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit">حفظ</button>
+          <button onclick="toggleEditGroupName()" style="background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:10px;padding:8px 10px;cursor:pointer;font-size:13px;font-family:inherit">✕</button>
+        </div>
+      </div>
       <div class="sub" id="dash-sub"></div>
       <div class="badges" id="dash-badges"></div>
       <span id="leave-group-btn-hidden" data-show="false" style="display:none"></span>
@@ -893,12 +984,7 @@
           </div>
           <div style="display:flex;gap:6px;align-items:center">
             <button id="reset-group-btn" onclick="resetGroupActivity()" style="display:none;background:none;border:1px solid #fee2e2;color:#ef4444;font-size:12px;border-radius:8px;padding:4px 10px;cursor:pointer;white-space:nowrap">🔄 تصفير</button>
-            <button id="add-member-btn" class="add-member-btn" onclick="toggleAddMember()" style="display:none">+ إضافة عضو</button>
           </div>
-        </div>
-        <div id="add-member-form" style="display:none;padding:12px 0 4px;border-top:1px solid #f3f4f6;margin-top:8px">
-          <input id="new-member-email" type="email" placeholder="البريد الإلكتروني" class="form-input" style="margin-bottom:8px;width:100%;direction:ltr;text-align:left" />
-          <button class="btn-primary" style="width:100%;padding:10px" onclick="sendInvite()">إرسال دعوة 📧</button>
         </div>
         <div class="view-tabs">
           <button class="view-tab active" id="tab-today" onclick="setMemberView('today')">اليوم</button>
@@ -979,6 +1065,28 @@ function closeMenu() {
   document.getElementById('ham-drawer').classList.remove('open');
 }
 
+// Handle deep link from email confirmation (com.werd.quran://confirm#access_token=...)
+async function handleDeepLink(url) {
+  try {
+    const hash = url.split('#')[1];
+    if (!hash) return;
+    const params = new URLSearchParams(hash);
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    if (accessToken && refreshToken) {
+      await db.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      // onAuthStateChange will fire and handle login
+    }
+  } catch (e) { console.error('Deep link error:', e); }
+}
+
+// Listen for deep links from Capacitor App plugin
+if (window.Capacitor?.Plugins?.App) {
+  window.Capacitor.Plugins.App.addListener('appUrlOpen', (data) => {
+    if (data.url) handleDeepLink(data.url);
+  });
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
   const savedSize = localStorage.getItem('werd_font_size');
   if (savedSize) document.getElementById('app').style.zoom = savedSize;
@@ -988,6 +1096,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(window.location.search);
   const joinCode = params.get('join');
   if (joinCode) localStorage.setItem('werd_pending_join', joinCode);
+
+  // Check if opened via deep link with hash tokens (web fallback)
+  if (window.location.hash && window.location.hash.includes('access_token')) {
+    await handleDeepLink(window.location.href);
+  }
 
   let authBusy = false;
 
@@ -1070,15 +1183,26 @@ async function showMyGroups() {
     }
   });
 
+  // Fetch member counts for all groups
+  const groupIds = groups.map(g => g.group.id);
+  const memberCounts = {};
+  if (groupIds.length > 0) {
+    const { data: counts } = await db.from('members').select('group_id').in('group_id', groupIds);
+    (counts || []).forEach(c => { memberCounts[c.group_id] = (memberCounts[c.group_id] || 0) + 1; });
+  }
+
   const list = document.getElementById('my-groups-list');
   if (groups.length === 0) {
     list.innerHTML = '<p style="text-align:center;color:#9ca3af;font-size:14px;padding:16px 0">لا توجد مجموعات بعد</p>';
   } else {
-    list.innerHTML = groups.map(({ group, memberId, pages, isCreator }) => `
+    list.innerHTML = groups.map(({ group, memberId, pages, isCreator }) => {
+      const unit = unitLabels[group.goal_unit] || 'صفحة';
+      const count = memberCounts[group.id] || 0;
+      return `
       <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
         <div onclick="enterGroup('${group.id}','${memberId}')" style="flex:1;cursor:pointer;min-width:0">
           <div style="font-weight:600;font-size:15px;color:#111827">${group.name}</div>
-          <div style="font-size:12px;color:#9ca3af;margin-top:3px">${isCreator ? '👑 منشئ' : '👤 عضو'} · ${pages} ${unitLabels[group.goal_unit]||'صفحة'} اليوم</div>
+          <div style="font-size:12px;color:#9ca3af;margin-top:3px">${isCreator ? '👑 منشئ' : '👤 عضو'} · ${count} عضو · هدف ${group.goal_amount} ${unit}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <button onclick="event.stopPropagation();${isCreator ? `deleteGroup('${group.id}')` : `leaveGroupFromList('${memberId}')`}"
@@ -1087,7 +1211,8 @@ async function showMyGroups() {
           </button>
           <span onclick="enterGroup('${group.id}','${memberId}')" style="color:#0d9488;font-size:20px;cursor:pointer">←</span>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
   show('choose-action');
@@ -1142,21 +1267,28 @@ function togglePass(id, btn) {
 async function signUp() {
   const firstName = document.getElementById('signup-firstname').value.trim();
   const email    = document.getElementById('signup-email').value.trim();
+  const emailConfirm = document.getElementById('signup-email-confirm').value.trim();
   const password = document.getElementById('signup-password').value;
+  const passwordConfirm = document.getElementById('signup-password-confirm').value;
   const errEl    = document.getElementById('signup-error');
 
   errEl.classList.remove('show');
   if (!firstName)    return showErr(errEl, 'أدخل اسمك');
   if (!email)        return showErr(errEl, 'أدخل البريد الإلكتروني');
+  if (email !== emailConfirm) return showErr(errEl, 'البريد الإلكتروني غير متطابق');
   if (password.length < 6) return showErr(errEl, 'كلمة المرور يجب أن تكون ٦ أحرف على الأقل');
   if (!/[a-z]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على حرف صغير (a-z)');
   if (!/[A-Z]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على حرف كبير (A-Z)');
   if (!/[0-9]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على رقم (0-9)');
   if (!/[^a-zA-Z0-9]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على رمز (!@#$...)');
+  if (password !== passwordConfirm) return showErr(errEl, 'كلمة المرور غير متطابقة');
 
   const { data, error } = await db.auth.signUp({
     email, password,
-    options: { data: { name: firstName } }
+    options: {
+      data: { name: firstName },
+      emailRedirectTo: 'com.werd.quran://confirm'
+    }
   });
 
   if (error) return showErr(errEl, error.message);
@@ -1273,6 +1405,86 @@ async function signInWithGoogle() {
       if (error) toast('حدث خطأ في تسجيل الدخول');
     }
   }
+}
+
+async function sendPasswordReset() {
+  const email = document.getElementById('forgot-email').value.trim();
+  const errEl = document.getElementById('forgot-error');
+  errEl.classList.remove('show');
+  if (!email) return showErr(errEl, 'أدخل بريدك الإلكتروني');
+  const { error } = await db.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/reset-password',
+  });
+  if (error) return showErr(errEl, error.message);
+  toast('تم إرسال رابط الاستعادة إلى بريدك ✓');
+  show('signin');
+}
+
+function openProfile() {
+  closeMenu();
+  document.getElementById('profile-name').value = state.profile?.first_name || '';
+  document.getElementById('profile-email').value = state.user?.email || '';
+  document.getElementById('profile-new-password').value = '';
+  document.getElementById('profile-confirm-password').value = '';
+  document.getElementById('profile-error').classList.remove('show');
+  document.getElementById('profile-pass-error').classList.remove('show');
+  show('profile-screen');
+}
+
+async function saveProfile() {
+  const errEl = document.getElementById('profile-error');
+  errEl.classList.remove('show');
+  const name = document.getElementById('profile-name').value.trim();
+  const email = document.getElementById('profile-email').value.trim();
+  if (!name) return showErr(errEl, 'أدخل الاسم');
+  if (!email) return showErr(errEl, 'أدخل البريد الإلكتروني');
+
+  const updates = { data: { name } };
+  if (email !== state.user.email) updates.email = email;
+
+  const { data, error } = await db.auth.updateUser(updates);
+  if (error) return showErr(errEl, error.message);
+  state.user = data.user;
+  state.profile.first_name = name;
+  state.profile.email = email;
+  // Update name in all member records
+  await db.from('members').update({ name }).eq('user_id', state.user.id);
+  toast('تم حفظ التغييرات ✓');
+}
+
+async function saveNewPassword() {
+  const errEl = document.getElementById('profile-pass-error');
+  errEl.classList.remove('show');
+  const pass = document.getElementById('profile-new-password').value;
+  const confirm = document.getElementById('profile-confirm-password').value;
+  if (!pass) return showErr(errEl, 'أدخل كلمة المرور الجديدة');
+  if (pass.length < 6) return showErr(errEl, 'كلمة المرور يجب أن تكون ٦ أحرف على الأقل');
+  if (pass !== confirm) return showErr(errEl, 'كلمة المرور غير متطابقة');
+  const { error } = await db.auth.updateUser({ password: pass });
+  if (error) return showErr(errEl, error.message);
+  document.getElementById('profile-new-password').value = '';
+  document.getElementById('profile-confirm-password').value = '';
+  toast('تم تغيير كلمة المرور ✓');
+}
+
+function toggleEditGroupName() {
+  const form = document.getElementById('edit-group-name-form');
+  const open = form.style.display === 'none';
+  form.style.display = open ? '' : 'none';
+  if (open) {
+    document.getElementById('edit-group-name-input').value = state.groupData?.name || '';
+  }
+}
+
+async function saveGroupName() {
+  const newName = document.getElementById('edit-group-name-input').value.trim();
+  if (!newName) { toast('أدخل اسم المجموعة'); return; }
+  const { error } = await db.from('groups').update({ name: newName }).eq('id', state.groupId);
+  if (error) { toast('حدث خطأ: ' + error.message); return; }
+  state.groupData.name = newName;
+  document.getElementById('dash-group-name').textContent = newName;
+  document.getElementById('edit-group-name-form').style.display = 'none';
+  toast('تم تغيير اسم المجموعة ✓');
 }
 
 async function signOut() {
@@ -1505,6 +1717,7 @@ async function joinGroup() {
     state.memberId = member.id; state.myPages = 0;
     localStorage.setItem('werd_member_id', member.id);
     localStorage.setItem('werd_group_id', group.id);
+    sendGroupNotification('join', group.id, group.name);
     await openDashboard();
   } catch(e) {
     toast('حدث خطأ: ' + e.message);
@@ -1559,9 +1772,10 @@ async function openDashboard() {
   document.getElementById('invite-card-section').style.display = '';
   document.getElementById('group-code-display').textContent = group.invite_code;
   const isCreator = group.created_by === state.user?.id;
-  document.getElementById('add-member-btn').style.display = isCreator ? '' : 'none';
   document.getElementById('edit-goal-btn').style.display = isCreator ? '' : 'none';
   document.getElementById('reset-group-btn').style.display = isCreator ? '' : 'none';
+  document.getElementById('edit-group-name-btn').style.display = isCreator ? '' : 'none';
+  document.getElementById('edit-group-name-form').style.display = 'none';
   // Store leave-group visibility for hamburger menu
   const leaveHidden = document.getElementById('leave-group-btn-hidden');
   if (leaveHidden) leaveHidden.dataset.show = isCreator ? 'false' : 'true';
@@ -1621,13 +1835,14 @@ function renderMembers(members) {
     const medals = ['🥇', '🥈', '🥉'];
     sorted.forEach((m, i) => {
       const isMe = m.id === state.memberId;
+      const editBtn = isCreator ? `<button onclick="editMemberPoints('${m.id}','${m.name}',${m.total_points||0})" style="background:none;border:none;color:#0d9488;font-size:14px;cursor:pointer;padding:2px 6px">✏️</button>` : '';
       list.innerHTML += `
         <div class="member-item">
           <div class="rank-medal">${medals[i] || (i + 1)}</div>
           <div class="member-info">
             <div class="member-name-row">
               <span class="member-name">${m.name}${isMe ? ' (أنت)' : ''}</span>
-              <span class="points-badge">${m.total_points || 0} نقطة</span>
+              <span class="points-badge">${m.total_points || 0} نقطة ${editBtn}</span>
             </div>
           </div>
         </div>`;
@@ -1660,6 +1875,17 @@ async function removeMember(memberId) {
   const { error } = await db.from('members').delete().eq('id', memberId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
   toast('تم إزالة العضو ✓');
+  await loadMembers();
+}
+
+async function editMemberPoints(memberId, name, currentPoints) {
+  const newPoints = prompt(`تعديل نقاط ${name}\nالنقاط الحالية: ${currentPoints}\n\nأدخل النقاط الجديدة:`, currentPoints);
+  if (newPoints === null) return;
+  const pts = parseInt(newPoints);
+  if (isNaN(pts) || pts < 0) { toast('أدخل رقماً صحيحاً'); return; }
+  const { error } = await db.from('members').update({ total_points: pts }).eq('id', memberId);
+  if (error) { toast('حدث خطأ: ' + error.message); return; }
+  toast(`تم تعديل نقاط ${name} إلى ${pts} ✓`);
   await loadMembers();
 }
 
@@ -1704,12 +1930,15 @@ async function addPages(n) {
       toast('+1 نقطة 📖');
     }
   } else if (n < 0) {
+    // Fetch actual points from DB to avoid stale local state
+    const { data: current } = await db.from('members').select('points_today, total_points').eq('id', state.memberId).single();
+    const actualPointsToday = current?.points_today || 0;
     if (prevPages > goal) {
       // Was above goal → undo 1 extra point
       pointsDelta = -1;
-    } else if (prevPages === goal && newPages < goal && state.pointsToday > 0) {
-      // Was exactly at goal, dropped below → remove goal completion bonus
-      pointsDelta = -state.pointsToday;
+    } else if (prevPages <= goal && newPages < goal && actualPointsToday > 0) {
+      // Dropped below goal → remove all today's points
+      pointsDelta = -actualPointsToday;
       toast('تم خصم نقاط إتمام الهدف');
     }
   }
@@ -1717,7 +1946,7 @@ async function addPages(n) {
   if (pointsDelta !== 0) {
     const { data: me } = await db.from('members').select('total_points, points_today').eq('id', state.memberId).single();
     const newTotal = Math.max(0, (me?.total_points || 0) + pointsDelta);
-    state.pointsToday = Math.max(0, (me?.points_today || state.pointsToday) + pointsDelta);
+    state.pointsToday = Math.max(0, (me?.points_today || 0) + pointsDelta);
     // Try updating with points_today; if column missing, fall back to total_points only
     let { error: ptErr } = await db.from('members').update({ total_points: newTotal, points_today: state.pointsToday }).eq('id', state.memberId);
     if (ptErr) {
@@ -1868,6 +2097,7 @@ async function saveGoal() {
 
 async function leaveGroup() {
   if (!confirm('هل أنت متأكد أنك تريد مغادرة المجموعة؟')) return;
+  sendGroupNotification('leave');
   const { error } = await db.from('members').delete().eq('id', state.memberId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
   toast('تم مغادرة المجموعة');
@@ -1876,6 +2106,9 @@ async function leaveGroup() {
 
 async function leaveGroupFromList(memberId) {
   if (!confirm('هل أنت متأكد أنك تريد مغادرة المجموعة؟')) return;
+  // Get group info before leaving
+  const { data: memberData } = await db.from('members').select('group_id, groups(name)').eq('id', memberId).single();
+  if (memberData) sendGroupNotification('leave', memberData.group_id, memberData.groups?.name);
   const { error } = await db.from('members').delete().eq('id', memberId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
   toast('تم مغادرة المجموعة');
@@ -1900,30 +2133,6 @@ async function leaveDashboard() {
   await showMyGroups();
 }
 
-// ══════════════════════════════════════════
-//  ADD MEMBER FROM DASHBOARD
-// ══════════════════════════════════════════
-function toggleAddMember() {
-  const form = document.getElementById('add-member-form');
-  const isHidden = form.style.display === 'none';
-  form.style.display = isHidden ? 'block' : 'none';
-  if (isHidden) document.getElementById('new-member-email').value = '';
-}
-
-async function sendInvite() {
-  const email = document.getElementById('new-member-email').value.trim();
-  if (!email) return toast('أدخل البريد الإلكتروني');
-  const prodUrl = 'https://werd-moatazs-projects-f7432b84.vercel.app';
-  const joinLink = prodUrl + '/?join=' + state.groupData.invite_code;
-  const { error } = await db.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: joinLink }
-  });
-  if (error) return toast('حدث خطأ: ' + error.message);
-  toast('تم إرسال الدعوة ✓');
-  document.getElementById('new-member-email').value = '';
-  toggleAddMember();
-}
 
 function copyLink() {
   const link = document.getElementById('invite-link-display').textContent;
@@ -2237,21 +2446,29 @@ function toast(msg) {
 }
 
 async function setupPush() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.log('Push not supported (WebView or unsupported browser)');
+    return;
+  }
   try {
     const reg = await navigator.serviceWorker.register('/sw.js');
     const permission = await Notification.requestPermission();
-    if (permission !== 'granted') return;
+    if (permission !== 'granted') {
+      console.log('Notification permission denied');
+      return;
+    }
     const existing = await reg.pushManager.getSubscription();
     const sub = existing || await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
     });
     // Save subscription for this user+group
-    await db.from('push_subscriptions')
+    const { error } = await db.from('push_subscriptions')
       .upsert({ user_id: state.user.id, group_id: state.groupId, subscription: sub.toJSON() },
                { onConflict: 'user_id,group_id' });
-  } catch(e) { /* silent */ }
+    if (error) console.error('Push subscription save error:', error);
+    else console.log('Push subscription saved successfully');
+  } catch(e) { console.error('Push setup error:', e); }
 }
 
 function urlBase64ToUint8Array(base64String) {
@@ -2261,17 +2478,19 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
 }
 
-async function sendGoalNotification() {
+async function sendGroupNotification(type, groupId, groupName) {
   try {
     const myName = state.profile?.first_name || state.user.email;
-    const groupName = state.groupData?.name || '';
+    const gId = groupId || state.groupId;
+    const gName = groupName || state.groupData?.name || '';
     await fetch('/api/send-notification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ groupId: state.groupId, senderUserId: state.user.id, senderName: myName, groupName }),
+      body: JSON.stringify({ groupId: gId, senderUserId: state.user.id, senderName: myName, groupName: gName, type }),
     });
   } catch(e) { /* silent */ }
 }
+function sendGoalNotification() { sendGroupNotification('goal'); }
 
 let goalBannerTimer = null;
 function goalNotify(msg) {
@@ -2281,6 +2500,75 @@ function goalNotify(msg) {
   clearTimeout(goalBannerTimer);
   goalBannerTimer = setTimeout(() => el.classList.remove('show'), 5000);
 }
+
+// ══════════════════════════════════════════
+//  PWA INSTALL PROMPT
+// ══════════════════════════════════════════
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show install banner
+  document.getElementById('install-banner').style.display = 'flex';
+});
+
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then((result) => {
+    document.getElementById('install-banner').style.display = 'none';
+    deferredPrompt = null;
+  });
+}
+
+function dismissInstall() {
+  document.getElementById('install-banner').style.display = 'none';
+}
 </script>
+
+<!-- Install Banner -->
+<div id="install-banner" style="
+  display:none;
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:linear-gradient(135deg,#0d5e3a,#0a3d26);
+  color:#fff;
+  padding:16px 20px;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  z-index:99999;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.3);
+  direction:rtl;
+  font-family:'Segoe UI',Tahoma,Arial,sans-serif;
+">
+  <div style="flex:1">
+    <div style="font-weight:bold;font-size:16px;margin-bottom:4px">تثبيت الْوِرْدُ الْقُرْآنِيُّ</div>
+    <div style="font-size:13px;opacity:0.8">ثبّت التطبيق على جهازك للوصول السريع</div>
+  </div>
+  <button onclick="installApp()" style="
+    background:#d4af37;
+    color:#0a1628;
+    border:none;
+    padding:10px 20px;
+    border-radius:8px;
+    font-weight:bold;
+    font-size:14px;
+    cursor:pointer;
+    white-space:nowrap;
+  ">تثبيت</button>
+  <button onclick="dismissInstall()" style="
+    background:none;
+    border:none;
+    color:rgba(255,255,255,0.6);
+    font-size:22px;
+    cursor:pointer;
+    padding:0 4px;
+    line-height:1;
+  ">&times;</button>
+</div>
+
 </body>
 </html>

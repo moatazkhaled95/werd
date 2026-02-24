@@ -393,7 +393,7 @@
     /* ── All screens transparent over background ── */
     #app, .screen, #auth, #loading, #dashboard,
     #create-group, #join-group, #choose-action, #complete-profile, #signin, #signup,
-    #verify-email, #main-menu, #quran-reader, #quran-page-view { background: transparent !important; }
+    #verify-email, #main-menu, #quran-reader, #quran-page-view, #forgot-password, #profile-screen { background: transparent !important; }
     .screen-header, .dash-header { background: transparent !important; overflow: hidden; }
     .screen-header::after, .dash-header::after { display: none; }
     .screen-body, .dash-body { background: transparent; }
@@ -591,6 +591,9 @@
     <button class="ham-item" onclick="closeMenu(); showMainMenu();" id="ham-home">
       <span class="ham-icon">🏠</span> القائمة الرئيسية
     </button>
+    <button class="ham-item" onclick="openProfile()">
+      <span class="ham-icon">👤</span> ملفي الشخصي
+    </button>
     <button class="ham-item" onclick="closeMenu(); leaveDashboard && leaveDashboard();" id="ham-mygroups" style="display:none">
       <span class="ham-icon">👥</span> مجموعاتي
     </button>
@@ -730,7 +733,71 @@
         <div id="signin-error" class="err-text"></div>
       </div>
       <button class="btn-primary" onclick="signIn()">تسجيل الدخول ←</button>
+      <p class="auth-link"><a onclick="show('forgot-password')">نسيت كلمة المرور؟</a></p>
       <p class="auth-link">ليس لديك حساب؟ <a onclick="show('signup')">إنشاء حساب</a></p>
+    </div>
+  </div>
+
+  <!-- ══════════ Forgot Password ══════════ -->
+  <div id="forgot-password" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="show('signin')">← رجوع</button>
+      <h2>استعادة كلمة المرور</h2>
+      <p>أدخل بريدك لإرسال رابط الاستعادة</p>
+    </div>
+    <div class="screen-body">
+      <div class="card">
+        <div class="form-group">
+          <label>البريد الإلكتروني</label>
+          <input type="email" id="forgot-email" placeholder="example@email.com" style="direction:ltr;text-align:left" />
+        </div>
+        <div id="forgot-error" class="err-text"></div>
+      </div>
+      <button class="btn-primary" onclick="sendPasswordReset()">إرسال رابط الاستعادة ←</button>
+      <p class="auth-link"><a onclick="show('signin')">← العودة لتسجيل الدخول</a></p>
+    </div>
+  </div>
+
+  <!-- ══════════ Profile Screen ══════════ -->
+  <div id="profile-screen" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="closeMenu(); showMainMenu()">← رجوع</button>
+      <h2>ملفي الشخصي</h2>
+      <p>تعديل بياناتك</p>
+    </div>
+    <div class="screen-body">
+      <div class="card" style="gap:14px;display:flex;flex-direction:column">
+        <div class="form-group">
+          <label>الاسم</label>
+          <input type="text" id="profile-name" placeholder="اسمك" />
+        </div>
+        <div class="form-group">
+          <label>البريد الإلكتروني</label>
+          <input type="email" id="profile-email" placeholder="example@email.com" style="direction:ltr;text-align:left" />
+        </div>
+        <div id="profile-error" class="err-text"></div>
+        <button class="btn-primary" onclick="saveProfile()">حفظ التغييرات ✓</button>
+      </div>
+
+      <div class="card" style="gap:14px;display:flex;flex-direction:column;margin-top:4px">
+        <h3 style="margin-bottom:0">تغيير كلمة المرور</h3>
+        <div class="form-group">
+          <label>كلمة المرور الجديدة</label>
+          <div style="position:relative">
+            <input type="password" id="profile-new-password" placeholder="كلمة المرور الجديدة" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
+            <button type="button" onclick="togglePass('profile-new-password',this)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:0;line-height:1">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>تأكيد كلمة المرور الجديدة</label>
+          <div style="position:relative">
+            <input type="password" id="profile-confirm-password" placeholder="أعد كتابة كلمة المرور" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
+            <button type="button" onclick="togglePass('profile-confirm-password',this)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:0;line-height:1">👁</button>
+          </div>
+        </div>
+        <div id="profile-pass-error" class="err-text"></div>
+        <button class="btn-primary" onclick="saveNewPassword()">تغيير كلمة المرور ✓</button>
+      </div>
     </div>
   </div>
 
@@ -874,7 +941,17 @@
     <div class="dash-header">
       <button class="back-btn" onclick="leaveDashboard()">← مجموعاتي</button>
       <button class="ham-btn" onclick="openMenu(true)">☰</button>
-      <h2 id="dash-group-name">مجموعتي</h2>
+      <div style="display:flex;align-items:center;gap:8px">
+        <h2 id="dash-group-name">مجموعتي</h2>
+        <button id="edit-group-name-btn" onclick="toggleEditGroupName()" style="display:none;background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1">✏️</button>
+      </div>
+      <div id="edit-group-name-form" style="display:none;margin-top:6px">
+        <div style="display:flex;gap:8px">
+          <input type="text" id="edit-group-name-input" style="flex:1;padding:8px 12px;border-radius:10px;border:none;font-size:14px;background:rgba(255,255,255,.9);color:#1f2937;font-family:inherit" />
+          <button onclick="saveGroupName()" style="background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit">حفظ</button>
+          <button onclick="toggleEditGroupName()" style="background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:10px;padding:8px 10px;cursor:pointer;font-size:13px;font-family:inherit">✕</button>
+        </div>
+      </div>
       <div class="sub" id="dash-sub"></div>
       <div class="badges" id="dash-badges"></div>
       <span id="leave-group-btn-hidden" data-show="false" style="display:none"></span>
@@ -1330,6 +1407,86 @@ async function signInWithGoogle() {
   }
 }
 
+async function sendPasswordReset() {
+  const email = document.getElementById('forgot-email').value.trim();
+  const errEl = document.getElementById('forgot-error');
+  errEl.classList.remove('show');
+  if (!email) return showErr(errEl, 'أدخل بريدك الإلكتروني');
+  const { error } = await db.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/reset-password',
+  });
+  if (error) return showErr(errEl, error.message);
+  toast('تم إرسال رابط الاستعادة إلى بريدك ✓');
+  show('signin');
+}
+
+function openProfile() {
+  closeMenu();
+  document.getElementById('profile-name').value = state.profile?.first_name || '';
+  document.getElementById('profile-email').value = state.user?.email || '';
+  document.getElementById('profile-new-password').value = '';
+  document.getElementById('profile-confirm-password').value = '';
+  document.getElementById('profile-error').classList.remove('show');
+  document.getElementById('profile-pass-error').classList.remove('show');
+  show('profile-screen');
+}
+
+async function saveProfile() {
+  const errEl = document.getElementById('profile-error');
+  errEl.classList.remove('show');
+  const name = document.getElementById('profile-name').value.trim();
+  const email = document.getElementById('profile-email').value.trim();
+  if (!name) return showErr(errEl, 'أدخل الاسم');
+  if (!email) return showErr(errEl, 'أدخل البريد الإلكتروني');
+
+  const updates = { data: { name } };
+  if (email !== state.user.email) updates.email = email;
+
+  const { data, error } = await db.auth.updateUser(updates);
+  if (error) return showErr(errEl, error.message);
+  state.user = data.user;
+  state.profile.first_name = name;
+  state.profile.email = email;
+  // Update name in all member records
+  await db.from('members').update({ name }).eq('user_id', state.user.id);
+  toast('تم حفظ التغييرات ✓');
+}
+
+async function saveNewPassword() {
+  const errEl = document.getElementById('profile-pass-error');
+  errEl.classList.remove('show');
+  const pass = document.getElementById('profile-new-password').value;
+  const confirm = document.getElementById('profile-confirm-password').value;
+  if (!pass) return showErr(errEl, 'أدخل كلمة المرور الجديدة');
+  if (pass.length < 6) return showErr(errEl, 'كلمة المرور يجب أن تكون ٦ أحرف على الأقل');
+  if (pass !== confirm) return showErr(errEl, 'كلمة المرور غير متطابقة');
+  const { error } = await db.auth.updateUser({ password: pass });
+  if (error) return showErr(errEl, error.message);
+  document.getElementById('profile-new-password').value = '';
+  document.getElementById('profile-confirm-password').value = '';
+  toast('تم تغيير كلمة المرور ✓');
+}
+
+function toggleEditGroupName() {
+  const form = document.getElementById('edit-group-name-form');
+  const open = form.style.display === 'none';
+  form.style.display = open ? '' : 'none';
+  if (open) {
+    document.getElementById('edit-group-name-input').value = state.groupData?.name || '';
+  }
+}
+
+async function saveGroupName() {
+  const newName = document.getElementById('edit-group-name-input').value.trim();
+  if (!newName) { toast('أدخل اسم المجموعة'); return; }
+  const { error } = await db.from('groups').update({ name: newName }).eq('id', state.groupId);
+  if (error) { toast('حدث خطأ: ' + error.message); return; }
+  state.groupData.name = newName;
+  document.getElementById('dash-group-name').textContent = newName;
+  document.getElementById('edit-group-name-form').style.display = 'none';
+  toast('تم تغيير اسم المجموعة ✓');
+}
+
 async function signOut() {
   if (realtimeSub) { realtimeSub.unsubscribe(); realtimeSub = null; }
   localStorage.removeItem('werd_member_id');
@@ -1617,6 +1774,8 @@ async function openDashboard() {
   const isCreator = group.created_by === state.user?.id;
   document.getElementById('edit-goal-btn').style.display = isCreator ? '' : 'none';
   document.getElementById('reset-group-btn').style.display = isCreator ? '' : 'none';
+  document.getElementById('edit-group-name-btn').style.display = isCreator ? '' : 'none';
+  document.getElementById('edit-group-name-form').style.display = 'none';
   // Store leave-group visibility for hamburger menu
   const leaveHidden = document.getElementById('leave-group-btn-hidden');
   if (leaveHidden) leaveHidden.dataset.show = isCreator ? 'false' : 'true';
