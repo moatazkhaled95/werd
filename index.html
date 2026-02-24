@@ -265,7 +265,7 @@
       padding: 52px 20px 20px; color: #fff; position: relative;
     }
     .dash-header h2 { font-size: 26px; font-weight: 800; }
-    .dash-header .sub { font-size: 13px; color: #fff; margin-top: 2px; font-weight: 800; }
+    .dash-header .sub { font-size: 15px; color: #fca5a5; margin-top: 2px; font-weight: 800; }
     .badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
     .badge {
       font-size: 11px; font-weight: 600;
@@ -603,8 +603,8 @@
     <div class="ham-divider"></div>
     <div class="ham-font-row">
       <span>حجم الخط</span>
-      <button class="ham-font-btn" onclick="changeFontSize(-1)">−</button>
-      <button class="ham-font-btn" onclick="changeFontSize(1)">+</button>
+      <button class="ham-font-btn" onclick="changeAppZoom(-1)">−</button>
+      <button class="ham-font-btn" onclick="changeAppZoom(1)">+</button>
     </div>
     <div class="ham-divider"></div>
     <button class="ham-item danger" onclick="closeMenu(); signOut()">
@@ -1046,7 +1046,7 @@ const state = {
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
-function changeFontSize(delta) {
+function changeAppZoom(delta) {
   const current = parseFloat(document.documentElement.style.zoom) || 1;
   const next = Math.min(1.4, Math.max(0.75, +(current + delta * 0.08).toFixed(2)));
   document.documentElement.style.zoom = next;
