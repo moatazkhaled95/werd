@@ -1046,9 +1046,9 @@
     <div class="dash-header">
       <button class="back-btn" onclick="leaveDashboard()">← مجموعاتي</button>
       <button class="ham-btn" onclick="openMenu(true)">☰</button>
-      <div style="padding:6px 56px 0;display:flex;align-items:center;gap:6px">
-        <h2 id="dash-group-name" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border-radius:10px;padding:6px 16px;flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">مجموعتي</h2>
-        <button id="edit-group-name-btn" onclick="toggleEditGroupName()" style="display:none;background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;flex-shrink:0">✏️</button>
+      <div style="margin:8px -20px 0;display:flex;align-items:stretch;background:linear-gradient(135deg,#78350f,#92400e)">
+        <h2 id="dash-group-name" style="flex:1;color:#fff;padding:12px 20px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">مجموعتي</h2>
+        <button id="edit-group-name-btn" onclick="toggleEditGroupName()" style="display:none;background:rgba(255,255,255,.15);border:none;border-left:1px solid rgba(255,255,255,.2);color:#fff;padding:0 14px;cursor:pointer;font-size:14px;flex-shrink:0">✏️</button>
       </div>
       <div id="edit-group-name-form" style="display:none;margin-top:6px">
         <div style="display:flex;gap:8px">
@@ -1384,13 +1384,17 @@ async function showMyGroups() {
       const unit = unitLabels[group.goal_unit] || 'صفحة';
       const count = memberCounts[group.id] || 0;
       return `
-      <div onclick="enterGroup('${group.id}','${memberId}')" style="background:linear-gradient(135deg,#78350f,#92400e);border-radius:16px;padding:20px 18px;margin-bottom:12px;cursor:pointer;position:relative;box-shadow:0 4px 14px rgba(120,53,15,.35)">
-        <div style="font-weight:800;font-size:18px;color:#fff;margin-bottom:6px">${group.name}</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.75)">${isCreator ? '👑 منشئ' : '👤 عضو'} · ${count} عضو · هدف ${group.goal_amount} ${unit}</div>
-        <button onclick="event.stopPropagation();${isCreator ? `deleteGroup('${group.id}')` : `leaveGroupFromList('${memberId}')`}"
-          style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.85);font-size:11px;border-radius:8px;padding:4px 10px;cursor:pointer;font-family:inherit;white-space:nowrap">
-          ${isCreator ? '🗑 حذف' : '↩ مغادرة'}
-        </button>
+      <div onclick="enterGroup('${group.id}','${memberId}')" style="background:linear-gradient(135deg,#78350f,#92400e);border-radius:16px;margin-bottom:12px;cursor:pointer;overflow:hidden;box-shadow:0 4px 14px rgba(120,53,15,.35)">
+        <div style="background:rgba(0,0,0,.22);padding:14px 18px;text-align:center;font-weight:800;font-size:18px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          ${group.name}
+        </div>
+        <div style="padding:10px 16px 14px;display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:12px;color:rgba(255,255,255,.8)">${isCreator ? '👑 منشئ' : '👤 عضو'} · ${count} عضو · هدف ${group.goal_amount} ${unit}</div>
+          <button onclick="event.stopPropagation();${isCreator ? `deleteGroup('${group.id}')` : `leaveGroupFromList('${memberId}')`}"
+            style="background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.85);font-size:11px;border-radius:8px;padding:4px 10px;cursor:pointer;font-family:inherit;white-space:nowrap">
+            ${isCreator ? '🗑 حذف' : '↩ مغادرة'}
+          </button>
+        </div>
       </div>`;
     }).join('');
   }
