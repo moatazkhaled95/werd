@@ -624,6 +624,9 @@
     <button class="ham-item" onclick="openProfile()">
       <span class="ham-icon">👤</span> ملفي الشخصي
     </button>
+    <button class="ham-item" onclick="closeMenu(); showQuranReader();">
+      <span class="ham-icon">📖</span> القرآن الكريم
+    </button>
     <button class="ham-item" onclick="closeMenu(); leaveDashboard && leaveDashboard();" id="ham-mygroups" style="display:none">
       <span class="ham-icon">👥</span> مجموعاتي
     </button>
@@ -1163,23 +1166,32 @@ if (window.Capacitor?.Plugins?.App) {
   });
   // Handle Android hardware back button
   window.Capacitor.Plugins.App.addListener('backButton', () => {
+    // First priority: close hamburger menu if it's open
+    if (document.getElementById('ham-drawer')?.classList.contains('open')) {
+      closeMenu();
+      return;
+    }
     const active = document.querySelector('.screen.active');
-    if (!active) return;
+    if (!active) { window.Capacitor?.Plugins?.App?.minimizeApp?.(); return; }
     switch (active.id) {
-      case 'quran-page-view': showQuranReader(); break;
-      case 'quran-reader':   showMainMenu(); break;
-      case 'dashboard':      leaveDashboard(); break;
-      case 'choose-action':  showMainMenu(); break;
-      case 'create-group':   showMyGroups(); break;
-      case 'join-group':     showMyGroups(); break;
-      case 'profile-screen': showMainMenu(); break;
+      case 'quran-page-view':  showQuranReader(); break;
+      case 'quran-reader':    showMainMenu(); break;
+      case 'dashboard':       leaveDashboard(); break;
+      case 'choose-action':   showMainMenu(); break;
+      case 'create-group':    showMyGroups(); break;
+      case 'join-group':      showMyGroups(); break;
+      case 'profile-screen':  showMainMenu(); break;
       case 'forgot-password': show('signin'); break;
-      case 'reset-password': show('signin'); break;
-      case 'signin': show('auth'); break;
-      case 'signup': show('auth'); break;
-      case 'verify-email': show('auth'); break;
+      case 'reset-password':  show('signin'); break;
+      case 'signin':          show('auth'); break;
+      case 'signup':          show('auth'); break;
+      case 'verify-email':    show('auth'); break;
+      case 'auth':
+      case 'main-menu':
+        // Minimize (don't exit) on root screens
+        window.Capacitor?.Plugins?.App?.minimizeApp?.();
+        break;
       default:
-        // On main screens (auth, main-menu) minimize instead of exiting
         window.Capacitor?.Plugins?.App?.minimizeApp?.();
     }
   });
