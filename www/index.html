@@ -646,6 +646,9 @@
     <button class="ham-item" onclick="openProfile()">
       <span class="ham-icon">👤</span> ملفي الشخصي
     </button>
+    <button class="ham-item" id="ham-quran" onclick="closeMenu(); showQuranReader();" style="display:none">
+      <span class="ham-icon">📖</span> القرآن الكريم
+    </button>
     <button class="ham-item" onclick="closeMenu(); leaveDashboard && leaveDashboard();" id="ham-mygroups" style="display:none">
       <span class="ham-icon">👥</span> مجموعاتي
     </button>
@@ -917,6 +920,7 @@
       <div id="my-groups-list" style="margin-bottom:16px"></div>
       <button class="btn-primary" style="margin-top:4px" onclick="show('create-group')">+ إنشاء مجموعة جديدة</button>
       <button class="btn-secondary" style="margin-top:8px" onclick="show('join-group')">انضم برقم المجموعة 🔢</button>
+      <button onclick="showQuranReader()" style="margin-top:8px;width:100%;padding:14px;background:linear-gradient(135deg,#134e4a,#0f766e);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">📖 القرآن الكريم</button>
     </div>
   </div>
 
@@ -1039,9 +1043,9 @@
     <div class="dash-header">
       <button class="back-btn" onclick="leaveDashboard()">← مجموعاتي</button>
       <button class="ham-btn" onclick="openMenu(true)">☰</button>
-      <div style="padding:0 56px;text-align:center">
-        <h2 id="dash-group-name" style="background:linear-gradient(135deg,rgba(251,191,36,.35),rgba(245,158,11,.25));border:1.5px solid rgba(251,191,36,.6);border-radius:12px;padding:4px 14px;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">مجموعتي</h2>
-        <button id="edit-group-name-btn" onclick="toggleEditGroupName()" style="display:none;background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;vertical-align:middle">✏️</button>
+      <div style="padding:6px 56px 0;display:flex;align-items:center;gap:6px">
+        <h2 id="dash-group-name" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border-radius:10px;padding:6px 16px;flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">مجموعتي</h2>
+        <button id="edit-group-name-btn" onclick="toggleEditGroupName()" style="display:none;background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;flex-shrink:0">✏️</button>
       </div>
       <div id="edit-group-name-form" style="display:none;margin-top:6px">
         <div style="display:flex;gap:8px">
@@ -1168,6 +1172,7 @@ function changeAppZoom(delta) {
 function openMenu(inDashboard) {
   document.getElementById('ham-overlay').classList.add('open');
   document.getElementById('ham-drawer').classList.add('open');
+  document.getElementById('ham-quran').style.display  = inDashboard ? '' : 'none';
   document.getElementById('ham-mygroups').style.display = inDashboard ? '' : 'none';
   const leaveBtn = document.getElementById('ham-leave');
   leaveBtn.style.display = (inDashboard && document.getElementById('leave-group-btn-hidden')?.dataset.show === 'true') ? '' : 'none';
