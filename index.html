@@ -340,8 +340,8 @@
     .member-name-row { display: flex; justify-content: space-between; align-items: center; }
     .member-name { font-size: 14px; font-weight: 800; color: #1f2937; }
     .member-count { font-size: 12px; color: #0d9488; font-weight: 700; }
-    .member-bar-bg { background: #e5e7eb; border-radius: 99px; height: 5px; margin-top: 4px; overflow: hidden; }
-    .member-bar-fill { background: #2dd4bf; height: 100%; border-radius: 99px; transition: width .4s; }
+    .member-bar-bg { background: #e5e7eb; border-radius: 99px; height: 7px; margin-top: 6px; overflow: hidden; }
+    .member-bar-fill { background: #0d9488; height: 100%; border-radius: 99px; transition: width .4s; }
     .member-check { font-size: 18px; }
 
     /* invite */
@@ -609,6 +609,13 @@
 </head>
 <body>
 <div id="goal-banner"></div>
+
+<!-- ══════════ Floating Back Button ══════════ -->
+<div id="float-back-btn" style="display:none;position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:1500;pointer-events:auto">
+  <button onclick="floatGoBack()" style="background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;border:none;border-radius:99px;padding:10px 22px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 18px rgba(15,118,110,.4);display:flex;align-items:center;gap:6px;white-space:nowrap">
+    ← رجوع
+  </button>
+</div>
 
 <!-- ══════════ Member Action Sheet ══════════ -->
 <div id="member-action-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000" onclick="closeMemberActions()"></div>
@@ -1000,6 +1007,11 @@
         <button id="qtab-juz" class="view-tab" onclick="switchQuranTab('juz')">الأجزاء</button>
       </div>
     </div>
+    <div style="padding:8px 16px;background:#f0fdfa;border-bottom:1px solid #ccfbf1;flex-shrink:0">
+      <button onclick="showMyGroups()" style="width:100%;padding:9px 14px;background:#fff;border:1.5px solid #2dd4bf;border-radius:12px;color:#0d9488;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">
+        <span>👥</span> مجموعاتي
+      </button>
+    </div>
     <div class="screen-body" id="quran-surah-list">
       <div style="text-align:center;padding:40px;color:#6b7280">جاري التحميل...</div>
     </div>
@@ -1030,8 +1042,8 @@
     <div class="dash-header">
       <button class="back-btn" onclick="leaveDashboard()">← مجموعاتي</button>
       <button class="ham-btn" onclick="openMenu(true)">☰</button>
-      <div style="display:flex;align-items:center;gap:8px">
-        <h2 id="dash-group-name">مجموعتي</h2>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <h2 id="dash-group-name" style="background:linear-gradient(135deg,rgba(251,191,36,.35),rgba(245,158,11,.25));border:1.5px solid rgba(251,191,36,.6);border-radius:12px;padding:4px 14px;display:inline-block">مجموعتي</h2>
         <button id="edit-group-name-btn" onclick="toggleEditGroupName()" style="display:none;background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1">✏️</button>
       </div>
       <div id="edit-group-name-form" style="display:none;margin-top:6px">
@@ -2080,7 +2092,7 @@ function renderMembers(members) {
               <span class="member-name">${m.name}${isMe ? ' (أنت)' : ''}</span>
               <span class="member-count">${m.pages_today} ${unit}</span>
             </div>
-            <div class="member-bar-bg"><div class="member-bar-fill" style="width:${pct}%"></div></div>
+            <div class="member-bar-bg"><div class="member-bar-fill" style="width:${pct}%;background:${color}"></div></div>
           </div>
           <div class="member-check">${done ? '✅' : (canTap ? '<span style="color:#9ca3af;font-size:14px">⋮</span>' : '')}</div>
         </div>`;
@@ -2418,6 +2430,33 @@ function show(id) {
   if (!el) { console.error('show(): screen not found:', id); return; }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   el.classList.add('active');
+  updateFloatBack();
+}
+
+const _FLOAT_BACK_HIDDEN = new Set(['auth', 'main-menu', 'quran-page-view']);
+function updateFloatBack() {
+  const btn = document.getElementById('float-back-btn');
+  if (!btn) return;
+  const active = document.querySelector('.screen.active');
+  btn.style.display = (!active || _FLOAT_BACK_HIDDEN.has(active.id)) ? 'none' : 'block';
+}
+
+function floatGoBack() {
+  const active = document.querySelector('.screen.active');
+  if (!active) return;
+  switch (active.id) {
+    case 'quran-reader':    showMainMenu(); break;
+    case 'dashboard':       leaveDashboard(); break;
+    case 'choose-action':   showMainMenu(); break;
+    case 'create-group':    showMyGroups(); break;
+    case 'join-group':      showMyGroups(); break;
+    case 'profile-screen':  showMainMenu(); break;
+    case 'forgot-password': show('signin'); break;
+    case 'reset-password':  show('signin'); break;
+    case 'signin':          show('auth'); break;
+    case 'signup':          show('auth'); break;
+    case 'verify-email':    show('auth'); break;
+  }
 }
 
 // ══════════════════════════════════════════
