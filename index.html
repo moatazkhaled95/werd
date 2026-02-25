@@ -503,7 +503,7 @@
     #quran-page-view { background: transparent !important; }
     #quran-page-view .screen-body { padding: 0 !important; overflow: hidden !important; }
     .mushaf-container {
-      width: 100%; height: calc(100vh - 50px);
+      width: 100%; height: calc(100vh - 50px - env(safe-area-inset-bottom, 0px));
       overflow: hidden; position: relative; touch-action: none;
     }
     .mushaf-page {
@@ -588,17 +588,22 @@
       position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
       width: 100%; max-width: 428px;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 12px; background: linear-gradient(0deg, rgba(90,62,27,0.97), rgba(120,85,40,0.93));
-      z-index: 999; gap: 6px;
+      padding: 8px clamp(6px, 2vw, 12px) calc(8px + env(safe-area-inset-bottom, 0px));
+      background: linear-gradient(0deg, rgba(90,62,27,0.97), rgba(120,85,40,0.93));
+      z-index: 999; gap: clamp(2px, 1.2vw, 6px); box-sizing: border-box;
     }
     .mushaf-bar-btn {
       background: none; border: 1px solid rgba(255,255,255,0.4); color: #fff;
-      border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 700;
-      cursor: pointer; font-family: inherit; white-space: nowrap;
+      border-radius: 8px;
+      padding: 5px clamp(4px, 2vw, 10px);
+      font-size: clamp(10px, 3vw, 13px);
+      font-weight: 700; cursor: pointer; font-family: inherit;
+      white-space: nowrap; flex-shrink: 0;
     }
     .mushaf-bar-btn:active { background: rgba(255,255,255,0.15); }
     .mushaf-page-num {
-      color: #fff; font-size: 14px; font-weight: 700; min-width: 50px; text-align: center;
+      color: #fff; font-size: clamp(11px, 3vw, 14px); font-weight: 700;
+      min-width: 0; text-align: center; flex-shrink: 1;
     }
   </style>
 </head>
@@ -994,8 +999,8 @@
         <button class="mushaf-bar-btn" onclick="savePageBookmark()">🔖 حفظ</button>
         <span class="mushaf-page-num" id="mushaf-page-num"></span>
         <div style="display:flex;gap:4px;align-items:center">
-          <button class="mushaf-bar-btn" onclick="changeFontSize(-1)" style="padding:6px 10px;font-size:16px;font-weight:900">−</button>
-          <button class="mushaf-bar-btn" onclick="changeFontSize(1)" style="padding:6px 10px;font-size:16px;font-weight:900">+</button>
+          <button class="mushaf-bar-btn" onclick="changeFontSize(-1)" style="font-size:clamp(14px,4vw,18px);font-weight:900">−</button>
+          <button class="mushaf-bar-btn" onclick="changeFontSize(1)" style="font-size:clamp(14px,4vw,18px);font-weight:900">+</button>
         </div>
         <button class="mushaf-bar-btn" onclick="goToBookmark()">📖 العلامة</button>
       </div>
@@ -2586,7 +2591,14 @@ function openPage(pageIndex, surahId) {
 
 function renderCurrentPage() {
   const container = document.getElementById('mushaf-container');
-  container.innerHTML = `<div class="mushaf-page" id="page-current">${renderPage(currentPage)}</div>`;
+  const bm = JSON.parse(localStorage.getItem('werd_quran_bookmark') || 'null');
+  const isBookmarked = bm && bm.page === currentPage + 1;
+  const ribbon = isBookmarked
+    ? `<div style="position:absolute;top:0;left:10px;z-index:10;pointer-events:none">
+        <div style="width:22px;height:44px;background:#dc2626;clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%);box-shadow:1px 1px 4px rgba(0,0,0,.3)"></div>
+       </div>`
+    : '';
+  container.innerHTML = `<div class="mushaf-page" id="page-current" style="position:relative">${ribbon}${renderPage(currentPage)}</div>`;
   document.getElementById('mushaf-page-num').textContent = toArabicNum(currentPage + 1) + ' / ' + toArabicNum(604);
   autoFitText();
 }
