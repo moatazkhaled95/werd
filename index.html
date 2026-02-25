@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
   <title>الْوِرْدُ الْقُرْآنِيُّ</title>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#1a5e3a" />
@@ -646,9 +646,6 @@
     <button class="ham-item" onclick="openProfile()">
       <span class="ham-icon">👤</span> ملفي الشخصي
     </button>
-    <button class="ham-item" onclick="closeMenu(); showQuranReader();">
-      <span class="ham-icon">📖</span> القرآن الكريم
-    </button>
     <button class="ham-item" onclick="closeMenu(); leaveDashboard && leaveDashboard();" id="ham-mygroups" style="display:none">
       <span class="ham-icon">👥</span> مجموعاتي
     </button>
@@ -1001,16 +998,16 @@
       <button class="ham-btn" onclick="openMenu(false)">☰</button>
       <h2>القرآن الكريم</h2>
     </div>
+    <div style="padding:8px 16px 6px;background:#f0fdfa;border-bottom:1px solid #ccfbf1;flex-shrink:0">
+      <button onclick="showMyGroups()" style="width:100%;padding:9px 14px;background:#fff;border:1.5px solid #2dd4bf;border-radius:12px;color:#0d9488;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">
+        <span>👥</span> مجموعاتي
+      </button>
+    </div>
     <div style="background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:8px 16px 0;flex-shrink:0">
       <div class="view-tabs">
         <button id="qtab-surah" class="view-tab active" onclick="switchQuranTab('surah')">السور</button>
         <button id="qtab-juz" class="view-tab" onclick="switchQuranTab('juz')">الأجزاء</button>
       </div>
-    </div>
-    <div style="padding:8px 16px;background:#f0fdfa;border-bottom:1px solid #ccfbf1;flex-shrink:0">
-      <button onclick="showMyGroups()" style="width:100%;padding:9px 14px;background:#fff;border:1.5px solid #2dd4bf;border-radius:12px;color:#0d9488;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">
-        <span>👥</span> مجموعاتي
-      </button>
     </div>
     <div class="screen-body" id="quran-surah-list">
       <div style="text-align:center;padding:40px;color:#6b7280">جاري التحميل...</div>
@@ -1042,9 +1039,9 @@
     <div class="dash-header">
       <button class="back-btn" onclick="leaveDashboard()">← مجموعاتي</button>
       <button class="ham-btn" onclick="openMenu(true)">☰</button>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <h2 id="dash-group-name" style="background:linear-gradient(135deg,rgba(251,191,36,.35),rgba(245,158,11,.25));border:1.5px solid rgba(251,191,36,.6);border-radius:12px;padding:4px 14px;display:inline-block">مجموعتي</h2>
-        <button id="edit-group-name-btn" onclick="toggleEditGroupName()" style="display:none;background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1">✏️</button>
+      <div style="padding:0 56px;text-align:center">
+        <h2 id="dash-group-name" style="background:linear-gradient(135deg,rgba(251,191,36,.35),rgba(245,158,11,.25));border:1.5px solid rgba(251,191,36,.6);border-radius:12px;padding:4px 14px;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">مجموعتي</h2>
+        <button id="edit-group-name-btn" onclick="toggleEditGroupName()" style="display:none;background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;vertical-align:middle">✏️</button>
       </div>
       <div id="edit-group-name-form" style="display:none;margin-top:6px">
         <div style="display:flex;gap:8px">
