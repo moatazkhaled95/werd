@@ -1314,6 +1314,11 @@ function showMainMenu() {
 }
 
 function showQuranReader() {
+  // Restore app zoom that was frozen while reading
+  if (_savedAppZoom !== null) {
+    document.documentElement.style.zoom = _savedAppZoom;
+    _savedAppZoom = null;
+  }
   show('quran-reader');
   // Always return to surah tab
   document.getElementById('quran-surah-list').style.display = '';
@@ -2716,9 +2721,13 @@ let touchStartX = 0, touchStartY = 0;
 let touchDeltaX = 0;
 let swiping = false, swipeDir = null; // 'h'=horizontal, 'v'=vertical
 
+let _savedAppZoom = null;
 function openPage(pageIndex, surahId) {
   currentPage = Math.max(0, Math.min(603, pageIndex));
   if (surahId) lastOpenedSurahId = surahId;
+  // Isolate Quran reading from app zoom: freeze doc zoom at 1
+  _savedAppZoom = document.documentElement.style.zoom || '1';
+  document.documentElement.style.zoom = 1;
   show('quran-page-view');
   renderCurrentPage();
   setupSwipe();
@@ -2726,6 +2735,11 @@ function openPage(pageIndex, surahId) {
 }
 
 function renderCurrentPage() {
+  // Track which surah we're reading so the list scrolls back to it
+  if (quranPages && quranPages[currentPage]) {
+    const firstAyah = quranPages[currentPage].ayahs[0];
+    if (firstAyah) lastOpenedSurahId = firstAyah.surahId;
+  }
   const container = document.getElementById('mushaf-container');
   const bm = JSON.parse(localStorage.getItem('werd_quran_bookmark') || 'null');
   const isBookmarked = bm && bm.page === currentPage + 1;
