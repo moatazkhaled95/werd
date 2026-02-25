@@ -338,7 +338,7 @@
     .member-avatar.me { background: linear-gradient(135deg, #f59e0b, #d97706); }
     .member-info { flex: 1; }
     .member-name-row { display: flex; justify-content: space-between; align-items: center; }
-    .member-name { font-size: 14px; font-weight: 600; color: #1f2937; }
+    .member-name { font-size: 14px; font-weight: 800; color: #1f2937; }
     .member-count { font-size: 12px; color: #0d9488; font-weight: 700; }
     .member-bar-bg { background: #e5e7eb; border-radius: 99px; height: 5px; margin-top: 4px; overflow: hidden; }
     .member-bar-fill { background: #2dd4bf; height: 100%; border-radius: 99px; transition: width .4s; }
@@ -609,6 +609,21 @@
 </head>
 <body>
 <div id="goal-banner"></div>
+
+<!-- ══════════ Member Action Sheet ══════════ -->
+<div id="member-action-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000" onclick="closeMemberActions()"></div>
+<div id="member-action-sheet" style="display:none;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:428px;background:#fff;border-radius:20px 20px 0 0;z-index:2001;padding-bottom:env(safe-area-inset-bottom,0)">
+  <div style="padding:24px 20px 8px;text-align:center">
+    <div id="member-action-avatar" style="width:60px;height:60px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:800"></div>
+    <p id="member-action-name" style="font-size:18px;font-weight:800;color:#1f2937;margin-bottom:4px"></p>
+    <p style="font-size:12px;color:#9ca3af;margin-bottom:16px">عضو في المجموعة</p>
+  </div>
+  <div style="padding:0 16px 20px;display:flex;flex-direction:column;gap:10px">
+    <button onclick="kickMember()" style="width:100%;padding:14px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:14px;color:#dc2626;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">طرد العضو 🚫</button>
+    <button onclick="makeMemberAdmin()" style="width:100%;padding:14px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:14px;color:#15803d;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">تعيين مشرفاً 👑</button>
+    <button onclick="closeMemberActions()" style="width:100%;padding:14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:14px;color:#6b7280;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">إلغاء</button>
+  </div>
+</div>
 
 <!-- ══════════ Hamburger Drawer ══════════ -->
 <div id="ham-overlay" class="ham-overlay" onclick="closeMenu()"></div>
@@ -1101,6 +1116,22 @@ const unitLabels = {
   juz:  'جزء',  'juz-quarter':  'ربع جزء',  'juz-half':  'نصف جزء',  'juz-third':  'ثلاثة أرباع جزء',
   kahf: 'سورة الكهف',
 };
+
+const MEMBER_COLORS = [
+  'linear-gradient(135deg,#6366f1,#8b5cf6)',
+  'linear-gradient(135deg,#ec4899,#db2777)',
+  'linear-gradient(135deg,#3b82f6,#2563eb)',
+  'linear-gradient(135deg,#ef4444,#dc2626)',
+  'linear-gradient(135deg,#10b981,#059669)',
+  'linear-gradient(135deg,#f97316,#ea580c)',
+  'linear-gradient(135deg,#8b5cf6,#7c3aed)',
+  'linear-gradient(135deg,#0ea5e9,#0284c7)',
+];
+
+let _actionMemberId   = null;
+let _actionMemberUserId = null;
+let _actionMemberName = null;
+let _actionMemberColor = null;
 
 const state = {
   user: null, profile: null,
@@ -2030,15 +2061,20 @@ function renderMembers(members) {
         </div>`;
     });
   } else {
-    members.sort((a, b) => b.pages_today - a.pages_today).forEach(m => {
+    members.sort((a, b) => b.pages_today - a.pages_today).forEach((m, idx) => {
       const pct  = Math.min(100, (m.pages_today / goal) * 100);
       const done = m.pages_today >= goal;
       const isMe = m.id === state.memberId;
-      const canRemove = isCreator && !isMe;
+      const color = isMe
+        ? 'linear-gradient(135deg,#f59e0b,#d97706)'
+        : MEMBER_COLORS[idx % MEMBER_COLORS.length];
+      const canTap = isCreator && !isMe;
+      const tapAttr = canTap
+        ? `onclick="showMemberActions('${m.id}','${m.user_id}','${m.name.replace(/'/g, "\\'")}',${idx})"  style="cursor:pointer"`
+        : '';
       list.innerHTML += `
-        <div class="member-item">
-          ${canRemove ? `<button onclick="removeMember('${m.id}')" style="background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;padding:4px 8px;line-height:1;order:-1">×</button>` : ''}
-          <div class="member-avatar ${isMe ? 'me' : ''}">${m.name[0]}</div>
+        <div class="member-item" ${tapAttr}>
+          <div class="member-avatar" style="background:${color}">${m.name[0]}</div>
           <div class="member-info">
             <div class="member-name-row">
               <span class="member-name">${m.name}${isMe ? ' (أنت)' : ''}</span>
@@ -2046,7 +2082,7 @@ function renderMembers(members) {
             </div>
             <div class="member-bar-bg"><div class="member-bar-fill" style="width:${pct}%"></div></div>
           </div>
-          <div class="member-check">${done ? '✅' : ''}</div>
+          <div class="member-check">${done ? '✅' : (canTap ? '<span style="color:#9ca3af;font-size:14px">⋮</span>' : '')}</div>
         </div>`;
     });
   }
@@ -2057,6 +2093,51 @@ async function removeMember(memberId) {
   const { error } = await db.from('members').delete().eq('id', memberId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
   toast('تم إزالة العضو ✓');
+  await loadMembers();
+}
+
+function showMemberActions(memberId, memberUserId, memberName, colorIdx) {
+  _actionMemberId    = memberId;
+  _actionMemberUserId = memberUserId;
+  _actionMemberName  = memberName;
+  _actionMemberColor = MEMBER_COLORS[colorIdx % MEMBER_COLORS.length];
+  const avatar = document.getElementById('member-action-avatar');
+  avatar.style.background = _actionMemberColor;
+  avatar.textContent = memberName[0];
+  document.getElementById('member-action-name').textContent = memberName;
+  document.getElementById('member-action-overlay').style.display = 'block';
+  document.getElementById('member-action-sheet').style.display  = 'block';
+}
+
+function closeMemberActions() {
+  document.getElementById('member-action-overlay').style.display = 'none';
+  document.getElementById('member-action-sheet').style.display  = 'none';
+  _actionMemberId = _actionMemberUserId = _actionMemberName = _actionMemberColor = null;
+}
+
+async function kickMember() {
+  if (!_actionMemberId) return;
+  const id   = _actionMemberId;
+  const name = _actionMemberName;
+  closeMemberActions();
+  if (!confirm(`هل تريد طرد ${name} من المجموعة؟`)) return;
+  const { error } = await db.from('members').delete().eq('id', id);
+  if (error) { toast('حدث خطأ: ' + error.message); return; }
+  toast(`تم طرد ${name} ✓`);
+  await loadMembers();
+}
+
+async function makeMemberAdmin() {
+  if (!_actionMemberUserId) return;
+  const userId = _actionMemberUserId;
+  const name   = _actionMemberName;
+  closeMemberActions();
+  if (!confirm(`هل تريد تعيين ${name} مشرفاً للمجموعة؟\nستفقد صلاحيات الإشراف.`)) return;
+  const { error } = await db.from('groups').update({ created_by: userId }).eq('id', state.groupId);
+  if (error) { toast('حدث خطأ: ' + error.message); return; }
+  toast(`تم تعيين ${name} مشرفاً 👑`);
+  const { data: updatedGroup } = await db.from('groups').select('*').eq('id', state.groupId).single();
+  if (updatedGroup) state.groupData = updatedGroup;
   await loadMembers();
 }
 
