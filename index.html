@@ -610,10 +610,13 @@
 <body>
 <div id="goal-banner"></div>
 
-<!-- ══════════ Floating Back Button ══════════ -->
-<div id="float-back-btn" style="display:none;position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:16px;z-index:1500;pointer-events:auto">
+<!-- ══════════ Floating Quran Buttons (quran-reader only) ══════════ -->
+<div id="float-back-btn" style="display:none;position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:16px;z-index:1500;pointer-events:auto;flex-direction:column;gap:8px;align-items:flex-start">
   <button onclick="floatGoBack()" style="background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;border:none;border-radius:99px;padding:10px 22px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 18px rgba(15,118,110,.4);display:flex;align-items:center;gap:6px;white-space:nowrap">
     ← رجوع
+  </button>
+  <button onclick="goToBookmark()" style="background:linear-gradient(135deg,#92400e,#b45309);color:#fff;border:none;border-radius:99px;padding:10px 22px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 18px rgba(146,64,14,.4);display:flex;align-items:center;gap:6px;white-space:nowrap">
+    🔖 العلامة
   </button>
 </div>
 
@@ -1381,18 +1384,13 @@ async function showMyGroups() {
       const unit = unitLabels[group.goal_unit] || 'صفحة';
       const count = memberCounts[group.id] || 0;
       return `
-      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
-        <div onclick="enterGroup('${group.id}','${memberId}')" style="flex:1;cursor:pointer;min-width:0">
-          <div style="font-weight:600;font-size:15px;color:#111827">${group.name}</div>
-          <div style="font-size:12px;color:#9ca3af;margin-top:3px">${isCreator ? '👑 منشئ' : '👤 عضو'} · ${count} عضو · هدف ${group.goal_amount} ${unit}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <button onclick="event.stopPropagation();${isCreator ? `deleteGroup('${group.id}')` : `leaveGroupFromList('${memberId}')`}"
-            style="background:none;border:1px solid ${isCreator ? '#fee2e2' : '#fef3c7'};color:${isCreator ? '#ef4444' : '#d97706'};font-size:12px;border-radius:8px;padding:4px 10px;cursor:pointer;white-space:nowrap">
-            ${isCreator ? '🗑 حذف' : '↩ مغادرة'}
-          </button>
-          <span onclick="enterGroup('${group.id}','${memberId}')" style="color:#0d9488;font-size:20px;cursor:pointer">←</span>
-        </div>
+      <div onclick="enterGroup('${group.id}','${memberId}')" style="background:linear-gradient(135deg,#78350f,#92400e);border-radius:16px;padding:20px 18px;margin-bottom:12px;cursor:pointer;position:relative;box-shadow:0 4px 14px rgba(120,53,15,.35)">
+        <div style="font-weight:800;font-size:18px;color:#fff;margin-bottom:6px">${group.name}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.75)">${isCreator ? '👑 منشئ' : '👤 عضو'} · ${count} عضو · هدف ${group.goal_amount} ${unit}</div>
+        <button onclick="event.stopPropagation();${isCreator ? `deleteGroup('${group.id}')` : `leaveGroupFromList('${memberId}')`}"
+          style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.85);font-size:11px;border-radius:8px;padding:4px 10px;cursor:pointer;font-family:inherit;white-space:nowrap">
+          ${isCreator ? '🗑 حذف' : '↩ مغادرة'}
+        </button>
       </div>`;
     }).join('');
   }
@@ -2447,7 +2445,7 @@ function updateFloatBack() {
   const btn = document.getElementById('float-back-btn');
   if (!btn) return;
   const active = document.querySelector('.screen.active');
-  btn.style.display = (active && active.id === 'quran-reader') ? 'block' : 'none';
+  btn.style.display = (active && active.id === 'quran-reader') ? 'flex' : 'none';
 }
 
 function floatGoBack() {
