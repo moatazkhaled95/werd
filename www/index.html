@@ -769,7 +769,7 @@
         <div class="form-group">
           <label>كلمة المرور الجديدة</label>
           <div style="position:relative">
-            <input type="password" id="reset-new-password" placeholder="كلمة المرور (6 أحرف على الأقل)" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
+            <input type="password" id="reset-new-password" placeholder="8+ أحرف، كبيرة وصغيرة، رقم، ورمز" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
             <button type="button" onclick="togglePass('reset-new-password',this)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:0;line-height:1">👁</button>
           </div>
         </div>
@@ -1302,6 +1302,15 @@ function togglePass(id, btn) {
   btn.style.opacity = isText ? '0.5' : '1';
 }
 
+function validatePassword(p) {
+  if (p.length < 8)              return 'كلمة المرور يجب أن تكون ٨ أحرف على الأقل';
+  if (!/[a-z]/.test(p))         return 'يجب أن تحتوي على حرف صغير (a-z)';
+  if (!/[A-Z]/.test(p))         return 'يجب أن تحتوي على حرف كبير (A-Z)';
+  if (!/[0-9]/.test(p))         return 'يجب أن تحتوي على رقم (0-9)';
+  if (!/[^a-zA-Z0-9]/.test(p))  return 'يجب أن تحتوي على رمز (!@#$...)';
+  return null;
+}
+
 async function signUp() {
   const firstName = document.getElementById('signup-firstname').value.trim();
   const email    = document.getElementById('signup-email').value.trim();
@@ -1314,11 +1323,8 @@ async function signUp() {
   if (!firstName)    return showErr(errEl, 'أدخل اسمك');
   if (!email)        return showErr(errEl, 'أدخل البريد الإلكتروني');
   if (email !== emailConfirm) return showErr(errEl, 'البريد الإلكتروني غير متطابق');
-  if (password.length < 6) return showErr(errEl, 'كلمة المرور يجب أن تكون ٦ أحرف على الأقل');
-  if (!/[a-z]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على حرف صغير (a-z)');
-  if (!/[A-Z]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على حرف كبير (A-Z)');
-  if (!/[0-9]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على رقم (0-9)');
-  if (!/[^a-zA-Z0-9]/.test(password)) return showErr(errEl, 'كلمة المرور يجب أن تحتوي على رمز (!@#$...)');
+  const pwErr = validatePassword(password);
+  if (pwErr) return showErr(errEl, pwErr);
   if (password !== passwordConfirm) return showErr(errEl, 'كلمة المرور غير متطابقة');
 
   const { data, error } = await db.auth.signUp({
@@ -1467,7 +1473,8 @@ async function submitInAppPasswordReset() {
   const errEl = document.getElementById('reset-error');
   const btn = document.getElementById('reset-submit-btn');
   errEl.classList.remove('show');
-  if (!pass || pass.length < 6) return showErr(errEl, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+  const pwErr = validatePassword(pass);
+  if (pwErr) return showErr(errEl, pwErr);
   if (pass !== confirm) return showErr(errEl, 'كلمتا المرور غير متطابقتين');
   btn.disabled = true;
   btn.textContent = 'جارٍ الحفظ...';
@@ -1518,7 +1525,8 @@ async function saveNewPassword() {
   const pass = document.getElementById('profile-new-password').value;
   const confirm = document.getElementById('profile-confirm-password').value;
   if (!pass) return showErr(errEl, 'أدخل كلمة المرور الجديدة');
-  if (pass.length < 6) return showErr(errEl, 'كلمة المرور يجب أن تكون ٦ أحرف على الأقل');
+  const pwErr = validatePassword(pass);
+  if (pwErr) return showErr(errEl, pwErr);
   if (pass !== confirm) return showErr(errEl, 'كلمة المرور غير متطابقة');
   const { error } = await db.auth.updateUser({ password: pass });
   if (error) return showErr(errEl, error.message);
