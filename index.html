@@ -503,7 +503,9 @@
     #quran-page-view { background: transparent !important; }
     #quran-page-view .screen-body { padding: 0 !important; overflow: hidden !important; }
     .mushaf-container {
-      width: 100%; height: calc(100vh - 50px - env(safe-area-inset-bottom, 0px));
+      width: 100%;
+      height: calc(100vh - 50px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+      margin-top: env(safe-area-inset-top, 0px);
       overflow: hidden; position: relative; touch-action: none;
     }
     .mushaf-page {
