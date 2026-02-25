@@ -393,7 +393,7 @@
     /* ── All screens transparent over background ── */
     #app, .screen, #auth, #loading, #dashboard,
     #create-group, #join-group, #choose-action, #complete-profile, #signin, #signup,
-    #verify-email, #main-menu, #quran-reader, #quran-page-view, #forgot-password, #profile-screen { background: transparent !important; }
+    #verify-email, #main-menu, #quran-reader, #quran-page-view, #forgot-password, #profile-screen, #reset-password { background: transparent !important; }
     .screen-header, .dash-header { background: transparent !important; overflow: hidden; }
     .screen-header::after, .dash-header::after { display: none; }
     .screen-body, .dash-body { background: transparent; }
@@ -758,6 +758,34 @@
     </div>
   </div>
 
+  <!-- ══════════ Reset Password Screen (deep link / in-app) ══════════ -->
+  <div id="reset-password" class="screen">
+    <div class="screen-header">
+      <h2>تعيين كلمة مرور جديدة</h2>
+      <p>أدخل كلمة المرور الجديدة وتأكيدها</p>
+    </div>
+    <div class="screen-body">
+      <div class="card" style="gap:14px;display:flex;flex-direction:column">
+        <div class="form-group">
+          <label>كلمة المرور الجديدة</label>
+          <div style="position:relative">
+            <input type="password" id="reset-new-password" placeholder="كلمة المرور (6 أحرف على الأقل)" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
+            <button type="button" onclick="togglePass('reset-new-password',this)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:0;line-height:1">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>تأكيد كلمة المرور</label>
+          <div style="position:relative">
+            <input type="password" id="reset-confirm-password" placeholder="أعد كتابة كلمة المرور" style="direction:ltr;text-align:left;width:100%;padding-left:40px" />
+            <button type="button" onclick="togglePass('reset-confirm-password',this)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:0;line-height:1">👁</button>
+          </div>
+        </div>
+        <div id="reset-error" class="err-text"></div>
+      </div>
+      <button class="btn-primary" id="reset-submit-btn" onclick="submitInAppPasswordReset()">حفظ كلمة المرور ←</button>
+    </div>
+  </div>
+
   <!-- ══════════ Profile Screen ══════════ -->
   <div id="profile-screen" class="screen">
     <div class="screen-header">
@@ -1077,7 +1105,13 @@ async function handleDeepLink(url) {
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
-    if (accessToken && refreshToken) {
+    const type = params.get('type');
+    if (!accessToken) return;
+    if (type === 'recovery') {
+      // Password reset flow — set session silently then show reset screen
+      await db.auth.setSession({ access_token: accessToken, refresh_token: refreshToken || '' });
+      show('reset-password');
+    } else if (refreshToken) {
       await db.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
       // onAuthStateChange will fire and handle login
     }
@@ -1416,11 +1450,33 @@ async function sendPasswordReset() {
   const errEl = document.getElementById('forgot-error');
   errEl.classList.remove('show');
   if (!email) return showErr(errEl, 'أدخل بريدك الإلكتروني');
-  const { error } = await db.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/reset-password',
-  });
+  // On Android (Capacitor), use custom scheme so the link opens inside the app
+  const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
+  const redirectTo = isNative
+    ? 'com.werd.quran://reset-password'
+    : 'https://werd-mu.vercel.app/reset-password';
+  const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) return showErr(errEl, error.message);
   toast('تم إرسال رابط الاستعادة إلى بريدك ✓');
+  show('signin');
+}
+
+async function submitInAppPasswordReset() {
+  const pass = document.getElementById('reset-new-password').value;
+  const confirm = document.getElementById('reset-confirm-password').value;
+  const errEl = document.getElementById('reset-error');
+  const btn = document.getElementById('reset-submit-btn');
+  errEl.classList.remove('show');
+  if (!pass || pass.length < 6) return showErr(errEl, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+  if (pass !== confirm) return showErr(errEl, 'كلمتا المرور غير متطابقتين');
+  btn.disabled = true;
+  btn.textContent = 'جارٍ الحفظ...';
+  const { error } = await db.auth.updateUser({ password: pass });
+  btn.disabled = false;
+  btn.textContent = 'حفظ كلمة المرور ←';
+  if (error) return showErr(errEl, error.message || 'حدث خطأ. يرجى المحاولة مرة أخرى.');
+  await db.auth.signOut();
+  toast('تم تغيير كلمة المرور بنجاح ✓');
   show('signin');
 }
 
