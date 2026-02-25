@@ -88,7 +88,7 @@
     #signin, #signup { background: #f9fafb; }
     .screen-header {
       background: linear-gradient(135deg, #134e4a, #0f766e);
-      padding: 56px 24px 24px;
+      padding: calc(56px + env(safe-area-inset-top, 0px)) 24px 24px;
       color: #fff; position: relative;
     }
     .screen-header h2 { font-size: 22px; font-weight: 700; }
@@ -262,7 +262,7 @@
     /* ── Dashboard ── */
     .dash-header {
       background: linear-gradient(135deg, #134e4a, #0f766e);
-      padding: 52px 20px 20px; color: #fff; position: relative;
+      padding: calc(52px + env(safe-area-inset-top, 0px)) 20px 20px; color: #fff; position: relative;
     }
     .dash-header h2 { font-size: 20px; font-weight: 800; }
     .dash-header .sub { font-size: 15px; color: #fca5a5; margin-top: 2px; font-weight: 800; }
