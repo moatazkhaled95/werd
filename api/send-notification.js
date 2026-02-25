@@ -1,5 +1,17 @@
 const webpush = require('web-push');
 const { createClient } = require('@supabase/supabase-js');
+let admin;
+
+function getFirebaseAdmin() {
+  if (admin) return admin;
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
+  const firebase = require('firebase-admin');
+  if (!firebase.apps.length) {
+    firebase.initializeApp({ credential: firebase.credential.cert(serviceAccount) });
+  }
+  admin = firebase;
+  return admin;
+}
 
 module.exports = async (req, res) => {
   try {
@@ -17,24 +29,7 @@ module.exports = async (req, res) => {
       process.env.SUPABASE_SERVICE_KEY
     );
 
-    webpush.setVapidDetails(
-      'mailto:moataz_95@windowslive.com',
-      process.env.VAPID_PUBLIC_KEY,
-      process.env.VAPID_PRIVATE_KEY
-    );
-
-    // Get all push subscriptions for this group except the sender
-    const { data: subs, error } = await supabase
-      .from('push_subscriptions')
-      .select('subscription')
-      .eq('group_id', groupId)
-      .neq('user_id', senderUserId);
-
-    if (error) {
-      return res.status(500).json({ error: error.message });
-    }
-
-    // Build message based on type
+    // Build message body based on type
     let body;
     switch (type) {
       case 'goal':
@@ -50,28 +45,80 @@ module.exports = async (req, res) => {
         body = `🎉 ${senderName} أتمّ الهدف في ${groupName}!`;
     }
 
-    const payload = JSON.stringify({
-      title: 'الْوِرْدُ الْقُرْآنِيُّ',
-      body,
-    });
+    const title = 'الْوِرْدُ الْقُرْآنِيُّ';
+    let fcmSent = 0, webSent = 0;
 
-    const results = await Promise.allSettled(
-      (subs || []).map(row => {
-        const sub = row.subscription;
-        return webpush.sendNotification(sub, payload).catch(err => {
-          if (err.statusCode === 410 || err.statusCode === 404) {
-            supabase
-              .from('push_subscriptions')
-              .delete()
-              .eq('subscription', sub)
-              .then(() => {});
-          }
-        });
-      })
-    );
+    // ── FCM (Android native app) ──────────────────────────────────────────────
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      try {
+        const { data: fcmRows } = await supabase
+          .from('fcm_tokens')
+          .select('token')
+          .eq('group_id', groupId)
+          .neq('user_id', senderUserId);
 
-    const sent = results.filter(r => r.status === 'fulfilled').length;
-    res.status(200).json({ sent, total: subs?.length || 0 });
+        const tokens = (fcmRows || []).map(r => r.token).filter(Boolean);
+        if (tokens.length > 0) {
+          const firebase = getFirebaseAdmin();
+          const response = await firebase.messaging().sendEachForMulticast({
+            tokens,
+            notification: { title, body },
+            android: {
+              notification: {
+                sound: 'default',
+                priority: 'HIGH',
+              },
+            },
+          });
+          fcmSent = response.successCount;
+
+          // Clean up expired tokens
+          response.responses.forEach((r, i) => {
+            if (!r.success &&
+                (r.error?.code === 'messaging/registration-token-not-registered' ||
+                 r.error?.code === 'messaging/invalid-registration-token')) {
+              supabase.from('fcm_tokens').delete().eq('token', tokens[i]).then(() => {});
+            }
+          });
+        }
+      } catch (e) {
+        console.error('FCM send error:', e);
+      }
+    }
+
+    // ── Web Push (PWA browsers) ────────────────────────────────────────────────
+    if (process.env.VAPID_PRIVATE_KEY && process.env.VAPID_PUBLIC_KEY) {
+      try {
+        webpush.setVapidDetails(
+          'mailto:moataz_95@windowslive.com',
+          process.env.VAPID_PUBLIC_KEY,
+          process.env.VAPID_PRIVATE_KEY
+        );
+
+        const { data: subs } = await supabase
+          .from('push_subscriptions')
+          .select('subscription')
+          .eq('group_id', groupId)
+          .neq('user_id', senderUserId);
+
+        const payload = JSON.stringify({ title, body });
+        const results = await Promise.allSettled(
+          (subs || []).map(row => {
+            const sub = row.subscription;
+            return webpush.sendNotification(sub, payload).catch(err => {
+              if (err.statusCode === 410 || err.statusCode === 404) {
+                supabase.from('push_subscriptions').delete().eq('subscription', sub).then(() => {});
+              }
+            });
+          })
+        );
+        webSent = results.filter(r => r.status === 'fulfilled').length;
+      } catch (e) {
+        console.error('Web push error:', e);
+      }
+    }
+
+    res.status(200).json({ fcmSent, webSent });
   } catch (e) {
     console.error('send-notification error:', e);
     res.status(500).json({ error: e.message || 'Internal server error' });

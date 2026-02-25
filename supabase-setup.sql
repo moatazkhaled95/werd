@@ -103,3 +103,17 @@ end $$;
 alter table members add column if not exists total_points int not null default 0;
 
 alter table members add column if not exists points_today int not null default 0;
+
+-- ── FCM Tokens (Android push notifications) ──────────────────────────────────
+create table if not exists fcm_tokens (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  group_id uuid references groups(id) on delete cascade,
+  token text not null,
+  created_at timestamptz default now(),
+  unique(user_id, group_id)
+);
+alter table fcm_tokens enable row level security;
+drop policy if exists "users manage own fcm tokens" on fcm_tokens;
+create policy "users manage own fcm tokens" on fcm_tokens
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
