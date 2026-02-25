@@ -504,7 +504,7 @@
     #quran-page-view .screen-body { padding: 0 !important; overflow: hidden !important; }
     .mushaf-container {
       width: 100%; height: calc(100vh - 50px);
-      overflow: hidden; position: relative; touch-action: pan-x;
+      overflow: hidden; position: relative; touch-action: none;
     }
     .mushaf-page {
       width: 100%; height: 100%; position: absolute; top: 0;
@@ -557,6 +557,31 @@
       border-top: 1px solid #c9a96e; border-bottom: 1px solid #c9a96e;
       font-size: 12px; font-weight: 700; color: #8b6b3c;
     }
+
+    /* ── Juz navigation table ── */
+    #quran-juz-list { background: #f0ebe0; }
+    .juz-group { position: relative; margin-bottom: 6px; border: 1px solid #c8b99a; border-radius: 6px; overflow: hidden; }
+    .juz-group.juz-current .juz-header { background: linear-gradient(135deg, #6b4c1e, #8b6b3c); color: #fff; }
+    .juz-header {
+      text-align: center; background: #d9cdb8; padding: 8px 10px;
+      font-size: 14px; font-weight: 700; color: #3d2a00;
+      cursor: pointer; user-select: none;
+    }
+    .juz-ribbon {
+      position: absolute; top: 0; right: 4px; color: #dc2626;
+      font-size: 22px; line-height: 1; z-index: 2;
+    }
+    .juz-hizb-table { width: 100%; border-collapse: collapse; }
+    .juz-hizb-table td {
+      border: 1px solid #c8b99a; text-align: center; padding: 6px 2px;
+      font-size: 11px; color: #4a3520; background: #faf7f2; cursor: pointer;
+      user-select: none;
+    }
+    .juz-hizb-table td:active { background: #e8dcc8; }
+    .juz-hizb-table .juz-td-page { font-weight: 700; color: #3d2a00; font-size: 12px; min-width: 28px; }
+    .juz-hizb-table .juz-td-hizb { font-weight: 700; color: #3d2a00; font-size: 12px; }
+    .juz-hizb-table .juz-td-num  { font-weight: 700; color: #8b6b3c; font-size: 12px; min-width: 20px; background: #f0ebe0; cursor: default; }
+    .bookmark-surah { color: #dc2626; font-size: 14px; margin-right: 4px; }
 
     /* ── Fixed bottom bar ── */
     .mushaf-bottom-bar {
@@ -945,9 +970,17 @@
       <button class="back-btn" onclick="showMainMenu()">← القائمة</button>
       <button class="ham-btn" onclick="openMenu(false)">☰</button>
       <h2>القرآن الكريم</h2>
-      <p style="margin:4px 0 0;color:#99f6e4;font-size:13px">اختر سورة للقراءة</p>
+    </div>
+    <div style="background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:8px 16px 0;flex-shrink:0">
+      <div class="view-tabs">
+        <button id="qtab-surah" class="view-tab active" onclick="switchQuranTab('surah')">السور</button>
+        <button id="qtab-juz" class="view-tab" onclick="switchQuranTab('juz')">الأجزاء</button>
+      </div>
     </div>
     <div class="screen-body" id="quran-surah-list">
+      <div style="text-align:center;padding:40px;color:#6b7280">جاري التحميل...</div>
+    </div>
+    <div class="screen-body" id="quran-juz-list" style="display:none;padding:0">
       <div style="text-align:center;padding:40px;color:#6b7280">جاري التحميل...</div>
     </div>
   </div>
@@ -1123,6 +1156,28 @@ if (window.Capacitor?.Plugins?.App) {
   window.Capacitor.Plugins.App.addListener('appUrlOpen', (data) => {
     if (data.url) handleDeepLink(data.url);
   });
+  // Handle Android hardware back button
+  window.Capacitor.Plugins.App.addListener('backButton', () => {
+    const active = document.querySelector('.screen.active');
+    if (!active) return;
+    switch (active.id) {
+      case 'quran-page-view': showQuranReader(); break;
+      case 'quran-reader':   showMainMenu(); break;
+      case 'dashboard':      leaveDashboard(); break;
+      case 'choose-action':  showMainMenu(); break;
+      case 'create-group':   showMyGroups(); break;
+      case 'join-group':     showMyGroups(); break;
+      case 'profile-screen': showMainMenu(); break;
+      case 'forgot-password': show('signin'); break;
+      case 'reset-password': show('signin'); break;
+      case 'signin': show('auth'); break;
+      case 'signup': show('auth'); break;
+      case 'verify-email': show('auth'); break;
+      default:
+        // On main screens (auth, main-menu) minimize instead of exiting
+        window.Capacitor?.Plugins?.App?.minimizeApp?.();
+    }
+  });
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -1196,7 +1251,27 @@ function showMainMenu() {
 
 function showQuranReader() {
   show('quran-reader');
+  // Always return to surah tab
+  document.getElementById('quran-surah-list').style.display = '';
+  document.getElementById('quran-juz-list').style.display = 'none';
+  document.getElementById('qtab-surah').classList.add('active');
+  document.getElementById('qtab-juz').classList.remove('active');
   loadQuranSurahList();
+}
+
+function switchQuranTab(tab) {
+  if (tab === 'surah') {
+    document.getElementById('quran-surah-list').style.display = '';
+    document.getElementById('quran-juz-list').style.display = 'none';
+    document.getElementById('qtab-surah').classList.add('active');
+    document.getElementById('qtab-juz').classList.remove('active');
+  } else {
+    document.getElementById('quran-surah-list').style.display = 'none';
+    document.getElementById('quran-juz-list').style.display = '';
+    document.getElementById('qtab-surah').classList.remove('active');
+    document.getElementById('qtab-juz').classList.add('active');
+    loadJuzList();
+  }
 }
 
 async function showMyGroups() {
@@ -2322,6 +2397,7 @@ const juzPositions = {
 
 let quranPages = null;
 let currentPage = 0; // 0-indexed
+let lastOpenedSurahId = 0; // scroll back to this when returning to list
 
 async function loadQuranSurahList() {
   const container = document.getElementById('quran-surah-list');
@@ -2343,21 +2419,106 @@ async function loadQuranSurahList() {
       🔖 متابعة من صفحة ${bm.page}
     </button>`;
   }
+  // Build page-to-surah map for bookmark indicator
+  const bmPage = bm ? bm.page : -1;
   container.innerHTML = bmHtml + quranData.map((s, i) => {
     const startPage = quranPages.findIndex(p => p.ayahs.some(a => a.surahId === s.id));
+    const endPage = i < quranData.length - 1
+      ? quranPages.findIndex(p => p.ayahs.some(a => a.surahId === quranData[i + 1].id)) - 1
+      : 603;
+    const hasBm = bmPage >= startPage + 1 && bmPage <= endPage + 1;
     return `
-    <div class="card surah-card" onclick="openPage(${startPage})" style="cursor:pointer;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+    <div id="surah-card-${s.id}" class="card surah-card" onclick="openPage(${startPage},${s.id})" style="cursor:pointer;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
       <div style="width:36px;height:36px;border-radius:50%;background:#8b6b3c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">${s.id}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:16px;font-weight:700;color:#3d2a00">${s.name}</div>
+        <div style="font-size:16px;font-weight:700;color:#3d2a00">${hasBm ? '<span class="bookmark-surah">🔖</span>' : ''}${s.name}</div>
         <div style="font-size:12px;color:#7a6840;margin-top:2px">${s.type === 'meccan' ? 'مكية' : 'مدنية'} · ${s.total_verses} آية · صفحة ${startPage + 1}</div>
       </div>
     </div>`;
   }).join('');
+  // Scroll to last opened surah
+  if (lastOpenedSurahId) {
+    const el = document.getElementById('surah-card-' + lastOpenedSurahId);
+    if (el) setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 50);
+  }
 }
 
 function toArabicNum(n) {
   return String(n).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+}
+
+function buildHizbPages() {
+  if (!quranPages) return [];
+  // Map "surahId:ayahNum" → page index (0-based)
+  const ayahToPage = {};
+  quranPages.forEach((pg, pi) => {
+    pg.ayahs.forEach(a => {
+      const k = a.surahId + ':' + a.ayahNum;
+      if (ayahToPage[k] === undefined) ayahToPage[k] = pi;
+    });
+  });
+  // Walk hizbQuarters in insertion order to build 60 hizb entries
+  const hizbs = [];
+  let cur = null;
+  for (const [key, label] of Object.entries(hizbQuarters)) {
+    if (label.startsWith('حزب ')) {
+      cur = { num: parseInt(label.split(' ')[1]), pages: [ayahToPage[key] ?? null, null, null, null] };
+      hizbs.push(cur);
+    } else if (cur) {
+      if (label === 'ربع')            cur.pages[1] = ayahToPage[key] ?? null;
+      else if (label === 'نصف')       cur.pages[2] = ayahToPage[key] ?? null;
+      else if (label === 'ثلاثة أرباع') cur.pages[3] = ayahToPage[key] ?? null;
+    }
+  }
+  return hizbs;
+}
+
+function loadJuzList() {
+  const container = document.getElementById('quran-juz-list');
+  if (!quranPages) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:#6b7280">جاري تحميل البيانات...</div>';
+    return;
+  }
+  const hizbs = buildHizbPages();
+  const bm = JSON.parse(localStorage.getItem('werd_quran_bookmark') || 'null');
+  const bmPage = bm ? bm.page - 1 : -1; // 0-indexed
+  const juzStartPages = [0,21,41,61,81,101,120,141,161,181,200,221,241,261,281,301,321,341,361,381,401,421,441,461,481,501,521,541,561,581]; // 0-indexed
+  const arabicOrdinals = ['الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع','العاشر','الحادي عشر','الثاني عشر','الثالث عشر','الرابع عشر','الخامس عشر','السادس عشر','السابع عشر','الثامن عشر','التاسع عشر','العشرون','الحادي والعشرون','الثاني والعشرون','الثالث والعشرون','الرابع والعشرون','الخامس والعشرون','السادس والعشرون','السابع والعشرون','الثامن والعشرون','التاسع والعشرون','الثلاثون'];
+  let html = '';
+  for (let j = 0; j < 30; j++) {
+    const startP = juzStartPages[j];
+    const endP = j < 29 ? juzStartPages[j + 1] - 1 : 603;
+    const isCurrentJuz = bmPage >= startP && bmPage <= endP;
+    const hizb1 = hizbs[j * 2];
+    const hizb2 = hizbs[j * 2 + 1];
+    html += `<div class="juz-group${isCurrentJuz ? ' juz-current' : ''}">`;
+    if (isCurrentJuz) html += '<div class="juz-ribbon">🔖</div>';
+    html += `<div class="juz-header" onclick="openPage(${startP})">\u0627\u0644\u062C\u0632\u0621 ${arabicOrdinals[j]}</div>`;
+    html += renderHizbRow(hizb1, j + 1) + renderHizbRow(hizb2, j + 1);
+    html += '</div>';
+  }
+  container.innerHTML = html;
+  // Scroll to current juz
+  if (bmPage >= 0) {
+    const cur = container.querySelector('.juz-current');
+    if (cur) setTimeout(() => cur.scrollIntoView({ block: 'center', behavior: 'smooth' }), 50);
+  }
+}
+
+function renderHizbRow(hizb, juzNum) {
+  if (!hizb) return '';
+  const [p0, p1, p2, p3] = hizb.pages;
+  const cell = (p, lbl) => p !== null && p !== undefined
+    ? `<td onclick="openPage(${p})">${lbl}</td>`
+    : `<td>${lbl}</td>`;
+  return `<table class="juz-hizb-table"><tr>
+    <td class="juz-td-page" onclick="openPage(${p0 ?? 0})">${toArabicNum((p0 ?? 0) + 1)}</td>
+    ${cell(p3, 'ثلاثة أرباع')}
+    ${cell(p2, 'نصف')}
+    ${cell(p1, 'ربع')}
+    <td class="juz-td-hizb" onclick="openPage(${p0 ?? 0})">الحزب ${toArabicNum(hizb.num)}</td>
+    <td class="juz-td-num">${toArabicNum(juzNum)}</td>
+  </tr></table>`;
 }
 
 function renderPage(pageIndex) {
@@ -2410,12 +2571,13 @@ function getJuzForPage(pageIndex) {
   return juz;
 }
 
-let touchStartX = 0;
+let touchStartX = 0, touchStartY = 0;
 let touchDeltaX = 0;
-let swiping = false;
+let swiping = false, swipeDir = null; // 'h'=horizontal, 'v'=vertical
 
-function openPage(pageIndex) {
+function openPage(pageIndex, surahId) {
   currentPage = Math.max(0, Math.min(603, pageIndex));
+  if (surahId) lastOpenedSurahId = surahId;
   show('quran-page-view');
   renderCurrentPage();
   setupSwipe();
@@ -2451,8 +2613,10 @@ function setupSwipe() {
 
   container.ontouchstart = (e) => {
     touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
     touchDeltaX = 0;
     swiping = true;
+    swipeDir = null;
     // Remove any leftover next page
     const old = document.getElementById('page-next');
     if (old) old.remove();
@@ -2461,7 +2625,16 @@ function setupSwipe() {
 
   container.ontouchmove = (e) => {
     if (!swiping) return;
-    touchDeltaX = e.touches[0].clientX - touchStartX;
+    const dx = e.touches[0].clientX - touchStartX;
+    const dy = e.touches[0].clientY - touchStartY;
+    // Determine swipe direction once movement is clear
+    if (!swipeDir && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+      swipeDir = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+    }
+    // Only act on horizontal swipes; let vertical scroll pass through naturally
+    if (swipeDir !== 'h') return;
+    e.preventDefault(); // block page scroll during horizontal swipe
+    touchDeltaX = dx;
     const curPage = document.getElementById('page-current');
     if (curPage) {
       curPage.style.transition = 'none';
