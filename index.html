@@ -1368,6 +1368,9 @@ async function showMyGroups() {
     }
   });
 
+  // Sort groups by creation date (oldest first)
+  groups.sort((a, b) => new Date(a.group.created_at) - new Date(b.group.created_at));
+
   // Fetch member counts for all groups
   const groupIds = groups.map(g => g.group.id);
   const memberCounts = {};
@@ -2084,7 +2087,7 @@ function renderMembers(members) {
         </div>`;
     });
   } else {
-    members.sort((a, b) => b.pages_today - a.pages_today).forEach((m, idx) => {
+    members.sort((a, b) => a.name.localeCompare(b.name, 'ar')).forEach((m, idx) => {
       const pct  = Math.min(100, (m.pages_today / goal) * 100);
       const done = m.pages_today >= goal;
       const isMe = m.id === state.memberId;
