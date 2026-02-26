@@ -2651,7 +2651,7 @@ function renderAzkarPanel() {
     const btnBg    = done ? '#22c55e' : (inProgress ? '#f0fdfa' : '#fff');
     const btnColor = done ? '#fff'    : (inProgress ? '#0d9488' : '#9ca3af');
     return `
-      <div style="background:${done?'#f0fdf4':'#fff'};border:1.5px solid ${done?'#86efac':'#e5e7eb'};border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px">
+      <div onclick="tapAzkar('${key}',${a.count})" style="cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;background:${done?'#f0fdf4':'#fff'};border:1.5px solid ${done?'#86efac':'#e5e7eb'};border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px">
         <div style="flex:1">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
             <span style="font-size:13px;font-weight:800;color:#1f2937">${a.label}</span>
@@ -2659,15 +2659,15 @@ function renderAzkarPanel() {
           </div>
           <p style="font-size:15px;line-height:1.9;color:#374151;margin:0;font-family:'Amiri','Noto Naskh Arabic',serif">${a.text.replace(/\n/g,'<br>')}</p>
         </div>
-        <button onclick="tapAzkar('${key}',${a.count})" style="flex-shrink:0;min-width:44px;height:44px;border-radius:50%;border:2px solid ${btnBorder};background:${btnBg};color:${btnColor};font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">${btnLabel}</button>
+        <div style="flex-shrink:0;min-width:44px;height:44px;border-radius:50%;border:2px solid ${btnBorder};background:${btnBg};color:${btnColor};font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:inherit">${btnLabel}</div>
       </div>`;
   }).join('');
 
   el.innerHTML = `
-    <div style="padding:16px 16px 40px">
+    <div style="padding:16px 16px 80px">
       <div style="display:flex;gap:8px;margin-bottom:14px">
-        <button onclick="_azkarSection='morning';renderAzkarPanel()" style="flex:1;padding:9px;border-radius:10px;border:2px solid ${_azkarSection==='morning'?'#0d9488':'#e5e7eb'};background:${_azkarSection==='morning'?'#f0fdfa':'#fff'};color:${_azkarSection==='morning'?'#0d9488':'#6b7280'};font-weight:700;cursor:pointer;font-family:inherit">🌅 أذكار الصباح</button>
-        <button onclick="_azkarSection='evening';renderAzkarPanel()" style="flex:1;padding:9px;border-radius:10px;border:2px solid ${_azkarSection==='evening'?'#0d9488':'#e5e7eb'};background:${_azkarSection==='evening'?'#f0fdfa':'#fff'};color:${_azkarSection==='evening'?'#0d9488':'#6b7280'};font-weight:700;cursor:pointer;font-family:inherit">🌙 أذكار المساء</button>
+        <button onclick="event.stopPropagation();_azkarSection='morning';renderAzkarPanel()" style="flex:1;padding:9px;border-radius:10px;border:2px solid ${_azkarSection==='morning'?'#0d9488':'#e5e7eb'};background:${_azkarSection==='morning'?'#f0fdfa':'#fff'};color:${_azkarSection==='morning'?'#0d9488':'#6b7280'};font-weight:700;cursor:pointer;font-family:inherit">🌅 أذكار الصباح</button>
+        <button onclick="event.stopPropagation();_azkarSection='evening';renderAzkarPanel()" style="flex:1;padding:9px;border-radius:10px;border:2px solid ${_azkarSection==='evening'?'#0d9488':'#e5e7eb'};background:${_azkarSection==='evening'?'#f0fdfa':'#fff'};color:${_azkarSection==='evening'?'#0d9488':'#6b7280'};font-weight:700;cursor:pointer;font-family:inherit">🌙 أذكار المساء</button>
       </div>
       ${azkarCards}
     </div>`;
