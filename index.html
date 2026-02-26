@@ -924,9 +924,10 @@
   <!-- ══════════ My Groups ══════════ -->
   <div id="choose-action" class="screen">
     <div class="screen-header">
-      <button class="ham-btn" onclick="openMenu(false)">☰</button>
+      <button class="back-btn" onclick="showMainMenu()">← رجوع</button>
       <h2 id="choose-hi">أهلاً!</h2>
       <p style="margin:6px 0 0;color:#99f6e4;font-size:13px">مجموعاتي</p>
+      <button class="ham-btn" onclick="openMenu(false)">☰</button>
     </div>
     <div class="screen-body">
       <div id="my-groups-list" style="margin-bottom:16px"></div>
@@ -2333,7 +2334,7 @@ let _activeDhikr = 'سبحان الله';
 async function addTasbeeh(n) {
   const prev = state.myTasbeeh;
   const goal = state.groupData?.tasbeeh_goal || parseInt(localStorage.getItem('werd_personal_tasbeeh_goal') || '100');
-  if (n > 0) _dhikrCount += n;
+  if (n > 0) _dhikrCounts[_activeDhikr] = (_dhikrCounts[_activeDhikr] || 0) + n;
   state.myTasbeeh = Math.max(0, state.myTasbeeh + n);
   // Update UI immediately — don't wait for DB
   updateTasbeehUI();
@@ -2350,7 +2351,7 @@ async function addTasbeeh(n) {
 
 async function resetTasbeeh() {
   state.myTasbeeh = 0;
-  _dhikrCount = 0;
+  _dhikrCounts = {};
   updateTasbeehUI();
   if (state.memberId) {
     await db.from('members').update({ tasbeeh_today: 0 }).eq('id', state.memberId);
@@ -2363,7 +2364,7 @@ function updateTasbeehUI() {
   const done = state.myTasbeeh >= goal;
   // In-panel circle shows per-dhikr count
   const counter = document.getElementById('tasbeeh-counter-display');
-  if (counter) counter.textContent = _dhikrCount;
+  if (counter) counter.textContent = _dhikrCounts[_activeDhikr] || 0;
   // Progress text shows daily total
   const progressEl = document.getElementById('tasbeeh-panel-progress');
   if (progressEl) progressEl.textContent = 'المجموع اليوم: ' + state.myTasbeeh + ' / ' + goal + ' ' + (done ? '✅' : '');
@@ -2420,7 +2421,7 @@ function switchTasbeehAzkarTab(tab) {
   if (tab === 'azkar')   renderAzkarPanel();
 }
 
-let _dhikrCount = 0; // per-dhikr counter, resets on switch
+let _dhikrCounts = {}; // dhikr → count, persists until reset is pressed
 
 function renderTasbeehPanel() {
   const el = document.getElementById('ta-tasbeeh-panel');
@@ -2438,7 +2439,7 @@ function renderTasbeehPanel() {
         <div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:14px;text-align:center">📿 عداد التسبيح</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:18px">${presetBtns}</div>
         <div onclick="addTasbeeh(1)" style="width:150px;height:150px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);margin:0 auto 14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(13,148,136,.4);user-select:none;-webkit-tap-highlight-color:transparent">
-          <div id="tasbeeh-counter-display" style="font-size:58px;font-weight:900;color:#fff;line-height:1">${_dhikrCount}</div>
+          <div id="tasbeeh-counter-display" style="font-size:58px;font-weight:900;color:#fff;line-height:1">${_dhikrCounts[_activeDhikr]||0}</div>
           <div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:4px;text-align:center;padding:0 8px;line-height:1.3">${_activeDhikr}</div>
         </div>
         <div id="tasbeeh-panel-progress" style="text-align:center;color:#6b7280;font-size:13px;margin-bottom:10px">المجموع اليوم: ${state.myTasbeeh} / ${goal} ${tasbeehDone?'✅':''}</div>
@@ -2453,7 +2454,6 @@ function renderTasbeehPanel() {
 
 function switchDhikr(dhikr) {
   _activeDhikr = dhikr;
-  _dhikrCount = 0;
   renderTasbeehPanel();
 }
 
