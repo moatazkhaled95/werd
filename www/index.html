@@ -654,7 +654,7 @@
     <button class="ham-item" id="ham-quran" onclick="closeMenu(); showQuranReader();" style="display:none">
       <span class="ham-icon">📖</span> القرآن الكريم
     </button>
-    <button class="ham-item" id="ham-tasbeeh" onclick="closeMenu(); showTasbeehAzkarScreen();" style="display:none">
+    <button class="ham-item" id="ham-tasbeeh" onclick="closeMenu(); showTasbeehAzkarScreen('dashboard');" style="display:none">
       <span class="ham-icon">📿</span> تسبيح وأذكار
     </button>
     <button class="ham-item" onclick="closeMenu(); leaveDashboard && leaveDashboard();" id="ham-mygroups" style="display:none">
@@ -910,6 +910,10 @@
         <span class="menu-card-icon">📖</span>
         <span class="menu-card-label">القرآن الكريم</span>
       </button>
+      <button class="menu-card" onclick="showTasbeehAzkarScreen('main-menu')">
+        <span class="menu-card-icon">📿</span>
+        <span class="menu-card-label">تسبيح وأذكار</span>
+      </button>
       <button class="menu-card" onclick="showMyGroups()">
         <span class="menu-card-icon">👥</span>
         <span class="menu-card-label">مجموعاتي</span>
@@ -1051,7 +1055,7 @@
   <!-- ══════════ Tasbeeh & Azkar Screen ══════════ -->
   <div id="tasbeeh-azkar-screen" class="screen">
     <div class="screen-header">
-      <button class="back-btn" onclick="show('dashboard')">← رجوع</button>
+      <button class="back-btn" onclick="closeTasbeehAzkarScreen()">← رجوع</button>
       <h2>تسبيح وأذكار</h2>
     </div>
     <div style="background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:8px 16px 0;flex-shrink:0">
@@ -1287,7 +1291,7 @@ if (window.Capacitor?.Plugins?.App) {
     switch (active.id) {
       case 'quran-page-view':        showQuranReader(); break;
       case 'quran-reader':          showMainMenu(); break;
-      case 'tasbeeh-azkar-screen':  show('dashboard'); break;
+      case 'tasbeeh-azkar-screen':  closeTasbeehAzkarScreen(); break;
       case 'dashboard':             leaveDashboard(); break;
       case 'choose-action':   showMainMenu(); break;
       case 'create-group':    showMyGroups(); break;
@@ -2398,9 +2402,16 @@ async function saveTasbeehGoal(n) {
 let _azkarSection = 'morning'; // 'morning' | 'evening'
 let _taTab = 'tasbeeh'; // active sub-tab in tasbeeh-azkar screen
 
-function showTasbeehAzkarScreen() {
+let _tasbeehOrigin = 'main-menu';
+
+function showTasbeehAzkarScreen(from) {
+  _tasbeehOrigin = from || 'main-menu';
   show('tasbeeh-azkar-screen');
   switchTasbeehAzkarTab('tasbeeh');
+}
+
+function closeTasbeehAzkarScreen() {
+  show(_tasbeehOrigin);
 }
 
 function switchTasbeehAzkarTab(tab) {
@@ -2480,18 +2491,30 @@ function toggleAzkar(key) {
 function renderKhatmaTab() {
   const el = document.getElementById('quran-khatma-tab');
   if (!el) return;
+  const duas = [
+    'اللَّهُمَّ ارْحَمْنِي بالقُرْءَانِ وَاجْعَلهُ لِي إِمَاماً وَنُوراً وَهُدًى وَرَحْمَةً',
+    'اللَّهُمَّ ذَكِّرْنِي مِنْهُ مَانَسِيتُ وَعَلِّمْنِي مِنْهُ مَاجَهِلْتُ وَارْزُقْنِي تِلاَوَتَهُ آنَاءَ اللَّيْلِ وَأَطْرَافَ النَّهَارِ وَاجْعَلْهُ لِي حُجَّةً يَارَبَّ العَالَمِينَ',
+    'اللَّهُمَّ أَصْلِحْ لِي دِينِي الَّذِي هُوَ عِصْمَةُ أَمْرِي، وَأَصْلِحْ لِي دُنْيَايَ الَّتِي فِيهَا مَعَاشِي، وَأَصْلِحْ لِي آخِرَتِي الَّتِي فِيهَا مَعَادِي، وَاجْعَلِ الحَيَاةَ زِيَادَةً لِي فِي كُلِّ خَيْرٍ وَاجْعَلِ المَوْتَ رَاحَةً لِي مِنْ كُلِّ شَرٍّ',
+    'اللَّهُمَّ اجْعَلْ خَيْرَ عُمْرِي آخِرَهُ وَخَيْرَ عَمَلِي خَوَاتِمَهُ وَخَيْرَ أَيَّامِي يَوْمَ أَلْقَاكَ فِيهِ',
+    'اللَّهُمَّ إِنِّي أَسْأَلُكَ عِيشَةً هَنِيَّةً وَمِيتَةً سَوِيَّةً وَمَرَدًّا غَيْرَ مُخْزٍ وَلاَ فَاضِحٍ',
+    'اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَ المَسْأَلةِ وَخَيْرَ الدُّعَاءِ وَخَيْرَ النَّجَاحِ وَخَيْرَ العِلْمِ وَخَيْرَ العَمَلِ وَخَيْرَ الثَّوَابِ وَخَيْرَ الحَيَاةِ وَخيْرَ المَمَاتِ وَثَبِّتْنِي وَثَقِّلْ مَوَازِينِي وَحَقِّقْ إِيمَانِي وَارْفَعْ دَرَجَتِي وَتَقَبَّلْ صَلاَتِي وَاغْفِرْ خَطِيئَاتِي وَأَسْأَلُكَ العُلَا مِنَ الجَنَّةِ',
+    'اللَّهُمَّ إِنِّي أَسْأَلُكَ مُوجِبَاتِ رَحْمَتِكَ وَعَزَائِمِ مَغْفِرَتِكَ وَالسَّلاَمَةَ مِنْ كُلِّ إِثْمٍ وَالغَنِيمَةَ مِنْ كُلِّ بِرٍّ وَالفَوْزَ بِالجَنَّةِ وَالنَّجَاةَ مِنَ النَّارِ',
+    'اللَّهُمَّ أَحْسِنْ عَاقِبَتَنَا فِي الأُمُورِ كُلِّهَا، وَأجِرْنَا مِنْ خِزْيِ الدُّنْيَا وَعَذَابِ الآخِرَةِ',
+    'اللَّهُمَّ اقْسِمْ لَنَا مِنْ خَشْيَتِكَ مَاتَحُولُ بِهِ بَيْنَنَا وَبَيْنَ مَعْصِيَتِكَ وَمِنْ طَاعَتِكَ مَاتُبَلِّغُنَا بِهَا جَنَّتَكَ وَمِنَ اليَقِينِ مَاتُهَوِّنُ بِهِ عَلَيْنَا مَصَائِبَ الدُّنْيَا وَمَتِّعْنَا بِأَسْمَاعِنَا وَأَبْصَارِنَا وَقُوَّتِنَا مَاأَحْيَيْتَنَا وَاجْعَلْهُ الوَارِثَ مِنَّا وَاجْعَلْ ثَأْرَنَا عَلَى مَنْ ظَلَمَنَا وَانْصُرْنَا عَلَى مَنْ عَادَانَا وَلاَ تجْعَلْ مُصِيبَتَنَا فِي دِينِنَا وَلاَ تَجْعَلِ الدُّنْيَا أَكْبَرَ هَمِّنَا وَلَا مَبْلَغَ عِلْمِنَا وَلاَ تُسَلِّطْ عَلَيْنَا مَنْ لَا يَرْحَمُنَا',
+    'اللَّهُمَّ لَا تَدَعْ لَنَا ذَنْبًا إِلَّا غَفَرْتَهُ وَلَا هَمَّا إِلَّا فَرَّجْتَهُ وَلَا دَيْنًا إِلَّا قَضَيْتَهُ وَلَا حَاجَةً مِنْ حَوَائِجِ الدُّنْيَا وَالآخِرَةِ إِلَّا قَضَيْتَهَا يَاأَرْحَمَ الرَّاحِمِينَ',
+    'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ وَصَلَّى اللهُ عَلَى سَيِّدِنَا وَنَبِيِّنَا مُحَمَّدٍ وَعَلَى آلِهِ وَأَصْحَابِهِ الأَخْيَارِ وَسَلَّمَ تَسْلِيمًا كَثِيراً'
+  ];
+  const cards = duas.map(d => `
+    <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 1px 8px rgba(0,0,0,.05);border-right:4px solid #0d9488">
+      <p style="font-size:17px;line-height:2.1;color:#1f2937;margin:0;font-family:'Amiri','Noto Naskh Arabic',serif;text-align:right">${d}</p>
+    </div>`).join('');
   el.innerHTML = `
-    <div style="padding:20px 16px 80px;direction:rtl">
-      <div style="background:#fff;border-radius:18px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.06);text-align:center">
-        <div style="font-size:28px;margin-bottom:8px">🤲</div>
-        <div style="font-size:16px;font-weight:800;color:#1f2937;margin-bottom:16px">دعاء الختمة</div>
-        <p style="font-size:18px;line-height:2.2;color:#374151;font-family:'Amiri','Noto Naskh Arabic',serif;margin:0">
-          اللَّهُمَّ ارْحَمْنِي بِالْقُرْآنِ وَاجْعَلْهُ لِي إِمَامًا وَنُورًا وَهُدًى وَرَحْمَةً<br>
-          اللَّهُمَّ ذَكِّرْنِي مِنْهُ مَا نَسِيتُ وَعَلِّمْنِي مِنْهُ مَا جَهِلْتُ<br>
-          وَارْزُقْنِي تِلَاوَتَهُ آنَاءَ اللَّيْلِ وَأَطْرَافَ النَّهَارِ<br>
-          وَاجْعَلْهُ لِي حُجَّةً يَا رَبَّ الْعَالَمِينَ
-        </p>
+    <div style="padding:16px 16px 80px;direction:rtl">
+      <div style="text-align:center;margin-bottom:16px">
+        <span style="font-size:28px">🤲</span>
+        <div style="font-size:15px;font-weight:800;color:#0d9488;margin-top:4px">دعاء الختمة</div>
       </div>
+      ${cards}
     </div>`;
 }
 
