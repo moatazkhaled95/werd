@@ -1910,7 +1910,8 @@ function renderTasbeehGoalsForm() {
     const v = _tasbeehGoalsForm[d] || 0;
     return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
       <span style="flex:1;font-size:13px;font-weight:700;color:#1f2937">${d}</span>
-      <input type="number" min="0" value="${v}" placeholder="0"
+      <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="0"
+        value="${_tasbeehGoalsForm[d] || ''}"
         oninput="_tasbeehGoalsForm['${d}']=Math.max(0,parseInt(this.value)||0)"
         style="width:64px;padding:6px 8px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;font-weight:700;text-align:center;background:#f9fafb;color:#1f2937" />
     </div>`;
