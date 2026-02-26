@@ -2152,7 +2152,7 @@ async function openDashboard() {
 }
 
 async function loadMembers() {
-  const { data: members } = await db.from('members').select('*').eq('group_id', state.groupId);
+  const { data: members } = await db.from('members').select('id,name,user_id,pages_today,points_today,total_points,tasbeeh_today,tasbeeh_counts').eq('group_id', state.groupId);
   if (!members) return;
   const goal = state.groupData.goal_amount;
   const tasbeehGoal = state.groupData.tasbeeh_goal || 100;
@@ -2200,8 +2200,8 @@ function renderMembers(members) {
   document.getElementById('dash-sub').textContent = members.length + ' أعضاء · هدف ' + goal + ' ' + unit;
 
   const list = document.getElementById('member-list');
-  list.innerHTML = '';
   const isCreator = state.groupData.created_by === state.user?.id;
+  const parts = [];
 
   if (memberView === 'points') {
     const sorted = [...members].sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
@@ -2209,7 +2209,7 @@ function renderMembers(members) {
     sorted.forEach((m, i) => {
       const isMe = m.id === state.memberId;
       const editBtn = isCreator ? `<button onclick="editMemberPoints('${m.id}','${m.name}',${m.total_points||0})" style="background:none;border:none;color:#0d9488;font-size:14px;cursor:pointer;padding:2px 6px">✏️</button>` : '';
-      list.innerHTML += `
+      parts.push(`
         <div class="member-item">
           <div class="rank-medal">${medals[i] || (i + 1)}</div>
           <div class="member-info">
@@ -2218,13 +2218,13 @@ function renderMembers(members) {
               <span class="points-badge">${m.total_points || 0} نقطة ${editBtn}</span>
             </div>
           </div>
-        </div>`;
+        </div>`);
     });
   } else {
     const tasbeehGoals = state.groupData?.tasbeeh_goals || {};
     const hasTasbeehGoals = Object.values(tasbeehGoals).some(v => v > 0);
     const totalTasbeehGoal = Object.values(tasbeehGoals).reduce((s, v) => s + v, 0);
-    members.sort((a, b) => a.name.localeCompare(b.name, 'ar')).forEach((m, idx) => {
+    [...members].sort((a, b) => a.name.localeCompare(b.name, 'ar')).forEach((m, idx) => {
       const pct  = Math.min(100, (m.pages_today / goal) * 100);
       const done = m.pages_today >= goal;
       const isMe = m.id === state.memberId;
@@ -2245,7 +2245,7 @@ function renderMembers(members) {
           ${tasbeehDone ? '<span style="font-size:12px">✅</span>' : ''}
         </div>
         <div class="member-bar-bg" style="background:#7c3aed22;margin-top:3px"><div class="member-bar-fill" style="width:${tasbeehPct}%;background:#7c3aed"></div></div>` : '';
-      list.innerHTML += `
+      parts.push(`
         <div class="member-item" ${tapAttr}>
           <div class="member-avatar" style="background:${color}">${m.name[0]}</div>
           <div class="member-info">
@@ -2257,9 +2257,10 @@ function renderMembers(members) {
             ${tasbeehRow}
           </div>
           <div class="member-check">${done ? '✅' : (canTap ? '<span style="color:#9ca3af;font-size:14px">⋮</span>' : '')}</div>
-        </div>`;
+        </div>`);
     });
   }
+  list.innerHTML = parts.join('');
 }
 
 
@@ -2672,15 +2673,15 @@ function renderAzkarPanel() {
     const btnBg    = done ? '#22c55e' : (inProgress ? '#f0fdfa' : '#fff');
     const btnColor = done ? '#fff'    : (inProgress ? '#0d9488' : '#9ca3af');
     return `
-      <div onclick="tapAzkar('${key}',${a.count})" style="cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;background:${done?'#f0fdf4':'#fff'};border:1.5px solid ${done?'#86efac':'#e5e7eb'};border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px">
+      <div data-azkar-key="${key}" data-azkar-max="${a.count}" onclick="tapAzkar('${key}',${a.count})" style="cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;background:${done?'#f0fdf4':'#fff'};border:1.5px solid ${done?'#86efac':'#e5e7eb'};border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px">
         <div style="flex:1">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
             <span style="font-size:13px;font-weight:800;color:#1f2937">${a.label}</span>
-            <span style="background:${done?'#dcfce7':'#f0fdfa'};color:${done?'#16a34a':'#0d9488'};border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700">${done?'✅ تم':('×'+a.count)}</span>
+            <span class="azkar-badge" style="background:${done?'#dcfce7':'#f0fdfa'};color:${done?'#16a34a':'#0d9488'};border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700">${done?'✅ تم':('×'+a.count)}</span>
           </div>
           <p style="font-size:15px;line-height:1.9;color:#374151;margin:0;font-family:'Amiri','Noto Naskh Arabic',serif">${a.text.replace(/\n/g,'<br>')}</p>
         </div>
-        <div style="flex-shrink:0;min-width:44px;height:44px;border-radius:50%;border:2px solid ${btnBorder};background:${btnBg};color:${btnColor};font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:inherit">${btnLabel}</div>
+        <div class="azkar-circle" style="flex-shrink:0;min-width:44px;height:44px;border-radius:50%;border:2px solid ${btnBorder};background:${btnBg};color:${btnColor};font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:inherit">${btnLabel}</div>
       </div>`;
   }).join('');
 
@@ -2696,12 +2697,31 @@ function renderAzkarPanel() {
 
 function tapAzkar(key, maxCount) {
   const current = parseInt(localStorage.getItem(key) || '0');
-  if (current >= maxCount) {
-    localStorage.removeItem(key); // tap again to reset
-  } else {
-    localStorage.setItem(key, String(current + 1));
+  const newVal = current >= maxCount ? 0 : current + 1;
+  if (newVal === 0) localStorage.removeItem(key);
+  else localStorage.setItem(key, String(newVal));
+
+  // Update only the tapped card — no full panel rebuild
+  const card = document.querySelector(`[data-azkar-key="${key}"]`);
+  if (!card) { renderAzkarPanel(); return; }
+  const done = newVal >= maxCount;
+  const inProgress = newVal > 0 && !done;
+  const btnLabel = done ? '✓' : (maxCount === 1 ? '○' : `${newVal}/${maxCount}`);
+  card.style.background = done ? '#f0fdf4' : '#fff';
+  card.style.borderColor = done ? '#86efac' : '#e5e7eb';
+  const badge = card.querySelector('.azkar-badge');
+  if (badge) {
+    badge.textContent = done ? '✅ تم' : ('×' + maxCount);
+    badge.style.background = done ? '#dcfce7' : '#f0fdfa';
+    badge.style.color = done ? '#16a34a' : '#0d9488';
   }
-  renderAzkarPanel();
+  const circle = card.querySelector('.azkar-circle');
+  if (circle) {
+    circle.textContent = btnLabel;
+    circle.style.borderColor = done ? '#22c55e' : (inProgress ? '#0d9488' : '#d1d5db');
+    circle.style.background  = done ? '#22c55e' : (inProgress ? '#f0fdfa' : '#fff');
+    circle.style.color        = done ? '#fff'    : (inProgress ? '#0d9488' : '#9ca3af');
+  }
 }
 
 function renderKhatmaTab() {
@@ -2768,6 +2788,7 @@ async function calcGoalPoints() {
   return total;
 }
 
+let _loadMembersTimer = null;
 function subscribeToMembers() {
   if (realtimeSub) realtimeSub.unsubscribe();
   realtimeSub = db
@@ -2775,7 +2796,10 @@ function subscribeToMembers() {
     .on('postgres_changes', {
       event: '*', schema: 'public', table: 'members',
       filter: 'group_id=eq.' + state.groupId,
-    }, async () => { await loadMembers(); })
+    }, () => {
+      clearTimeout(_loadMembersTimer);
+      _loadMembersTimer = setTimeout(() => loadMembers(), 500);
+    })
     .subscribe();
 }
 
@@ -3190,44 +3214,48 @@ function renderHizbRow(hizb, juzNum) {
   </tr></table>`;
 }
 
+// Cache for rendered page HTML to avoid re-processing on back navigation
+const _pageCache = {};
+const _allahRegex = /(ٱللَّهَ|ٱللَّهُ|ٱللَّهِ|ٱللَّه[ۖۗۚۙۘ]|لِلَّهِ|لِلَّهُ|لِلَّهَ|ٱللّهَ|ٱللّهُ|ٱللّهِ)/g;
+
 function renderPage(pageIndex) {
+  if (_pageCache[pageIndex]) return _pageCache[pageIndex];
   const page = quranPages[pageIndex];
   if (!page) return '';
-  let html = '';
+  const parts = [];
   // Page header
   const juzNum = getJuzForPage(pageIndex);
-  html += `<div class="mushaf-page-header"><span>الجزء ${toArabicNum(juzNum)}</span><span>صفحة ${toArabicNum(page.page)}</span><span>${page.surahName}</span></div>`;
+  parts.push(`<div class="mushaf-page-header"><span>الجزء ${toArabicNum(juzNum)}</span><span>صفحة ${toArabicNum(page.page)}</span><span>${page.surahName}</span></div>`);
   // Ayahs
   let lastSurahId = 0;
-  html += '<div class="mushaf-text">';
+  parts.push('<div class="mushaf-text">');
   page.ayahs.forEach(a => {
     const hKey = a.surahId + ':' + a.ayahNum;
     // New surah: show header + bismillah
     if (a.surahId !== lastSurahId && a.ayahNum === 1) {
-      if (lastSurahId !== 0) html += '</div>'; // close previous text div
+      if (lastSurahId !== 0) parts.push('</div>'); // close previous text div
       const sName = quranData[a.surahId - 1]?.name || '';
-      html += `<div class="mushaf-surah-header">${sName}</div>`;
+      parts.push(`<div class="mushaf-surah-header">${sName}</div>`);
       if (a.surahId !== 1 && a.surahId !== 9) {
-        html += '<div class="mushaf-bismillah">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>';
+        parts.push('<div class="mushaf-bismillah">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>');
       }
-      if (lastSurahId !== 0) html += '<div class="mushaf-text">'; // reopen
+      if (lastSurahId !== 0) parts.push('<div class="mushaf-text">'); // reopen
     }
     if (a.surahId !== lastSurahId) lastSurahId = a.surahId;
     // Hizb marker
     const hizb = hizbQuarters[hKey];
     if (hizb) {
-      let label = hizb;
-      if (hizb === 'ربع') label = 'ربع حزب';
-      else if (hizb === 'نصف') label = 'نصف حزب';
-      else if (hizb === 'ثلاثة أرباع') label = 'ثلاثة أرباع حزب';
-      html += `<div class="mushaf-hizb">۞ ${label}</div>`;
+      const label = hizb === 'ربع' ? 'ربع حزب' : hizb === 'نصف' ? 'نصف حزب' : hizb === 'ثلاثة أرباع' ? 'ثلاثة أرباع حزب' : hizb;
+      parts.push(`<div class="mushaf-hizb">۞ ${label}</div>`);
     }
     // Color لفظ الجلالة (Allah's name) in red
-    const coloredText = a.text.replace(/(ٱللَّهَ|ٱللَّهُ|ٱللَّهِ|ٱللَّه[ۖۗۚۙۘ]|لِلَّهِ|لِلَّهُ|لِلَّهَ|ٱللّهَ|ٱللّهُ|ٱللّهِ)/g, '<span class="allah-name">$1</span>');
-    html += `${coloredText} <span class="mushaf-ayah-num">${toArabicNum(a.ayahNum)}</span> `;
+    const coloredText = a.text.replace(_allahRegex, '<span class="allah-name">$1</span>');
+    parts.push(`${coloredText} <span class="mushaf-ayah-num">${toArabicNum(a.ayahNum)}</span> `);
   });
-  html += '</div>';
-  return html;
+  parts.push('</div>');
+  const result = parts.join('');
+  _pageCache[pageIndex] = result;
+  return result;
 }
 
 function getJuzForPage(pageIndex) {
