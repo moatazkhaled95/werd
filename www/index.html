@@ -931,7 +931,7 @@
     </div>
     <div class="screen-body">
       <div id="my-groups-list" style="margin-bottom:16px"></div>
-      <button class="btn-primary" style="margin-top:4px" onclick="show('create-group')">+ إنشاء مجموعة جديدة</button>
+      <button class="btn-primary" style="margin-top:4px" onclick="showCreateGroup()">+ إنشاء مجموعة جديدة</button>
       <button class="btn-secondary" style="margin-top:8px" onclick="show('join-group')">انضم برقم المجموعة 🔢</button>
       <button onclick="showQuranReader()" style="margin-top:8px;width:100%;padding:14px;background:linear-gradient(135deg,#134e4a,#0f766e);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">📖 القرآن الكريم</button>
     </div>
@@ -977,6 +977,11 @@
           </label>
         </div>
         <div id="goal-amount-section"></div>
+      </div>
+
+      <div class="card">
+        <h3>هدف التسبيح اليومي <span style="color:#9ca3af;font-size:12px;font-weight:400">(اختياري — 0 = بدون هدف)</span></h3>
+        <div id="tasbeeh-goals-form"></div>
       </div>
 
       <button class="btn-primary" onclick="createGroup()">إنشاء المجموعة 🕌</button>
@@ -1185,7 +1190,7 @@ const state = {
   goalUnit: 'page', goalBaseUnit: 'page', goalSubUnit: 'none', goalPages: 2,
   privacy: 'private', restriction: 'all',
   groupId: null, groupData: null,
-  memberId: null, myPages: 0, myTasbeeh: 0,
+  memberId: null, myPages: 0, myTasbeeh: 0, tasbeehCounts: {},
   joinGroupData: null,
 };
 
@@ -1479,6 +1484,8 @@ async function enterGroup(groupId, memberId) {
   state.groupId = group.id; state.groupData = group;
   state.memberId = member.id; state.myPages = member.pages_today;
   state.myTasbeeh = member.tasbeeh_today || 0;
+  state.tasbeehCounts = member.tasbeeh_counts || {};
+  _dhikrCounts = { ...state.tasbeehCounts };
   state.pointsToday = member.points_today || 0;
   await openDashboard();
 }
@@ -1887,6 +1894,34 @@ function renderGoalOptions() {
 }
 
 
+let _tasbeehGoalsForm = {};
+
+function showCreateGroup() {
+  _tasbeehGoalsForm = {};
+  document.getElementById('group-name').value = '';
+  show('create-group');
+  renderTasbeehGoalsForm();
+}
+
+function renderTasbeehGoalsForm() {
+  const el = document.getElementById('tasbeeh-goals-form');
+  if (!el) return;
+  el.innerHTML = DHIKR_LIST.map((d, i) => {
+    const v = _tasbeehGoalsForm[d] || 0;
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span style="flex:1;font-size:13px;font-weight:700;color:#1f2937">${d}</span>
+      <button onclick="adjustTasbeehGoalForm('${d}',-1)" style="width:32px;height:32px;border-radius:50%;border:2px solid #e5e7eb;background:#f9fafb;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#374151">−</button>
+      <span id="tgf-${i}" style="width:36px;text-align:center;font-weight:700;font-size:15px">${v}</span>
+      <button onclick="adjustTasbeehGoalForm('${d}',1)" style="width:32px;height:32px;border-radius:50%;border:2px solid #e5e7eb;background:#f9fafb;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#374151">+</button>
+    </div>`;
+  }).join('');
+}
+
+function adjustTasbeehGoalForm(dhikr, delta) {
+  _tasbeehGoalsForm[dhikr] = Math.max(0, (_tasbeehGoalsForm[dhikr] || 0) + delta);
+  renderTasbeehGoalsForm();
+}
+
 async function createGroup() {
   const name   = document.getElementById('group-name').value.trim();
   if (!name) { toast('الرجاء إدخال اسم المجموعة'); return; }
@@ -1907,6 +1942,7 @@ async function createGroup() {
       created_by: state.user.id,
       invite_code,
       timezone,
+      tasbeeh_goals: _tasbeehGoalsForm,
     }).select().single();
     if (ge) throw ge;
 
@@ -2046,12 +2082,14 @@ async function checkAndResetDaily(group) {
   if (lastReset === todayInTz) return; // already reset today
   const isFirstTime = !lastReset;
   // New day — reset all members' daily progress
-  await db.from('members').update({ pages_today: 0, points_today: 0, tasbeeh_today: 0 }).eq('group_id', group.id);
+  await db.from('members').update({ pages_today: 0, points_today: 0, tasbeeh_today: 0, tasbeeh_counts: {} }).eq('group_id', group.id);
   localStorage.setItem(lsKey, todayInTz);
   db.from('groups').update({ last_reset_date: todayInTz }).eq('id', group.id).then(() => {});
   state.groupData.last_reset_date = todayInTz;
   state.myPages = 0;
   state.myTasbeeh = 0;
+  state.tasbeehCounts = {};
+  _dhikrCounts = {};
   state.pointsToday = 0;
   if (!isFirstTime) toast('تم تصفير الأهداف اليومية ✓');
 }
@@ -2250,7 +2288,7 @@ async function editMemberPoints(memberId, name, currentPoints) {
 async function resetGroupActivity() {
   if (!confirm('هل أنت متأكد؟ سيتم تصفير تقدّم جميع الأعضاء والنقاط الإجمالية.')) return;
   const { error } = await db.from('members')
-    .update({ pages_today: 0, points_today: 0, total_points: 0, tasbeeh_today: 0 })
+    .update({ pages_today: 0, points_today: 0, total_points: 0, tasbeeh_today: 0, tasbeeh_counts: {} })
     .eq('group_id', state.groupId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
   state.myPages = 0;
@@ -2329,70 +2367,80 @@ async function addPages(n) {
 }
 
 // ── Tasbeeh ─────────────────────────────────────────────────────────────────
-let _activeDhikr = 'سبحان الله';
+const DHIKR_LIST = ['سبحان الله', 'الحمد لله', 'الله أكبر', 'لا إله إلا الله', 'أستغفر الله', 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّد'];
+let _activeDhikr = DHIKR_LIST[0];
+
+function _getTasbeehGoals() {
+  const g = state.groupData?.tasbeeh_goals || {};
+  return Object.keys(g).length ? g : JSON.parse(localStorage.getItem('werd_personal_tasbeeh_goals') || '{}');
+}
+
+function _allTasbeehDone() {
+  const goals = _getTasbeehGoals();
+  const activeGoals = Object.keys(goals).filter(d => goals[d] > 0);
+  if (!activeGoals.length) return false;
+  return activeGoals.every(d => (state.tasbeehCounts[d] || 0) >= goals[d]);
+}
 
 async function addTasbeeh(n) {
-  const prev = state.myTasbeeh;
-  const goal = state.groupData?.tasbeeh_goal || parseInt(localStorage.getItem('werd_personal_tasbeeh_goal') || '100');
-  if (n > 0) _dhikrCounts[_activeDhikr] = (_dhikrCounts[_activeDhikr] || 0) + n;
-  state.myTasbeeh = Math.max(0, state.myTasbeeh + n);
+  if (n > 0) {
+    state.tasbeehCounts[_activeDhikr] = (state.tasbeehCounts[_activeDhikr] || 0) + n;
+    _dhikrCounts[_activeDhikr] = state.tasbeehCounts[_activeDhikr];
+  }
+  state.myTasbeeh = Object.values(state.tasbeehCounts).reduce((s, v) => s + v, 0);
   // Update UI immediately — don't wait for DB
   updateTasbeehUI();
-  if (n > 0 && prev < goal && state.myTasbeeh >= goal) {
+  if (n > 0 && _allTasbeehDone()) {
     goalNotify('🎉 ما شاء الله! أتممت هدف التسبيح اليوم!');
     if (state.memberId) sendGroupNotification('tasbeeh');
   }
   // Save to DB only when inside a group
   if (state.memberId) {
-    await db.from('members').update({ tasbeeh_today: state.myTasbeeh }).eq('id', state.memberId);
+    await db.from('members').update({ tasbeeh_today: state.myTasbeeh, tasbeeh_counts: state.tasbeehCounts }).eq('id', state.memberId);
     updateMyProgress();
   }
 }
 
 async function resetTasbeeh() {
   state.myTasbeeh = 0;
+  state.tasbeehCounts = {};
   _dhikrCounts = {};
   updateTasbeehUI();
   if (state.memberId) {
-    await db.from('members').update({ tasbeeh_today: 0 }).eq('id', state.memberId);
+    await db.from('members').update({ tasbeeh_today: 0, tasbeeh_counts: {} }).eq('id', state.memberId);
     updateMyProgress();
   }
 }
 
 function updateTasbeehUI() {
-  const goal = state.groupData?.tasbeeh_goal || parseInt(localStorage.getItem('werd_personal_tasbeeh_goal') || '100');
-  const done = state.myTasbeeh >= goal;
-  // In-panel circle shows per-dhikr count
+  const done = _allTasbeehDone();
+  // Circle shows current dhikr count
   const counter = document.getElementById('tasbeeh-counter-display');
-  if (counter) counter.textContent = _dhikrCounts[_activeDhikr] || 0;
-  // Progress text shows daily total
+  if (counter) counter.textContent = state.tasbeehCounts[_activeDhikr] || 0;
+  // Progress text
   const progressEl = document.getElementById('tasbeeh-panel-progress');
-  if (progressEl) progressEl.textContent = 'المجموع اليوم: ' + state.myTasbeeh + ' / ' + goal + ' ' + (done ? '✅' : '');
-  // Celebration banner inside panel
+  if (progressEl) {
+    const goals = _getTasbeehGoals();
+    const activeGoals = Object.keys(goals).filter(d => goals[d] > 0);
+    if (activeGoals.length) {
+      const doneCnt = activeGoals.filter(d => (state.tasbeehCounts[d] || 0) >= goals[d]).length;
+      progressEl.textContent = `${doneCnt} / ${activeGoals.length} أذكار مكتملة ${done ? '✅' : ''}`;
+    } else {
+      progressEl.textContent = 'المجموع اليوم: ' + state.myTasbeeh;
+    }
+  }
+  // Celebration banner
   const celebPanel = document.getElementById('tasbeeh-panel-celebration');
   if (celebPanel) celebPanel.style.display = done ? 'block' : 'none';
-  // Dashboard elements (if visible)
-  const tasbeehGoalEl = document.getElementById('tasbeeh-goal-label');
-  if (tasbeehGoalEl) tasbeehGoalEl.textContent = '/ ' + goal + ' تسبيحة';
-  const tasbeehPct = Math.min(100, (state.myTasbeeh / goal) * 100);
-  const tasbeehCountEl = document.getElementById('my-tasbeeh-count');
-  const tasbeehBarEl   = document.getElementById('my-tasbeeh-bar');
-  const tasbeehCelebEl = document.getElementById('tasbeeh-celebration');
-  if (tasbeehCountEl) tasbeehCountEl.textContent = state.myTasbeeh;
-  if (tasbeehBarEl)   tasbeehBarEl.style.width = tasbeehPct + '%';
-  if (tasbeehCelebEl) tasbeehCelebEl.classList.toggle('show', done);
 }
 
-async function saveTasbeehGoal(n) {
-  const newGoal = Math.max(10, n);
-  const { error } = await db.from('groups').update({ tasbeeh_goal: newGoal }).eq('id', state.groupId);
+async function saveTasbeehGoal(dhikr, n) {
+  const newGoals = { ...(state.groupData.tasbeeh_goals || {}), [dhikr]: n };
+  const { error } = await db.from('groups').update({ tasbeeh_goals: newGoals }).eq('id', state.groupId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
-  state.groupData.tasbeeh_goal = newGoal;
-  const tasbeehGoalEl = document.getElementById('tasbeeh-goal-label');
-  if (tasbeehGoalEl) tasbeehGoalEl.textContent = '/ ' + newGoal + ' تسبيحة';
-  updateMyProgress();
+  state.groupData.tasbeeh_goals = newGoals;
   renderTasbeehPanel();
-  toast('تم تحديث هدف التسبيح ✓');
+  toast('تم تحديث الهدف ✓');
 }
 
 // ── Tasbeeh & Azkar Screen ──────────────────────────────────────────────────
@@ -2426,30 +2474,48 @@ let _dhikrCounts = {}; // dhikr → count, persists until reset is pressed
 function renderTasbeehPanel() {
   const el = document.getElementById('ta-tasbeeh-panel');
   if (!el) return;
-  const goal = state.groupData?.tasbeeh_goal || parseInt(localStorage.getItem('werd_personal_tasbeeh_goal') || '100');
-  const dhikrList = ['سبحان الله', 'الحمد لله', 'الله أكبر', 'لا إله إلا الله', 'أستغفر الله', 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّد'];
-  const presetBtns = dhikrList.map(d =>
-    `<button onclick="switchDhikr('${d}')" style="flex:1;min-width:0;padding:8px 4px;border-radius:10px;border:2px solid ${_activeDhikr===d?'#0d9488':'#e5e7eb'};background:${_activeDhikr===d?'#f0fdfa':'#fff'};color:${_activeDhikr===d?'#0d9488':'#6b7280'};font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d}</button>`
-  ).join('');
-  const tasbeehDone = state.myTasbeeh >= goal;
+  const goals = _getTasbeehGoals();
   const canEditGoal = !state.memberId || state.groupData?.created_by === state.user?.id;
+  const allDone = _allTasbeehDone();
+  const activeDhikrGoal = goals[_activeDhikr] || 0;
+  const activeDhikrCount = state.tasbeehCounts[_activeDhikr] || 0;
+  const activeDone = activeDhikrGoal > 0 && activeDhikrCount >= activeDhikrGoal;
+
+  const presetBtns = DHIKR_LIST.map(d => {
+    const g = goals[d] || 0;
+    const c = state.tasbeehCounts[d] || 0;
+    const isActive = _activeDhikr === d;
+    const dhikrDone = g > 0 && c >= g;
+    const badge = g > 0
+      ? `<span style="font-size:10px;font-weight:800;color:${dhikrDone?'#16a34a':'#f59e0b'}">${dhikrDone?'✅':c+'/'+g}</span>`
+      : (c > 0 ? `<span style="font-size:10px;color:#9ca3af">${c}</span>` : '');
+    return `<button onclick="switchDhikr('${d}')" style="padding:7px 4px;border-radius:10px;border:2px solid ${isActive?'#0d9488':'#e5e7eb'};background:${isActive?'#f0fdfa':'#fff'};color:${isActive?'#0d9488':'#374151'};font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px">
+      <span style="max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d}</span>
+      ${badge}
+    </button>`;
+  }).join('');
+
+  const circleBg = activeDone ? '#16a34a,#15803d' : '#0d9488,#0f766e';
+  const circleLabel = activeDhikrGoal > 0 ? `${_activeDhikr} (${activeDhikrGoal})` : _activeDhikr;
+
   el.innerHTML = `
     <div style="padding:20px 16px 80px">
       <div style="background:#fff;border-radius:18px;padding:20px 16px;box-shadow:0 2px 12px rgba(0,0,0,.06)">
         <div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:14px;text-align:center">📿 عداد التسبيح</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:18px">${presetBtns}</div>
-        <div onclick="addTasbeeh(1)" style="width:150px;height:150px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);margin:0 auto 14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(13,148,136,.4);user-select:none;-webkit-tap-highlight-color:transparent">
-          <div id="tasbeeh-counter-display" style="font-size:58px;font-weight:900;color:#fff;line-height:1">${_dhikrCounts[_activeDhikr]||0}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:4px;text-align:center;padding:0 8px;line-height:1.3">${_activeDhikr}</div>
+        <div onclick="addTasbeeh(1)" style="width:150px;height:150px;border-radius:50%;background:linear-gradient(135deg,${circleBg});margin:0 auto 14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(13,148,136,.4);user-select:none;-webkit-tap-highlight-color:transparent">
+          <div id="tasbeeh-counter-display" style="font-size:58px;font-weight:900;color:#fff;line-height:1">${activeDhikrCount}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:4px;text-align:center;padding:0 8px;line-height:1.3">${circleLabel}</div>
         </div>
-        <div id="tasbeeh-panel-progress" style="text-align:center;color:#6b7280;font-size:13px;margin-bottom:10px">المجموع اليوم: ${state.myTasbeeh} / ${goal} ${tasbeehDone?'✅':''}</div>
-        <div id="tasbeeh-panel-celebration" class="celebration" style="${tasbeehDone?'display:block':'display:none'};background:linear-gradient(135deg,#0d9488,#0f766e);margin-bottom:12px">🎉 ما شاء الله! أتممت هدف التسبيح اليوم!</div>
+        <div id="tasbeeh-panel-progress" style="text-align:center;color:#6b7280;font-size:13px;margin-bottom:10px"></div>
+        <div id="tasbeeh-panel-celebration" class="celebration" style="display:${allDone?'block':'none'};background:linear-gradient(135deg,#0d9488,#0f766e);margin-bottom:12px">🎉 ما شاء الله! أتممت هدف التسبيح اليوم!</div>
         <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
           <button onclick="resetTasbeeh()" style="padding:10px 22px;border-radius:10px;border:1.5px solid #fee2e2;background:#fff;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">إعادة</button>
-          ${canEditGoal?`<button onclick="promptTasbeehGoal()" style="padding:10px 22px;border-radius:10px;border:1.5px solid #99f6e4;background:#f0fdfa;color:#0d9488;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">الهدف: ${goal} ✏️</button>`:'<span style="padding:10px 16px;color:#6b7280;font-size:13px">الهدف: '+goal+' تسبيحة</span>'}
+          ${canEditGoal?`<button onclick="promptTasbeehGoal()" style="padding:8px 14px;border-radius:10px;border:1.5px solid #99f6e4;background:#f0fdfa;color:#0d9488;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">${_activeDhikr}: ${activeDhikrGoal||'∞'} ✏️</button>`:''}
         </div>
       </div>
     </div>`;
+  updateTasbeehUI();
 }
 
 function switchDhikr(dhikr) {
@@ -2525,17 +2591,19 @@ function renderKhatmaTab() {
 }
 
 function promptTasbeehGoal() {
-  const current = state.groupData?.tasbeeh_goal || parseInt(localStorage.getItem('werd_personal_tasbeeh_goal') || '100');
-  const val = prompt('هدف التسبيح اليومي:', current);
+  const goals = _getTasbeehGoals();
+  const current = goals[_activeDhikr] || 0;
+  const val = prompt(`هدف "${_activeDhikr}" اليومي (0 = بدون هدف):`, current);
   const n = parseInt(val);
-  if (!isNaN(n) && n > 0) {
-    if (state.memberId && state.groupData?.created_by === state.user?.id) {
-      saveTasbeehGoal(n);
-    } else {
-      localStorage.setItem('werd_personal_tasbeeh_goal', String(n));
-      renderTasbeehPanel();
-      toast('تم تحديث الهدف ✓');
-    }
+  if (isNaN(n) || n < 0) return;
+  if (state.memberId && state.groupData?.created_by === state.user?.id) {
+    saveTasbeehGoal(_activeDhikr, n);
+  } else {
+    const personal = JSON.parse(localStorage.getItem('werd_personal_tasbeeh_goals') || '{}');
+    personal[_activeDhikr] = n;
+    localStorage.setItem('werd_personal_tasbeeh_goals', JSON.stringify(personal));
+    renderTasbeehPanel();
+    toast('تم تحديث الهدف ✓');
   }
 }
 

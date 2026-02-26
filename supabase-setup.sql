@@ -119,5 +119,9 @@ create policy "users manage own fcm tokens" on fcm_tokens
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ── Tasbeeh Goal & Daily Counter ─────────────────────────────────────────────
-alter table groups  add column if not exists tasbeeh_goal  int not null default 100;
-alter table members add column if not exists tasbeeh_today int not null default 0;
+alter table groups  add column if not exists tasbeeh_goal   int  not null default 100;
+alter table members add column if not exists tasbeeh_today  int  not null default 0;
+-- Per-dhikr goals (e.g. {"سبحان الله": 33, "الحمد لله": 33})
+alter table groups  add column if not exists tasbeeh_goals  jsonb not null default '{}';
+-- Per-dhikr daily counts for each member
+alter table members add column if not exists tasbeeh_counts jsonb not null default '{}';
