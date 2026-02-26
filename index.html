@@ -392,11 +392,14 @@
 
     /* ── All screens transparent over background ── */
     #app, .screen, #auth, #loading, #dashboard,
-    #create-group, #join-group, #choose-action, #complete-profile, #signin, #signup,
+    #create-group, #choose-action, #complete-profile, #signin, #signup,
     #verify-email, #main-menu, #quran-reader, #quran-page-view, #forgot-password, #profile-screen, #reset-password, #tasbeeh-azkar-screen { background: transparent !important; }
     .screen-header, .dash-header { background: transparent !important; overflow: hidden; }
     .screen-header::after, .dash-header::after { display: none; }
     .screen-body, .dash-body { background: transparent; }
+    #join-group { background: #ffffff !important; }
+    #join-group .screen-header { background: linear-gradient(135deg,#0d9488,#0f766e) !important; }
+    #join-group .screen-body { background: #ffffff !important; }
     .card, .progress-card, .members-card, .invite-card,
     .auth-card { background: rgba(255,255,255,0.95); box-shadow: 0 2px 12px rgba(0,0,0,.25); }
     .card h3, .mc-title, .pc-label, .form-group label { color: #0f766e; }
