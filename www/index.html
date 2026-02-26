@@ -2464,8 +2464,8 @@ function updateTasbeehUI() {
   const counter = document.getElementById('tasbeeh-counter-display');
   if (counter) { counter.textContent = activeDhikrCount; counter.style.color = activeDone ? '#16a34a' : '#1f2937'; }
 
-  const tapArea = document.getElementById('tasbeeh-tap-area');
-  if (tapArea) { tapArea.style.background = activeDone ? '#f0fdf4' : '#f0fdfa'; tapArea.style.borderColor = activeDone ? '#86efac' : '#99f6e4'; }
+  const circle = document.getElementById('tasbeeh-circle');
+  if (circle) circle.style.background = activeDone ? 'linear-gradient(135deg,#16a34a,#15803d)' : 'linear-gradient(135deg,#0d9488,#0f766e)';
 
   const barFill = document.getElementById('tasbeeh-bar-fill');
   if (barFill && activeDhikrGoal > 0) {
@@ -2531,58 +2531,89 @@ function renderTasbeehPanel() {
   const goals = _getTasbeehGoals();
   const canEditGoal = !state.memberId || state.groupData?.created_by === state.user?.id;
   const allDone = _allTasbeehDone();
+  const allDhikrs = _getAllDhikrs();
+  let idx = allDhikrs.indexOf(_activeDhikr);
+  if (idx < 0) { _activeDhikr = allDhikrs[0]; idx = 0; }
+
   const activeDhikrGoal = goals[_activeDhikr] || 0;
   const activeDhikrCount = state.tasbeehCounts[_activeDhikr] || 0;
   const activeDone = activeDhikrGoal > 0 && activeDhikrCount >= activeDhikrGoal;
   const pct = activeDhikrGoal > 0 ? Math.min(100, (activeDhikrCount / activeDhikrGoal) * 100) : 0;
-
-  const customDhikrs = JSON.parse(localStorage.getItem('werd_custom_dhikrs') || '[]');
-  const allDhikrs = [...DHIKR_LIST, ...customDhikrs];
-
-  const presetBtns = allDhikrs.map((d, idx) => {
-    const g = goals[d] || 0;
-    const c = state.tasbeehCounts[d] || 0;
-    const isActive = _activeDhikr === d;
-    const dhikrDone = g > 0 && c >= g;
-    const isCustom = idx >= DHIKR_LIST.length;
-    const customIdx = idx - DHIKR_LIST.length;
-    const badge = g > 0
-      ? `<span style="font-size:9px;font-weight:800;color:${isActive?'rgba(255,255,255,.85)':(dhikrDone?'#16a34a':'#f59e0b')}">${dhikrDone?'✅':c+'/'+g}</span>`
-      : (c > 0 ? `<span style="font-size:9px;color:${isActive?'rgba(255,255,255,.7)':'#9ca3af'}">${c}</span>` : '');
-    const removeBtn = isCustom
-      ? `<span onclick="event.stopPropagation();removeCustomDhikr(${customIdx})" style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;background:#ef4444;color:#fff;border-radius:50%;font-size:11px;line-height:16px;text-align:center;cursor:pointer">×</span>`
-      : '';
-    return `<button onclick="switchDhikr('${d}')" style="position:relative;padding:8px 4px;border-radius:10px;border:2px solid ${isActive?'#0d9488':'#e5e7eb'};background:${isActive?'#0d9488':'#fff'};color:${isActive?'#fff':'#374151'};font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px">
-      ${removeBtn}
-      <span style="max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d}</span>
-      ${badge}
-    </button>`;
-  }).join('') + `<button onclick="addCustomDhikr()" style="padding:8px 4px;border-radius:10px;border:2px dashed #d1d5db;background:#f9fafb;color:#9ca3af;font-size:22px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center">+</button>`;
+  const isCustom = idx >= DHIKR_LIST.length;
+  const circleBg = activeDone ? 'linear-gradient(135deg,#16a34a,#15803d)' : 'linear-gradient(135deg,#0d9488,#0f766e)';
 
   el.innerHTML = `
     <div style="padding:16px 16px 80px">
-      <div style="background:#fff;border-radius:20px;padding:16px;box-shadow:0 2px 16px rgba(0,0,0,.07)">
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px">${presetBtns}</div>
+      <div style="background:#fff;border-radius:20px;padding:20px 16px;box-shadow:0 2px 16px rgba(0,0,0,.07)">
 
-        <div id="tasbeeh-tap-area" onclick="addTasbeeh(1)"
-          style="text-align:center;padding:32px 16px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;border-radius:16px;background:${activeDone?'#f0fdf4':'#f0fdfa'};border:2px solid ${activeDone?'#86efac':'#99f6e4'};margin-bottom:14px">
-          <div style="font-size:16px;font-weight:800;color:#374151;margin-bottom:10px">${_activeDhikr}</div>
-          <div id="tasbeeh-counter-display" style="font-size:80px;font-weight:900;line-height:1;color:${activeDone?'#16a34a':'#1f2937'}">${activeDhikrCount}</div>
-          <div style="font-size:12px;color:#9ca3af;margin-top:8px">${activeDhikrGoal > 0 ? 'من ' + activeDhikrGoal + (activeDone?' ✅':'') : 'اضغط للعدّ'}</div>
+        <!-- Carousel header -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+          <button onclick="prevDhikr()" style="width:38px;height:38px;flex-shrink:0;border-radius:50%;border:none;background:#f3f4f6;color:#374151;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">‹</button>
+          <div style="flex:1;text-align:center;overflow:hidden">
+            <div style="font-size:11px;color:#9ca3af;margin-bottom:2px">${idx+1} / ${allDhikrs.length}</div>
+            <div style="font-size:18px;font-weight:800;color:#1f2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_activeDhikr}</div>
+            ${activeDhikrGoal > 0 ? `<div style="font-size:11px;color:${activeDone?'#16a34a':'#0d9488'};margin-top:2px">الهدف: ${activeDhikrGoal} ${activeDone?'✅':''}</div>` : ''}
+          </div>
+          <button onclick="nextDhikr()" style="width:38px;height:38px;flex-shrink:0;border-radius:50%;border:none;background:#f3f4f6;color:#374151;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">›</button>
         </div>
 
-        ${activeDhikrGoal > 0 ? `<div style="background:#e5e7eb;border-radius:99px;height:5px;margin-bottom:14px;overflow:hidden"><div id="tasbeeh-bar-fill" style="width:${pct}%;height:100%;background:${activeDone?'#16a34a':'#0d9488'};border-radius:99px;transition:width .3s"></div></div>` : ''}
+        <!-- Circle counter -->
+        <div id="tasbeeh-circle" onclick="addTasbeeh(1)"
+          style="width:180px;height:180px;border-radius:50%;background:${circleBg};margin:0 auto 18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(13,148,136,.35);user-select:none;-webkit-tap-highlight-color:transparent;transition:background .3s">
+          <div id="tasbeeh-counter-display" style="font-size:72px;font-weight:900;color:#fff;line-height:1">${activeDhikrCount}</div>
+        </div>
+
+        ${activeDhikrGoal > 0 ? `<div style="background:#e5e7eb;border-radius:99px;height:5px;margin-bottom:14px;overflow:hidden"><div id="tasbeeh-bar-fill" style="width:${pct}%;height:100%;background:${activeDone?'#16a34a':'#0d9488'};border-radius:99px;transition:width .3s"></div></div>` : '<div style="margin-bottom:14px"></div>'}
 
         <div id="tasbeeh-panel-celebration" style="display:${allDone?'block':'none'};background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;text-align:center;padding:10px;border-radius:12px;font-weight:700;margin-bottom:12px">🎉 ما شاء الله! أتممت هدف التسبيح اليوم!</div>
 
-        <div style="display:flex;gap:8px;justify-content:center">
-          <button onclick="resetTasbeeh()" style="padding:10px 22px;border-radius:10px;border:1.5px solid #fee2e2;background:#fff;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">إعادة</button>
-          ${canEditGoal?`<button onclick="promptTasbeehGoal()" style="padding:10px 16px;border-radius:10px;border:1.5px solid #99f6e4;background:#f0fdfa;color:#0d9488;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🎯 ${activeDhikrGoal||'∞'}</button>`:''}
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <button onclick="resetTasbeeh()" style="padding:10px 18px;border-radius:10px;border:1.5px solid #fee2e2;background:#fff;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">إعادة</button>
+          ${canEditGoal ? `<button onclick="promptTasbeehGoal()" style="padding:10px 14px;border-radius:10px;border:1.5px solid #99f6e4;background:#f0fdfa;color:#0d9488;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🎯 ${activeDhikrGoal||'∞'}</button>` : ''}
+          <button onclick="addCustomDhikr()" style="padding:10px 14px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;color:#6b7280;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ ذكر</button>
+          ${isCustom ? `<button onclick="removeCurrentCustomDhikr()" style="padding:10px 14px;border-radius:10px;border:1.5px solid #fee2e2;background:#fff;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🗑️</button>` : ''}
         </div>
         <div id="tasbeeh-panel-progress" style="text-align:center;color:#9ca3af;font-size:12px;margin-top:10px"></div>
       </div>
     </div>`;
+
+  _initTasbeehSwipe();
   updateTasbeehUI();
+}
+
+function prevDhikr() {
+  const all = _getAllDhikrs();
+  const idx = all.indexOf(_activeDhikr);
+  _activeDhikr = all[(idx - 1 + all.length) % all.length];
+  renderTasbeehPanel();
+}
+
+function nextDhikr() {
+  const all = _getAllDhikrs();
+  const idx = all.indexOf(_activeDhikr);
+  _activeDhikr = all[(idx + 1) % all.length];
+  renderTasbeehPanel();
+}
+
+function removeCurrentCustomDhikr() {
+  const custom = JSON.parse(localStorage.getItem('werd_custom_dhikrs') || '[]');
+  const i = custom.indexOf(_activeDhikr);
+  if (i >= 0) { custom.splice(i, 1); localStorage.setItem('werd_custom_dhikrs', JSON.stringify(custom)); }
+  _activeDhikr = DHIKR_LIST[0];
+  renderTasbeehPanel();
+}
+
+function _initTasbeehSwipe() {
+  const el = document.getElementById('ta-tasbeeh-panel');
+  if (!el || el._swipeInit) return;
+  el._swipeInit = true;
+  let startX = 0, startY = 0;
+  el.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, { passive: true });
+  el.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { dx < 0 ? nextDhikr() : prevDhikr(); }
+  }, { passive: true });
 }
 
 function switchDhikr(dhikr) {
