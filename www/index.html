@@ -933,7 +933,10 @@
       <div id="my-groups-list" style="margin-bottom:16px"></div>
       <button class="btn-primary" style="margin-top:4px" onclick="showCreateGroup()">+ إنشاء مجموعة جديدة</button>
       <button class="btn-secondary" style="margin-top:8px;background:#ffffff !important;color:#0d9488 !important" onclick="show('join-group')">انضم برقم المجموعة 🔢</button>
-      <button onclick="showQuranReader()" style="margin-top:8px;width:100%;padding:14px;background:linear-gradient(135deg,#134e4a,#0f766e);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">📖 القرآن الكريم</button>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button onclick="showQuranReader()" style="flex:1;padding:14px;background:linear-gradient(135deg,#134e4a,#0f766e);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">📖 القرآن</button>
+        <button onclick="showTasbeehAzkarScreen('main-menu')" style="flex:1;padding:14px;background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">📿 تسبيح</button>
+      </div>
     </div>
   </div>
 
@@ -1020,9 +1023,12 @@
       <button class="ham-btn" onclick="openMenu(false)">☰</button>
       <h2>القرآن الكريم</h2>
     </div>
-    <div style="padding:8px 16px 6px;background:#f0fdfa;border-bottom:1px solid #ccfbf1;flex-shrink:0">
-      <button onclick="showMyGroups()" style="width:100%;padding:9px 14px;background:#fff;border:1.5px solid #2dd4bf;border-radius:12px;color:#0d9488;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">
+    <div style="padding:8px 16px 6px;background:#f0fdfa;border-bottom:1px solid #ccfbf1;flex-shrink:0;display:flex;gap:8px">
+      <button onclick="showMyGroups()" style="flex:1;padding:9px 14px;background:#fff;border:1.5px solid #2dd4bf;border-radius:12px;color:#0d9488;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">
         <span>👥</span> مجموعاتي
+      </button>
+      <button onclick="showTasbeehAzkarScreen('main-menu')" style="flex:1;padding:9px 14px;background:#fff;border:1.5px solid #2dd4bf;border-radius:12px;color:#0d9488;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">
+        <span>📿</span> تسبيح
       </button>
     </div>
     <div style="background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:8px 16px 0;flex-shrink:0">
@@ -2520,6 +2526,18 @@ let _tasbeehOrigin = 'main-menu';
 
 function showTasbeehAzkarScreen(from) {
   _tasbeehOrigin = from || 'main-menu';
+  // Auto-reset at midnight: if the calendar date has changed since last visit, clear counts
+  const todayStr = new Intl.DateTimeFormat('en-CA').format(new Date());
+  const lastDate = localStorage.getItem('werd_tasbeeh_date');
+  if (lastDate && lastDate !== todayStr) {
+    _dhikrCounts = {};
+    state.tasbeehCounts = {};
+    state.myTasbeeh = 0;
+    if (state.memberId) {
+      db.from('members').update({ tasbeeh_today: 0, tasbeeh_counts: {} }).eq('id', state.memberId).then(() => {});
+    }
+  }
+  localStorage.setItem('werd_tasbeeh_date', todayStr);
   show('tasbeeh-azkar-screen');
   switchTasbeehAzkarTab('tasbeeh');
 }
