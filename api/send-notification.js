@@ -60,24 +60,28 @@ module.exports = async (req, res) => {
         const tokens = (fcmRows || []).map(r => r.token).filter(Boolean);
         if (tokens.length > 0) {
           const firebase = getFirebaseAdmin();
-          const response = await firebase.messaging().sendEachForMulticast({
-            tokens,
-            notification: { title, body },
-            android: {
-              notification: {
-                sound: 'default',
-                priority: 'HIGH',
-              },
-            },
-          });
-          fcmSent = response.successCount;
+          // FCM allows max 500 tokens per multicast call — chunk if needed
+          const chunks = [];
+          for (let i = 0; i < tokens.length; i += 500) chunks.push(tokens.slice(i, i + 500));
+          const allResponses = [];
+          for (const chunk of chunks) {
+            const response = await firebase.messaging().sendEachForMulticast({
+              tokens: chunk,
+              notification: { title, body },
+              android: { notification: { sound: 'default', priority: 'HIGH' } },
+            });
+            fcmSent += response.successCount;
+            allResponses.push(...response.responses.map((r, i) => ({ r, token: chunk[i] })));
+          }
+          const response = { responses: allResponses.map(x => x.r) };
+          const tokenList = allResponses.map(x => x.token);
 
           // Clean up expired tokens
           response.responses.forEach((r, i) => {
             if (!r.success &&
                 (r.error?.code === 'messaging/registration-token-not-registered' ||
                  r.error?.code === 'messaging/invalid-registration-token')) {
-              supabase.from('fcm_tokens').delete().eq('token', tokens[i]).then(() => {});
+              supabase.from('fcm_tokens').delete().eq('token', tokenList[i]).then(() => {});
             }
           });
         }
