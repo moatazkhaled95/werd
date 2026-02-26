@@ -41,6 +41,9 @@ module.exports = async (req, res) => {
       case 'leave':
         body = `↩ ${senderName} غادر مجموعة ${groupName}`;
         break;
+      case 'tasbeeh':
+        body = `📿 ${senderName} أتمّ هدف التسبيح في ${groupName}!`;
+        break;
       default:
         body = `🎉 ${senderName} أتمّ الهدف في ${groupName}!`;
     }

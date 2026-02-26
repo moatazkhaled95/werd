@@ -117,3 +117,7 @@ alter table fcm_tokens enable row level security;
 drop policy if exists "users manage own fcm tokens" on fcm_tokens;
 create policy "users manage own fcm tokens" on fcm_tokens
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- ── Tasbeeh Goal & Daily Counter ─────────────────────────────────────────────
+alter table groups  add column if not exists tasbeeh_goal  int not null default 100;
+alter table members add column if not exists tasbeeh_today int not null default 0;

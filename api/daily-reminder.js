@@ -18,6 +18,9 @@ module.exports = async (req, res) => {
     process.env.VAPID_PRIVATE_KEY
   );
 
+  // Reset tasbeeh_today for all members (daily cron cleanup)
+  await supabase.from('members').update({ tasbeeh_today: 0 }).neq('tasbeeh_today', 0);
+
   // Get all members who haven't reached their goal today
   const { data: members } = await supabase
     .from('members')
