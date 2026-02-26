@@ -471,7 +471,7 @@
     .ham-font-row span { flex: 1; font-size: 15px; font-weight: 600; color: #e2f0eb; }
     .ham-font-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #2a4a63; background: #1e3347; color: #e2f0eb; font-size: 16px; font-weight: 700; cursor: pointer; }
     .ham-btn { background: rgba(255,255,255,.15); border: none; color: #fff; font-size: 20px; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .screen-header .ham-btn, .dash-header .ham-btn { position: absolute; top: 30px; left: 16px; }
+    .screen-header .ham-btn, .dash-header .ham-btn { position: absolute; top: calc(51px + env(safe-area-inset-top, 0px)); left: 16px; }
 
     /* ── Main Menu Cards ── */
     .menu-card {
