@@ -1,5 +1,9 @@
 apply plugin: 'com.android.application'
 
+def keystorePropsFile = rootProject.file("keystore.properties")
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) keystoreProps.load(new FileInputStream(keystorePropsFile))
+
 android {
     namespace = "com.werd.quran"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -18,10 +22,10 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file('../../werd-release.keystore')
-            storePassword 'werd2026'
-            keyAlias 'werd'
-            keyPassword 'werd2026'
+            storeFile file(keystoreProps['storeFile'] ?: '../../werd-release.keystore')
+            storePassword keystoreProps['storePassword']
+            keyAlias keystoreProps['keyAlias']
+            keyPassword keystoreProps['keyPassword']
         }
     }
     buildTypes {
