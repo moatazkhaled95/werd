@@ -654,6 +654,9 @@
     <button class="ham-item" id="ham-quran" onclick="closeMenu(); showQuranReader();" style="display:none">
       <span class="ham-icon">📖</span> القرآن الكريم
     </button>
+    <button class="ham-item" id="ham-tasbeeh" onclick="closeMenu(); showTasbeehAzkarScreen();" style="display:none">
+      <span class="ham-icon">📿</span> تسبيح وأذكار
+    </button>
     <button class="ham-item" onclick="closeMenu(); leaveDashboard && leaveDashboard();" id="ham-mygroups" style="display:none">
       <span class="ham-icon">👥</span> مجموعاتي
     </button>
@@ -1016,7 +1019,7 @@
       <div class="view-tabs">
         <button id="qtab-surah" class="view-tab active" onclick="switchQuranTab('surah')">السور</button>
         <button id="qtab-juz" class="view-tab" onclick="switchQuranTab('juz')">الأجزاء</button>
-        <button id="qtab-azkar" class="view-tab" onclick="switchQuranTab('azkar')">تسبيح وأذكار</button>
+        <button id="qtab-khatma" class="view-tab" onclick="switchQuranTab('khatma')">دعاء الختمة</button>
       </div>
     </div>
     <div class="screen-body" id="quran-surah-list">
@@ -1025,7 +1028,7 @@
     <div class="screen-body" id="quran-juz-list" style="display:none;padding:0">
       <div style="text-align:center;padding:40px;color:#6b7280">جاري التحميل...</div>
     </div>
-    <div id="quran-azkar-tab" style="display:none;overflow-y:auto;flex:1"></div>
+    <div id="quran-khatma-tab" style="display:none;overflow-y:auto;flex:1"></div>
   </div>
 
   <!-- ══════════ Quran Page View ══════════ -->
@@ -1043,6 +1046,22 @@
         <button class="mushaf-bar-btn" onclick="goToBookmark()">📖 العلامة</button>
       </div>
     </div>
+  </div>
+
+  <!-- ══════════ Tasbeeh & Azkar Screen ══════════ -->
+  <div id="tasbeeh-azkar-screen" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="show('dashboard')">← رجوع</button>
+      <h2>تسبيح وأذكار</h2>
+    </div>
+    <div style="background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:8px 16px 0;flex-shrink:0">
+      <div class="view-tabs">
+        <button id="tatab-tasbeeh" class="view-tab active" onclick="switchTasbeehAzkarTab('tasbeeh')">📿 تسبيح</button>
+        <button id="tatab-azkar" class="view-tab" onclick="switchTasbeehAzkarTab('azkar')">📖 أذكار</button>
+      </div>
+    </div>
+    <div id="ta-tasbeeh-panel" style="overflow-y:auto;flex:1"></div>
+    <div id="ta-azkar-panel" style="display:none;overflow-y:auto;flex:1"></div>
   </div>
 
   <!-- ══════════ Dashboard ══════════ -->
@@ -1216,7 +1235,8 @@ function changeAppZoom(delta) {
 function openMenu(inDashboard) {
   document.getElementById('ham-overlay').classList.add('open');
   document.getElementById('ham-drawer').classList.add('open');
-  document.getElementById('ham-quran').style.display  = inDashboard ? '' : 'none';
+  document.getElementById('ham-quran').style.display   = inDashboard ? '' : 'none';
+  document.getElementById('ham-tasbeeh').style.display = inDashboard ? '' : 'none';
   document.getElementById('ham-mygroups').style.display = inDashboard ? '' : 'none';
   const leaveBtn = document.getElementById('ham-leave');
   leaveBtn.style.display = (inDashboard && document.getElementById('leave-group-btn-hidden')?.dataset.show === 'true') ? '' : 'none';
@@ -1265,9 +1285,10 @@ if (window.Capacitor?.Plugins?.App) {
     const active = document.querySelector('.screen.active');
     if (!active) { window.Capacitor?.Plugins?.App?.minimizeApp?.(); return; }
     switch (active.id) {
-      case 'quran-page-view':  showQuranReader(); break;
-      case 'quran-reader':    showMainMenu(); break;
-      case 'dashboard':       leaveDashboard(); break;
+      case 'quran-page-view':        showQuranReader(); break;
+      case 'quran-reader':          showMainMenu(); break;
+      case 'tasbeeh-azkar-screen':  show('dashboard'); break;
+      case 'dashboard':             leaveDashboard(); break;
       case 'choose-action':   showMainMenu(); break;
       case 'create-group':    showMyGroups(); break;
       case 'join-group':      showMyGroups(); break;
@@ -1367,22 +1388,22 @@ function showQuranReader() {
   // Always return to surah tab
   document.getElementById('quran-surah-list').style.display = '';
   document.getElementById('quran-juz-list').style.display = 'none';
-  document.getElementById('quran-azkar-tab').style.display = 'none';
+  document.getElementById('quran-khatma-tab').style.display = 'none';
   document.getElementById('qtab-surah').classList.add('active');
   document.getElementById('qtab-juz').classList.remove('active');
-  document.getElementById('qtab-azkar').classList.remove('active');
+  document.getElementById('qtab-khatma').classList.remove('active');
   loadQuranSurahList();
 }
 
 function switchQuranTab(tab) {
   document.getElementById('quran-surah-list').style.display  = tab === 'surah'  ? '' : 'none';
   document.getElementById('quran-juz-list').style.display    = tab === 'juz'    ? '' : 'none';
-  document.getElementById('quran-azkar-tab').style.display   = tab === 'azkar'  ? '' : 'none';
+  document.getElementById('quran-khatma-tab').style.display  = tab === 'khatma' ? '' : 'none';
   document.getElementById('qtab-surah').classList.toggle('active', tab === 'surah');
   document.getElementById('qtab-juz').classList.toggle('active', tab === 'juz');
-  document.getElementById('qtab-azkar').classList.toggle('active', tab === 'azkar');
-  if (tab === 'juz')   loadJuzList();
-  if (tab === 'azkar') renderAzkarTab();
+  document.getElementById('qtab-khatma').classList.toggle('active', tab === 'khatma');
+  if (tab === 'juz')    loadJuzList();
+  if (tab === 'khatma') renderKhatmaTab();
 }
 
 async function showMyGroups() {
@@ -2345,9 +2366,11 @@ async function resetTasbeeh() {
 }
 
 function updateTasbeehUI() {
+  const goal = state.groupData?.tasbeeh_goal || 100;
   const counter = document.getElementById('tasbeeh-counter-display');
   if (counter) counter.textContent = state.myTasbeeh;
-  const goal = state.groupData?.tasbeeh_goal || 100;
+  const progressEl = document.getElementById('tasbeeh-panel-progress');
+  if (progressEl) progressEl.textContent = state.myTasbeeh + ' / ' + goal + ' تسبيحة ' + (state.myTasbeeh >= goal ? '✅' : '');
   const tasbeehGoalEl = document.getElementById('tasbeeh-goal-label');
   if (tasbeehGoalEl) tasbeehGoalEl.textContent = '/ ' + goal + ' تسبيحة';
   const tasbeehPct = Math.min(100, (state.myTasbeeh / goal) * 100);
@@ -2364,30 +2387,63 @@ async function saveTasbeehGoal(n) {
   const { error } = await db.from('groups').update({ tasbeeh_goal: newGoal }).eq('id', state.groupId);
   if (error) { toast('حدث خطأ: ' + error.message); return; }
   state.groupData.tasbeeh_goal = newGoal;
-  document.getElementById('tasbeeh-goal-label').textContent = '/ ' + newGoal + ' تسبيحة';
+  const tasbeehGoalEl = document.getElementById('tasbeeh-goal-label');
+  if (tasbeehGoalEl) tasbeehGoalEl.textContent = '/ ' + newGoal + ' تسبيحة';
   updateMyProgress();
+  renderTasbeehPanel();
   toast('تم تحديث هدف التسبيح ✓');
 }
 
-// ── Azkar Tab ───────────────────────────────────────────────────────────────
+// ── Tasbeeh & Azkar Screen ──────────────────────────────────────────────────
 let _azkarSection = 'morning'; // 'morning' | 'evening'
+let _taTab = 'tasbeeh'; // active sub-tab in tasbeeh-azkar screen
 
-function renderAzkarTab() {
-  const el = document.getElementById('quran-azkar-tab');
+function showTasbeehAzkarScreen() {
+  show('tasbeeh-azkar-screen');
+  switchTasbeehAzkarTab('tasbeeh');
+}
+
+function switchTasbeehAzkarTab(tab) {
+  _taTab = tab;
+  document.getElementById('ta-tasbeeh-panel').style.display = tab === 'tasbeeh' ? '' : 'none';
+  document.getElementById('ta-azkar-panel').style.display   = tab === 'azkar'   ? '' : 'none';
+  document.getElementById('tatab-tasbeeh').classList.toggle('active', tab === 'tasbeeh');
+  document.getElementById('tatab-azkar').classList.toggle('active', tab === 'azkar');
+  if (tab === 'tasbeeh') renderTasbeehPanel();
+  if (tab === 'azkar')   renderAzkarPanel();
+}
+
+function renderTasbeehPanel() {
+  const el = document.getElementById('ta-tasbeeh-panel');
+  if (!el) return;
+  const goal = state.groupData?.tasbeeh_goal || 100;
+  const dhikrList = ['سبحان الله', 'الحمد لله', 'الله أكبر', 'لا إله إلا الله'];
+  const presetBtns = dhikrList.map(d =>
+    `<button onclick="_activeDhikr='${d}';renderTasbeehPanel()" style="flex:1;padding:8px 4px;border-radius:10px;border:2px solid ${_activeDhikr===d?'#0d9488':'#e5e7eb'};background:${_activeDhikr===d?'#f0fdfa':'#fff'};color:${_activeDhikr===d?'#0d9488':'#6b7280'};font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">${d}</button>`
+  ).join('');
+  const tasbeehDone = state.myTasbeeh >= goal;
+  el.innerHTML = `
+    <div style="padding:20px 16px 80px">
+      <div style="background:#fff;border-radius:18px;padding:20px 16px;box-shadow:0 2px 12px rgba(0,0,0,.06)">
+        <div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:14px;text-align:center">📿 عداد التسبيح</div>
+        <div style="display:flex;gap:6px;margin-bottom:18px">${presetBtns}</div>
+        <div onclick="addTasbeeh(1)" style="width:150px;height:150px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);margin:0 auto 16px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(13,148,136,.4);user-select:none;-webkit-tap-highlight-color:transparent">
+          <div id="tasbeeh-counter-display" style="font-size:58px;font-weight:900;color:#fff;line-height:1">${state.myTasbeeh}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.85);margin-top:4px">${_activeDhikr}</div>
+        </div>
+        <div id="tasbeeh-panel-progress" style="text-align:center;color:#6b7280;font-size:14px;margin-bottom:14px">${state.myTasbeeh} / ${goal} تسبيحة ${tasbeehDone?'✅':''}</div>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button onclick="resetTasbeeh()" style="padding:10px 22px;border-radius:10px;border:1.5px solid #fee2e2;background:#fff;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">إعادة</button>
+          ${state.groupData?.created_by===state.user?.id?`<button onclick="promptTasbeehGoal()" style="padding:10px 22px;border-radius:10px;border:1.5px solid #99f6e4;background:#f0fdfa;color:#0d9488;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">تعديل الهدف (${goal})</button>`:''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderAzkarPanel() {
+  const el = document.getElementById('ta-azkar-panel');
   if (!el) return;
   const today = new Intl.DateTimeFormat('en-CA').format(new Date());
-  const goal = state.groupData?.tasbeeh_goal || 100;
-
-  const dhikrList = ['سبحان الله', 'الحمد لله', 'الله أكبر', 'لا إله إلا الله'];
-
-  // ── Tasbeeh counter ──
-  const presetBtns = dhikrList.map(d =>
-    `<button onclick="_activeDhikr='${d}';renderAzkarTab()" style="flex:1;padding:8px 4px;border-radius:10px;border:2px solid ${_activeDhikr===d?'#0d9488':'#e5e7eb'};background:${_activeDhikr===d?'#f0fdfa':'#fff'};color:${_activeDhikr===d?'#0d9488':'#6b7280'};font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">${d}</button>`
-  ).join('');
-
-  const tasbeehDone = state.myTasbeeh >= goal;
-
-  // ── Azkar list ──
   const list = _azkarSection === 'morning' ? AZKAR_MORNING : AZKAR_EVENING;
   const azkarCards = list.map((a, i) => {
     const key = `azkar_${today}_${_azkarSection}_${i}`;
@@ -2401,47 +2457,42 @@ function renderAzkarTab() {
           </div>
           <p style="font-size:15px;line-height:1.9;color:#374151;margin:0;font-family:'Amiri','Noto Naskh Arabic',serif">${a.text.replace(/\n/g,'<br>')}</p>
         </div>
-        <button onclick="toggleAzkar('${key}',this)" style="flex-shrink:0;width:36px;height:36px;border-radius:50%;border:2px solid ${done?'#22c55e':'#d1d5db'};background:${done?'#22c55e':'#fff'};color:${done?'#fff':'#9ca3af'};font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">${done?'✓':'○'}</button>
+        <button onclick="toggleAzkar('${key}')" style="flex-shrink:0;width:36px;height:36px;border-radius:50%;border:2px solid ${done?'#22c55e':'#d1d5db'};background:${done?'#22c55e':'#fff'};color:${done?'#fff':'#9ca3af'};font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">${done?'✓':'○'}</button>
       </div>`;
   }).join('');
 
   el.innerHTML = `
-    <div style="padding:16px 16px 80px">
-      <!-- Tasbeeh Counter -->
-      <div style="background:#fff;border-radius:18px;padding:16px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.06)">
-        <div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:12px;text-align:center">📿 عداد التسبيح</div>
-        <div style="display:flex;gap:6px;margin-bottom:14px">${presetBtns}</div>
-        <div onclick="addTasbeeh(1)" style="width:130px;height:130px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);margin:0 auto 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(13,148,136,.35);user-select:none;-webkit-tap-highlight-color:transparent;active:opacity:.8">
-          <div id="tasbeeh-counter-display" style="font-size:52px;font-weight:900;color:#fff;line-height:1">${state.myTasbeeh}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:2px">${_activeDhikr}</div>
-        </div>
-        <div style="text-align:center;color:#6b7280;font-size:13px;margin-bottom:10px">${state.myTasbeeh} / ${goal} ${tasbeehDone?'✅':''}</div>
-        <div style="display:flex;gap:8px;justify-content:center">
-          <button onclick="resetTasbeeh()" style="padding:8px 18px;border-radius:10px;border:1.5px solid #fee2e2;background:#fff;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">إعادة</button>
-          ${state.groupData?.created_by===state.user?.id?`<button onclick="promptTasbeehGoal()" style="padding:8px 18px;border-radius:10px;border:1.5px solid #99f6e4;background:#f0fdfa;color:#0d9488;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">تعديل الهدف (${goal})</button>`:''}
-        </div>
+    <div style="padding:16px 16px 40px">
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button onclick="_azkarSection='morning';renderAzkarPanel()" style="flex:1;padding:9px;border-radius:10px;border:2px solid ${_azkarSection==='morning'?'#0d9488':'#e5e7eb'};background:${_azkarSection==='morning'?'#f0fdfa':'#fff'};color:${_azkarSection==='morning'?'#0d9488':'#6b7280'};font-weight:700;cursor:pointer;font-family:inherit">🌅 أذكار الصباح</button>
+        <button onclick="_azkarSection='evening';renderAzkarPanel()" style="flex:1;padding:9px;border-radius:10px;border:2px solid ${_azkarSection==='evening'?'#0d9488':'#e5e7eb'};background:${_azkarSection==='evening'?'#f0fdfa':'#fff'};color:${_azkarSection==='evening'?'#0d9488':'#6b7280'};font-weight:700;cursor:pointer;font-family:inherit">🌙 أذكار المساء</button>
       </div>
-
-      <!-- Azkar Lists -->
-      <div style="background:#fff;border-radius:18px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.06)">
-        <div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:12px;text-align:center">📖 الأذكار</div>
-        <div style="display:flex;gap:8px;margin-bottom:14px">
-          <button onclick="_azkarSection='morning';renderAzkarTab()" style="flex:1;padding:9px;border-radius:10px;border:2px solid ${_azkarSection==='morning'?'#0d9488':'#e5e7eb'};background:${_azkarSection==='morning'?'#f0fdfa':'#fff'};color:${_azkarSection==='morning'?'#0d9488':'#6b7280'};font-weight:700;cursor:pointer;font-family:inherit">🌅 أذكار الصباح</button>
-          <button onclick="_azkarSection='evening';renderAzkarTab()" style="flex:1;padding:9px;border-radius:10px;border:2px solid ${_azkarSection==='evening'?'#0d9488':'#e5e7eb'};background:${_azkarSection==='evening'?'#f0fdfa':'#fff'};color:${_azkarSection==='evening'?'#0d9488':'#6b7280'};font-weight:700;cursor:pointer;font-family:inherit">🌙 أذكار المساء</button>
-        </div>
-        ${azkarCards}
-      </div>
+      ${azkarCards}
     </div>`;
 }
 
-function toggleAzkar(key, btn) {
+function toggleAzkar(key) {
   const done = localStorage.getItem(key) === '1';
-  if (done) {
-    localStorage.removeItem(key);
-  } else {
-    localStorage.setItem(key, '1');
-  }
-  renderAzkarTab();
+  if (done) { localStorage.removeItem(key); } else { localStorage.setItem(key, '1'); }
+  renderAzkarPanel();
+}
+
+function renderKhatmaTab() {
+  const el = document.getElementById('quran-khatma-tab');
+  if (!el) return;
+  el.innerHTML = `
+    <div style="padding:20px 16px 80px;direction:rtl">
+      <div style="background:#fff;border-radius:18px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.06);text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">🤲</div>
+        <div style="font-size:16px;font-weight:800;color:#1f2937;margin-bottom:16px">دعاء الختمة</div>
+        <p style="font-size:18px;line-height:2.2;color:#374151;font-family:'Amiri','Noto Naskh Arabic',serif;margin:0">
+          اللَّهُمَّ ارْحَمْنِي بِالْقُرْآنِ وَاجْعَلْهُ لِي إِمَامًا وَنُورًا وَهُدًى وَرَحْمَةً<br>
+          اللَّهُمَّ ذَكِّرْنِي مِنْهُ مَا نَسِيتُ وَعَلِّمْنِي مِنْهُ مَا جَهِلْتُ<br>
+          وَارْزُقْنِي تِلَاوَتَهُ آنَاءَ اللَّيْلِ وَأَطْرَافَ النَّهَارِ<br>
+          وَاجْعَلْهُ لِي حُجَّةً يَا رَبَّ الْعَالَمِينَ
+        </p>
+      </div>
+    </div>`;
 }
 
 function promptTasbeehGoal() {
