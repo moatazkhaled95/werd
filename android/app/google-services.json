@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "680137915459",
+    "project_id": "werd-27aff",
+    "storage_bucket": "werd-27aff.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:680137915459:android:a8bffbc0cb552d4d81a8f6",
+        "android_client_info": {
+          "package_name": "com.werd.quran"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7rGi3nEg1HcFx8UshwPIa51yQrkV3yxU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
