@@ -2444,12 +2444,12 @@ async function addTasbeeh(n) {
 }
 
 async function resetTasbeeh() {
-  state.myTasbeeh = 0;
-  state.tasbeehCounts = {};
-  _dhikrCounts = {};
+  delete state.tasbeehCounts[_activeDhikr];
+  delete _dhikrCounts[_activeDhikr];
+  state.myTasbeeh = Object.values(state.tasbeehCounts).reduce((s, v) => s + v, 0);
   updateTasbeehUI();
   if (state.memberId) {
-    await db.from('members').update({ tasbeeh_today: 0, tasbeeh_counts: {} }).eq('id', state.memberId);
+    await db.from('members').update({ tasbeeh_today: state.myTasbeeh, tasbeeh_counts: state.tasbeehCounts }).eq('id', state.memberId);
     updateMyProgress();
   }
 }
@@ -2462,7 +2462,7 @@ function updateTasbeehUI() {
   const activeDone = activeDhikrGoal > 0 && activeDhikrCount >= activeDhikrGoal;
 
   const counter = document.getElementById('tasbeeh-counter-display');
-  if (counter) { counter.textContent = activeDhikrCount; counter.style.color = activeDone ? '#16a34a' : '#1f2937'; }
+  if (counter) { counter.textContent = activeDhikrCount; counter.style.color = '#fff'; }
 
   const circle = document.getElementById('tasbeeh-circle');
   if (circle) circle.style.background = activeDone ? 'linear-gradient(135deg,#16a34a,#15803d)' : 'linear-gradient(135deg,#0d9488,#0f766e)';
@@ -2547,20 +2547,20 @@ function renderTasbeehPanel() {
       <div style="background:#fff;border-radius:20px;padding:20px 16px;box-shadow:0 2px 16px rgba(0,0,0,.07)">
 
         <!-- Carousel header -->
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
-          <button onclick="prevDhikr()" style="width:38px;height:38px;flex-shrink:0;border-radius:50%;border:none;background:#f3f4f6;color:#374151;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">‹</button>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px">
+          <button onclick="prevDhikr()" style="width:46px;height:46px;flex-shrink:0;border-radius:50%;border:none;background:#f3f4f6;color:#374151;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">‹</button>
           <div style="flex:1;text-align:center;overflow:hidden">
-            <div style="font-size:11px;color:#9ca3af;margin-bottom:2px">${idx+1} / ${allDhikrs.length}</div>
-            <div style="font-size:18px;font-weight:800;color:#1f2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_activeDhikr}</div>
-            ${activeDhikrGoal > 0 ? `<div style="font-size:11px;color:${activeDone?'#16a34a':'#0d9488'};margin-top:2px">الهدف: ${activeDhikrGoal} ${activeDone?'✅':''}</div>` : ''}
+            <div style="font-size:12px;color:#9ca3af;margin-bottom:3px">${idx+1} / ${allDhikrs.length}</div>
+            <div style="font-size:22px;font-weight:800;color:#1f2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_activeDhikr}</div>
+            ${activeDhikrGoal > 0 ? `<div style="font-size:12px;color:${activeDone?'#16a34a':'#0d9488'};margin-top:3px">الهدف: ${activeDhikrGoal} ${activeDone?'✅':''}</div>` : ''}
           </div>
-          <button onclick="nextDhikr()" style="width:38px;height:38px;flex-shrink:0;border-radius:50%;border:none;background:#f3f4f6;color:#374151;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">›</button>
+          <button onclick="nextDhikr()" style="width:46px;height:46px;flex-shrink:0;border-radius:50%;border:none;background:#f3f4f6;color:#374151;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">›</button>
         </div>
 
         <!-- Circle counter -->
         <div id="tasbeeh-circle" onclick="addTasbeeh(1)"
-          style="width:180px;height:180px;border-radius:50%;background:${circleBg};margin:0 auto 18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(13,148,136,.35);user-select:none;-webkit-tap-highlight-color:transparent;transition:background .3s">
-          <div id="tasbeeh-counter-display" style="font-size:72px;font-weight:900;color:#fff;line-height:1">${activeDhikrCount}</div>
+          style="width:220px;height:220px;border-radius:50%;background:${circleBg};margin:0 auto 22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 36px rgba(13,148,136,.4);user-select:none;-webkit-tap-highlight-color:transparent;transition:background .3s">
+          <div id="tasbeeh-counter-display" style="font-size:90px;font-weight:900;color:#fff;line-height:1">${activeDhikrCount}</div>
         </div>
 
         ${activeDhikrGoal > 0 ? `<div style="background:#e5e7eb;border-radius:99px;height:5px;margin-bottom:14px;overflow:hidden"><div id="tasbeeh-bar-fill" style="width:${pct}%;height:100%;background:${activeDone?'#16a34a':'#0d9488'};border-radius:99px;transition:width .3s"></div></div>` : '<div style="margin-bottom:14px"></div>'}
