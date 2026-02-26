@@ -2351,22 +2351,29 @@ async function addPages(n) {
 let _activeDhikr = 'سبحان الله';
 
 async function addTasbeeh(n) {
-  if (!state.memberId) return;
   const prev = state.myTasbeeh;
   const goal = state.groupData?.tasbeeh_goal || 100;
   state.myTasbeeh = Math.max(0, state.myTasbeeh + n);
-  await db.from('members').update({ tasbeeh_today: state.myTasbeeh }).eq('id', state.memberId);
+  // Update UI immediately — don't wait for DB
+  updateTasbeehUI();
   if (n > 0 && prev < goal && state.myTasbeeh >= goal) {
     goalNotify('🎉 ما شاء الله! أتممت هدف التسبيح اليوم!');
-    sendGroupNotification('tasbeeh');
+    if (state.memberId) sendGroupNotification('tasbeeh');
   }
-  updateMyProgress();
+  // Save to DB only when inside a group
+  if (state.memberId) {
+    await db.from('members').update({ tasbeeh_today: state.myTasbeeh }).eq('id', state.memberId);
+    updateMyProgress();
+  }
 }
 
 async function resetTasbeeh() {
   state.myTasbeeh = 0;
-  await db.from('members').update({ tasbeeh_today: 0 }).eq('id', state.memberId);
-  updateMyProgress();
+  updateTasbeehUI();
+  if (state.memberId) {
+    await db.from('members').update({ tasbeeh_today: 0 }).eq('id', state.memberId);
+    updateMyProgress();
+  }
 }
 
 function updateTasbeehUI() {
